@@ -166,14 +166,16 @@ type Form = ReturnType<typeof useForm<any>>;
 
 function Field({
     label,
+    name,
     children,
 }: {
     label: string;
+    name?: string;
     children: React.ReactNode;
 }) {
     return (
         <div className="grid gap-2">
-            <Label>{label}</Label>
+            <Label htmlFor={name}>{label}</Label>
             {children}
         </div>
     );
@@ -182,20 +184,26 @@ function Field({
 function CoupleStep({ form }: { form: Form }) {
     return (
         <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Nama Mempelai Pria">
+            <Field label="Nama Mempelai Pria" name="groom_name">
                 <Input
+                    id="groom_name"
+                    name="groom_name"
                     value={form.data.groom_name}
                     onChange={(e) => form.setData('groom_name', e.target.value)}
                 />
             </Field>
-            <Field label="Nama Mempelai Wanita">
+            <Field label="Nama Mempelai Wanita" name="bride_name">
                 <Input
+                    id="bride_name"
+                    name="bride_name"
                     value={form.data.bride_name}
                     onChange={(e) => form.setData('bride_name', e.target.value)}
                 />
             </Field>
-            <Field label="Tanggal &amp; Waktu Pernikahan">
+            <Field label="Tanggal &amp; Waktu Pernikahan" name="wedding_date">
                 <Input
+                    id="wedding_date"
+                    name="wedding_date"
                     type="datetime-local"
                     value={form.data.wedding_date}
                     onChange={(e) =>
@@ -203,8 +211,10 @@ function CoupleStep({ form }: { form: Form }) {
                     }
                 />
             </Field>
-            <Field label="Zona Waktu">
+            <Field label="Zona Waktu" name="timezone">
                 <select
+                    id="timezone"
+                    name="timezone"
                     value={form.data.timezone}
                     onChange={(e) => form.setData('timezone', e.target.value)}
                     className="h-9 rounded-md border border-input bg-background px-3 text-sm"
@@ -227,8 +237,10 @@ function VenueStep({ form }: { form: Form }) {
                         {kind === 'akad' ? 'Akad Nikah' : 'Resepsi'}
                     </h3>
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <Field label="Nama Tempat">
+                        <Field label="Nama Tempat" name={`${kind}_venue`}>
                             <Input
+                                id={`${kind}_venue`}
+                                name={`${kind}_venue`}
                                 value={form.data[`${kind}_venue`]}
                                 onChange={(e) =>
                                     form.setData(
@@ -238,8 +250,10 @@ function VenueStep({ form }: { form: Form }) {
                                 }
                             />
                         </Field>
-                        <Field label="Waktu">
+                        <Field label="Waktu" name={`${kind}_datetime`}>
                             <Input
+                                id={`${kind}_datetime`}
+                                name={`${kind}_datetime`}
                                 type="datetime-local"
                                 value={form.data[`${kind}_datetime`]}
                                 onChange={(e) =>
@@ -250,8 +264,10 @@ function VenueStep({ form }: { form: Form }) {
                                 }
                             />
                         </Field>
-                        <Field label="Alamat">
+                        <Field label="Alamat" name={`${kind}_address`}>
                             <Input
+                                id={`${kind}_address`}
+                                name={`${kind}_address`}
                                 value={form.data[`${kind}_address`]}
                                 onChange={(e) =>
                                     form.setData(
@@ -261,8 +277,10 @@ function VenueStep({ form }: { form: Form }) {
                                 }
                             />
                         </Field>
-                        <Field label="Link Google Maps">
+                        <Field label="Link Google Maps" name={`maps_url_${kind}`}>
                             <Input
+                                id={`maps_url_${kind}`}
+                                name={`maps_url_${kind}`}
                                 value={form.data[`maps_url_${kind}`]}
                                 onChange={(e) =>
                                     form.setData(
@@ -379,8 +397,10 @@ function PhotosStep({ invitation }: { invitation: PublicInvitation }) {
 
 function StoryStep({ form }: { form: Form }) {
     return (
-        <Field label="Kisah Cinta / Love Story">
+        <Field label="Kisah Cinta / Love Story" name="love_story">
             <textarea
+                id="love_story"
+                name="love_story"
                 value={form.data.love_story}
                 onChange={(e) => form.setData('love_story', e.target.value)}
                 rows={8}

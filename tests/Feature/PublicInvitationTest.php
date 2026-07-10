@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\TemplateCategory;
 use App\Models\Invitation;
+use App\Models\Template;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(fn () => $this->withoutVite());
@@ -31,6 +33,16 @@ test('the invitation data is passed to the react page as a prop', function () {
             ->component('invitation/PublicInvitationPage')
             ->where('invitation.slug', $invitation->slug)
             ->where('invitation.status', 'active'),
+        );
+});
+
+test('the template category is exposed so the client can resolve the theme', function () {
+    $template = Template::factory()->create(['category' => TemplateCategory::Javanese]);
+    $invitation = Invitation::factory()->active()->for($template)->create();
+
+    $this->get(route('invitation.show', $invitation->slug))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('invitation.template.category', 'javanese'),
         );
 });
 

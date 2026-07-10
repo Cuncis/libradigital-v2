@@ -19,14 +19,16 @@ export default function GiftCard({ gift }: { gift: GiftAccount }) {
     const Icon = gift.type === 'bank' ? CreditCard : Wallet;
 
     return (
-        <div className="rounded-xl border border-rose-200/60 bg-white/70 p-5 text-left dark:border-rose-900/40 dark:bg-neutral-900/60">
+        <div className="rounded-xl border border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] p-5 text-left">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Icon className="size-4" />
                 <span className="uppercase">
                     {gift.type === 'bank' ? 'Bank' : 'E-Wallet'}
                 </span>
             </div>
-            <p className="mt-2 font-serif text-lg">{gift.provider_name}</p>
+            <p className="mt-2 text-lg [font-family:var(--inv-font-heading)]">
+                {gift.provider_name}
+            </p>
             <p className="font-mono text-xl tracking-wider tabular-nums">
                 {gift.account_number}
             </p>

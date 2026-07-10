@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useHydrated } from '@/hooks/use-hydrated';
 
 interface Remaining {
     days: number;
@@ -26,18 +27,21 @@ function computeRemaining(target: number): Remaining {
 
 export default function Countdown({ targetIso }: { targetIso: string }) {
     const target = new Date(targetIso).getTime();
-    const [remaining, setRemaining] = useState(() => computeRemaining(target));
+    // The server and first client render show placeholders (hydrated === false);
+    // once hydrated we compute the live value and re-render every second via the
+    // interval tick. This avoids an SSR hydration mismatch on the digits.
+    const hydrated = useHydrated();
+    const [, setTick] = useState(0);
 
     useEffect(() => {
-        const id = setInterval(
-            () => setRemaining(computeRemaining(target)),
-            1000,
-        );
+        const id = setInterval(() => setTick((t) => t + 1), 1000);
 
         return () => clearInterval(id);
-    }, [target]);
+    }, []);
 
-    if (remaining.passed) {
+    const remaining = hydrated ? computeRemaining(target) : null;
+
+    if (remaining?.passed) {
         return (
             <p className="text-center text-lg font-medium">
                 Hari bahagia telah tiba 🤍
@@ -45,11 +49,14 @@ export default function Countdown({ targetIso }: { targetIso: string }) {
         );
     }
 
-    const units: Array<[string, number]> = [
-        ['Hari', remaining.days],
-        ['Jam', remaining.hours],
-        ['Menit', remaining.minutes],
-        ['Detik', remaining.seconds],
+    const pad = (value: number | undefined) =>
+        value === undefined ? '––' : String(value).padStart(2, '0');
+
+    const units: Array<[string, string]> = [
+        ['Hari', pad(remaining?.days)],
+        ['Jam', pad(remaining?.hours)],
+        ['Menit', pad(remaining?.minutes)],
+        ['Detik', pad(remaining?.seconds)],
     ];
 
     return (
@@ -57,10 +64,10 @@ export default function Countdown({ targetIso }: { targetIso: string }) {
             {units.map(([label, value]) => (
                 <div
                     key={label}
-                    className="flex min-w-[64px] flex-col items-center rounded-xl border border-rose-200/60 bg-white/70 px-3 py-3 shadow-sm backdrop-blur dark:border-rose-900/40 dark:bg-neutral-900/60"
+                    className="flex min-w-[64px] flex-col items-center rounded-xl border border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] px-3 py-3 shadow-sm backdrop-blur"
                 >
-                    <span className="font-serif text-3xl font-semibold tabular-nums">
-                        {String(value).padStart(2, '0')}
+                    <span className="text-3xl font-semibold tabular-nums [font-family:var(--inv-font-heading)]">
+                        {value}
                     </span>
                     <span className="mt-1 text-xs tracking-wide text-muted-foreground uppercase">
                         {label}

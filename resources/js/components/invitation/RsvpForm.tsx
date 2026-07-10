@@ -53,8 +53,10 @@ export default function RsvpForm({
 
     if (done) {
         return (
-            <div className="rounded-xl border border-rose-200/60 bg-white/70 p-6 text-center dark:border-rose-900/40 dark:bg-neutral-900/60">
-                <p className="font-serif text-xl">Terima kasih 🤍</p>
+            <div className="rounded-xl border border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] p-6 text-center">
+                <p className="text-xl [font-family:var(--inv-font-heading)]">
+                    Terima kasih 🤍
+                </p>
                 <p className="mt-2 text-sm text-muted-foreground">
                     Ucapan dan konfirmasi kehadiran Anda telah kami terima.
                 </p>
@@ -65,7 +67,7 @@ export default function RsvpForm({
     return (
         <form
             onSubmit={submit}
-            className="mx-auto grid max-w-md gap-4 rounded-xl border border-rose-200/60 bg-white/70 p-6 dark:border-rose-900/40 dark:bg-neutral-900/60"
+            className="mx-auto grid max-w-md gap-4 rounded-xl border border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] p-6"
         >
             <div className="grid gap-2 text-left">
                 <Label htmlFor="guest_name">Nama</Label>
@@ -93,7 +95,7 @@ export default function RsvpForm({
                             onClick={() => setAttendance(option.value)}
                             className={`rounded-md border px-2 py-2 text-sm transition ${
                                 attendance === option.value
-                                    ? 'border-rose-400 bg-rose-50 font-medium text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                                    ? 'border-[var(--inv-accent)] bg-[var(--inv-soft-bg)] font-medium text-[var(--inv-soft-text)]'
                                     : 'border-input hover:bg-accent'
                             }`}
                         >

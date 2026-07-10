@@ -1,6 +1,20 @@
 export type Timezone = 'WIB' | 'WITA' | 'WIT';
 export type Attendance = 'hadir' | 'tidak_hadir' | 'ragu';
 export type GiftType = 'bank' | 'ewallet';
+export type InvitationStatus =
+    | 'draft'
+    | 'pending_payment'
+    | 'active'
+    | 'expired';
+export type PackageTier = 'starter' | 'standard' | 'premium' | 'signature';
+
+export interface Package {
+    value: PackageTier;
+    label: string;
+    price: number;
+    duration_months: number | null;
+    gallery_limit: number;
+}
 
 export interface InvitationTemplate {
     id: number;
@@ -29,7 +43,9 @@ export interface GalleryPhoto {
 export interface PublicInvitation {
     id: number;
     slug: string;
-    status: 'draft' | 'published';
+    status: InvitationStatus;
+    package: PackageTier | null;
+    active_until: string | null;
     template_id: number | null;
     groom_name: string | null;
     bride_name: string | null;

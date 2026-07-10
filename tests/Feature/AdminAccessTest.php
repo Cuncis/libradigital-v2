@@ -25,5 +25,5 @@ test('the seeded superadmin exists and is flagged', function () {
 
     $admin = User::where('email', 'admin@libradigital.id')->firstOrFail();
     expect($admin->is_admin)->toBeTrue();
-    expect($admin->isPremium())->toBeTrue();
+    expect($admin->email_verified_at)->not->toBeNull();
 });

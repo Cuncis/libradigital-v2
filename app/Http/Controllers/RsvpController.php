@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithJson;
 use App\Enums\Attendance;
-use App\Enums\InvitationStatus;
 use App\Http\Requests\StoreRsvpRequest;
 use App\Http\Resources\RsvpResource;
 use App\Models\Invitation;
@@ -18,11 +17,11 @@ class RsvpController extends Controller
     use RespondsWithJson;
 
     /**
-     * Store a guest RSVP for a published invitation (public, rate-limited).
+     * Store a guest RSVP for an active invitation (public, rate-limited).
      */
     public function store(StoreRsvpRequest $request, string $slug): JsonResponse
     {
-        $invitation = $this->publishedOrFail($slug);
+        $invitation = $this->visibleOrFail($slug);
 
         $rsvp = $invitation->rsvps()->create([
             ...$request->validated(),
@@ -101,11 +100,12 @@ class RsvpController extends Controller
         ];
     }
 
-    private function publishedOrFail(string $slug): Invitation
+    private function visibleOrFail(string $slug): Invitation
     {
-        return Invitation::query()
-            ->where('slug', $slug)
-            ->where('status', InvitationStatus::Published)
-            ->firstOrFail();
+        $invitation = Invitation::query()->where('slug', $slug)->firstOrFail();
+
+        abort_unless($invitation->isPubliclyVisible(), 404);
+
+        return $invitation;
     }
 }

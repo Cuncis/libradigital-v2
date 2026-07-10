@@ -12,7 +12,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('slug', 100)->unique();
-            $table->enum('status', ['draft', 'published'])->default('draft');
+            $table->enum('status', ['draft', 'pending_payment', 'active', 'expired'])->default('draft');
+            $table->enum('package', ['starter', 'standard', 'premium', 'signature'])->nullable();
+            $table->date('active_until')->nullable();
             $table->foreignId('template_id')->nullable()->constrained()->nullOnDelete();
             $table->string('groom_name')->nullable();
             $table->string('bride_name')->nullable();

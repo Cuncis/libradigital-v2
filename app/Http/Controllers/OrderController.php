@@ -3,45 +3,56 @@
 namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithJson;
-use App\Enums\PaymentStatus;
-use App\Enums\Plan;
-use App\Models\Payment;
+use App\Enums\InvitationStatus;
+use App\Enums\OrderStatus;
+use App\Enums\Package;
+use App\Http\Requests\StoreOrderRequest;
+use App\Models\Invitation;
+use App\Models\Order;
 use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PaymentController extends Controller
+class OrderController extends Controller
 {
     use RespondsWithJson;
-
-    /**
-     * Price (in Rupiah) of the one-time Free -> Premium upgrade.
-     */
-    private const PREMIUM_PRICE = 150_000;
 
     public function __construct(private MidtransService $midtrans) {}
 
     /**
-     * Create a pending payment and return a Snap token for the Free -> Premium upgrade.
+     * Create a pending order for an invitation and return a Snap token.
      */
-    public function upgrade(Request $request): JsonResponse
+    public function store(StoreOrderRequest $request, Invitation $invitation): JsonResponse
     {
-        $user = $request->user();
+        $this->authorize('update', $invitation);
 
-        if ($user->isPremium()) {
-            return $this->success(null, 'Anda sudah menggunakan paket Premium.');
+        if ($invitation->isActive()) {
+            return $this->success(null, 'Undangan ini sudah aktif.');
         }
 
-        $payment = $user->payments()->create([
-            'order_id' => 'PREMIUM-'.$user->id.'-'.Str::upper(Str::random(10)),
-            'gross_amount' => self::PREMIUM_PRICE,
-            'status' => PaymentStatus::Pending,
+        $package = $request->enum('package', Package::class);
+        $user = $request->user();
+
+        $order = $invitation->orders()->create([
+            'user_id' => $user->id,
+            'order_number' => 'INV-'.now()->format('Ymd').'-'.Str::upper(Str::random(6)),
+            'status' => OrderStatus::Pending,
+            'package' => $package,
+            'base_amount' => $package->price(),
+            'addon_amount' => 0,
+            'total_amount' => $package->price(),
         ]);
 
-        $snapToken = $this->midtrans->createSnapToken($payment, $user);
+        $invitation->update([
+            'package' => $package,
+            'status' => InvitationStatus::PendingPayment,
+        ]);
 
-        $payment->update(['snap_token' => $snapToken]);
+        $snapToken = $this->midtrans->createSnapToken($order, $user);
+
+        $order->update(['snap_token' => $snapToken]);
 
         return $this->success(['snap_token' => $snapToken], 'Token pembayaran berhasil dibuat.', 201);
     }
@@ -55,34 +66,41 @@ class PaymentController extends Controller
 
         abort_unless($this->midtrans->verifySignature($payload), 403);
 
-        $payment = Payment::query()->where('order_id', $payload['order_id'] ?? null)->firstOrFail();
+        $order = Order::query()->where('order_number', $payload['order_id'] ?? null)->firstOrFail();
 
         $status = $this->resolveStatus(
             $payload['transaction_status'] ?? '',
             $payload['fraud_status'] ?? null,
-            $payment->status,
+            $order->status,
         );
 
-        $payment->update([
-            'status' => $status,
-            'paid_at' => $status === PaymentStatus::Paid ? now() : $payment->paid_at,
-        ]);
+        DB::transaction(function () use ($order, $status, $payload) {
+            $order->update([
+                'status' => $status,
+                'paid_at' => $status === OrderStatus::Paid ? now() : $order->paid_at,
+                'midtrans_transaction_id' => $payload['transaction_id'] ?? $order->midtrans_transaction_id,
+            ]);
 
-        if ($status === PaymentStatus::Paid) {
-            $payment->user->update(['plan' => Plan::Premium]);
-        }
+            if ($status === OrderStatus::Paid) {
+                $order->invitation->update([
+                    'status' => InvitationStatus::Active,
+                    'active_until' => $order->package->activeUntil(now())?->toDateString(),
+                ]);
+            } elseif ($status === OrderStatus::Failed) {
+                $order->invitation->update(['status' => InvitationStatus::Draft]);
+            }
+        });
 
         return $this->success();
     }
 
-    private function resolveStatus(string $transactionStatus, ?string $fraudStatus, PaymentStatus $current): PaymentStatus
+    private function resolveStatus(string $transactionStatus, ?string $fraudStatus, OrderStatus $current): OrderStatus
     {
         return match (true) {
-            $transactionStatus === 'capture' && $fraudStatus === 'accept' => PaymentStatus::Paid,
-            $transactionStatus === 'settlement' => PaymentStatus::Paid,
-            $transactionStatus === 'pending' => PaymentStatus::Pending,
-            in_array($transactionStatus, ['deny', 'cancel'], true) => PaymentStatus::Failed,
-            $transactionStatus === 'expire' => PaymentStatus::Expired,
+            $transactionStatus === 'capture' && $fraudStatus === 'accept' => OrderStatus::Paid,
+            $transactionStatus === 'settlement' => OrderStatus::Paid,
+            $transactionStatus === 'pending' => OrderStatus::Pending,
+            in_array($transactionStatus, ['deny', 'cancel', 'expire'], true) => OrderStatus::Failed,
             default => $current,
         };
     }

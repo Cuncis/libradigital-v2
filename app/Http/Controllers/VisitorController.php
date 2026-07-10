@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithJson;
-use App\Enums\InvitationStatus;
 use App\Models\Invitation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,7 +21,7 @@ class VisitorController extends Controller
      */
     public function store(Request $request, string $slug): JsonResponse
     {
-        $invitation = $this->publishedOrFail($slug);
+        $invitation = $this->visibleOrFail($slug);
 
         $ip = $request->ip();
         // Prefer a stable client-provided visitor id (persisted in localStorage),
@@ -55,7 +54,7 @@ class VisitorController extends Controller
     public function count(string $slug): JsonResponse
     {
         $count = Cache::remember($this->cacheKey($slug), 30, function () use ($slug) {
-            return (int) $this->publishedOrFail($slug)->visitor_count;
+            return (int) $this->visibleOrFail($slug)->visitor_count;
         });
 
         return $this->success(['count' => $count]);
@@ -66,11 +65,12 @@ class VisitorController extends Controller
         return "invitation:{$slug}:visitors";
     }
 
-    private function publishedOrFail(string $slug): Invitation
+    private function visibleOrFail(string $slug): Invitation
     {
-        return Invitation::query()
-            ->where('slug', $slug)
-            ->where('status', InvitationStatus::Published)
-            ->firstOrFail();
+        $invitation = Invitation::query()->where('slug', $slug)->firstOrFail();
+
+        abort_unless($invitation->isPubliclyVisible(), 404);
+
+        return $invitation;
     }
 }

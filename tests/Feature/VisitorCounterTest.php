@@ -3,7 +3,7 @@
 use App\Models\Invitation;
 
 test('a first visit increments the counter', function () {
-    $invitation = Invitation::factory()->published()->create(['visitor_count' => 0]);
+    $invitation = Invitation::factory()->active()->create(['visitor_count' => 0]);
 
     $this->postJson(route('invitation.visit', $invitation->slug), ['session_id' => 'sess-a'])
         ->assertOk()
@@ -13,7 +13,7 @@ test('a first visit increments the counter', function () {
 });
 
 test('a repeat visit from the same ip and session does not increment', function () {
-    $invitation = Invitation::factory()->published()->create(['visitor_count' => 0]);
+    $invitation = Invitation::factory()->active()->create(['visitor_count' => 0]);
 
     $this->postJson(route('invitation.visit', $invitation->slug), ['session_id' => 'sess-a']);
     $this->postJson(route('invitation.visit', $invitation->slug), ['session_id' => 'sess-a'])
@@ -24,7 +24,7 @@ test('a repeat visit from the same ip and session does not increment', function 
 });
 
 test('a different session counts as a new visitor', function () {
-    $invitation = Invitation::factory()->published()->create(['visitor_count' => 0]);
+    $invitation = Invitation::factory()->active()->create(['visitor_count' => 0]);
 
     $this->postJson(route('invitation.visit', $invitation->slug), ['session_id' => 'sess-a']);
     $this->postJson(route('invitation.visit', $invitation->slug), ['session_id' => 'sess-b'])
@@ -34,7 +34,7 @@ test('a different session counts as a new visitor', function () {
 });
 
 test('the count endpoint returns the current count', function () {
-    $invitation = Invitation::factory()->published()->create(['visitor_count' => 42]);
+    $invitation = Invitation::factory()->active()->create(['visitor_count' => 42]);
 
     $this->getJson(route('invitation.visitors', $invitation->slug))
         ->assertOk()

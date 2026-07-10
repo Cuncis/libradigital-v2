@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\Plan;
 use App\Notifications\QueuedVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -22,15 +21,15 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $google_id
- * @property Plan $plan
+ * @property string|null $phone
  * @property bool $is_admin
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Invitation> $invitations
- * @property-read Collection<int, Payment> $payments
+ * @property-read Collection<int, Order> $orders
  */
-#[Fillable(['name', 'email', 'password', 'google_id', 'plan'])]
+#[Fillable(['name', 'email', 'password', 'google_id', 'phone'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -47,7 +46,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'plan' => Plan::class,
             'is_admin' => 'boolean',
         ];
     }
@@ -63,21 +61,13 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * The Midtrans payments made by the user.
+     * The Midtrans orders made by the user.
      *
-     * @return HasMany<Payment, $this>
+     * @return HasMany<Order, $this>
      */
-    public function payments(): HasMany
+    public function orders(): HasMany
     {
-        return $this->hasMany(Payment::class);
-    }
-
-    /**
-     * Determine whether the user is on the premium plan.
-     */
-    public function isPremium(): bool
-    {
-        return $this->plan === Plan::Premium;
+        return $this->hasMany(Order::class);
     }
 
     /**

@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\Plan;
 use App\Models\User;
 use App\Notifications\QueuedVerifyEmail;
 use Illuminate\Support\Facades\Notification;
@@ -25,7 +24,6 @@ test('new users can register and receive a verification email', function () {
     $response->assertRedirect(route('dashboard'));
 
     $user = User::where('email', 'test@example.com')->firstOrFail();
-    expect($user->plan)->toBe(Plan::Free);
     expect($user->is_admin)->toBeFalse();
 
     Notification::assertSentTo($user, QueuedVerifyEmail::class);

@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\InvitationStatus;
 use App\Models\Invitation;
 use App\Models\User;
 
@@ -23,7 +22,7 @@ test('the owner can edit couple details and the change autosaves on step change'
     expect($invitation->fresh()->bride_name)->toBe('Wulan');
 });
 
-test('the owner can walk through the builder steps and publish the invitation', function () {
+test('the owner can walk through the builder steps to the package checkout', function () {
     $user = User::factory()->create();
     $invitation = Invitation::factory()->for($user)->draft()->create();
 
@@ -38,11 +37,10 @@ test('the owner can walk through the builder steps and publish the invitation', 
         ->click('Lanjut') // Kisah -> Angpao
         ->click('Lanjut') // Angpao -> Template
         ->click('Lanjut') // Template -> Review
-        ->assertSee('Undangan Anda siap')
-        ->click('Publikasikan Undangan')
-        ->assertSee('Sudah dipublikasikan');
-
-    expect($invitation->fresh()->status)->toBe(InvitationStatus::Published);
+        ->assertSee('Pilih paket')
+        ->assertSee('Standard')
+        ->assertSee('Signature')
+        ->assertSee('Bayar & Publikasikan');
 });
 
 test('a non-owner cannot open the builder', function () {

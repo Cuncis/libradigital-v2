@@ -10,15 +10,15 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('google_id')->nullable()->unique()->after('password');
-            $table->enum('plan', ['free', 'premium'])->default('free')->after('google_id');
-            $table->boolean('is_admin')->default(false)->after('plan');
+            $table->string('phone', 20)->nullable()->after('google_id');
+            $table->boolean('is_admin')->default(false)->after('phone');
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['google_id', 'plan', 'is_admin']);
+            $table->dropColumn(['google_id', 'phone', 'is_admin']);
         });
     }
 };

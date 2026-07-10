@@ -4,7 +4,6 @@ export type User = {
     email: string;
     avatar?: string;
     email_verified_at: string | null;
-    plan: 'free' | 'premium';
     created_at: string;
     updated_at: string;
     [key: string]: unknown;

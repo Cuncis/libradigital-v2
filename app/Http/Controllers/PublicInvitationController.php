@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\InvitationStatus;
 use App\Http\Resources\InvitationResource;
 use App\Models\Invitation;
 use Inertia\Inertia;
@@ -11,7 +10,7 @@ use Inertia\Response;
 class PublicInvitationController extends Controller
 {
     /**
-     * Render a published invitation by slug.
+     * Render an active invitation by slug.
      *
      * Open Graph / Twitter meta tags are emitted server-side (via withViewData)
      * so link crawlers such as WhatsApp — which do not execute JavaScript —
@@ -21,9 +20,10 @@ class PublicInvitationController extends Controller
     {
         $invitation = Invitation::query()
             ->where('slug', $slug)
-            ->where('status', InvitationStatus::Published)
             ->with(['template', 'giftAccounts', 'galleryPhotos'])
             ->firstOrFail();
+
+        abort_unless($invitation->isPubliclyVisible(), 404);
 
         return Inertia::render('invitation/PublicInvitationPage', [
             'invitation' => InvitationResource::make($invitation),

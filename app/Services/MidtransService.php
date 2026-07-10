@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Payment;
+use App\Models\Order;
 use App\Models\User;
 use Midtrans\Config;
 use Midtrans\Snap;
@@ -18,18 +18,19 @@ class MidtransService
     }
 
     /**
-     * Request a Snap token for a pending payment.
+     * Request a Snap token for a pending order.
      */
-    public function createSnapToken(Payment $payment, User $user): string
+    public function createSnapToken(Order $order, User $user): string
     {
         return Snap::getSnapToken([
             'transaction_details' => [
-                'order_id' => $payment->order_id,
-                'gross_amount' => $payment->gross_amount,
+                'order_id' => $order->order_number,
+                'gross_amount' => $order->total_amount,
             ],
             'customer_details' => [
                 'first_name' => $user->name,
                 'email' => $user->email,
+                'phone' => $user->phone,
             ],
         ]);
     }

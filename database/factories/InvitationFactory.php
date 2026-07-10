@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\InvitationStatus;
+use App\Enums\Package;
 use App\Enums\Timezone;
 use App\Models\Invitation;
 use App\Models\Template;
@@ -45,13 +46,34 @@ class InvitationFactory extends Factory
         ];
     }
 
-    public function published(): static
+    public function active(): static
     {
-        return $this->state(fn () => ['status' => InvitationStatus::Published]);
+        return $this->state(fn () => [
+            'status' => InvitationStatus::Active,
+            'package' => Package::Standard,
+            'active_until' => now()->addMonths(6)->toDateString(),
+        ]);
     }
 
     public function draft(): static
     {
         return $this->state(fn () => ['status' => InvitationStatus::Draft]);
+    }
+
+    public function pendingPayment(): static
+    {
+        return $this->state(fn () => [
+            'status' => InvitationStatus::PendingPayment,
+            'package' => Package::Standard,
+        ]);
+    }
+
+    public function expired(): static
+    {
+        return $this->state(fn () => [
+            'status' => InvitationStatus::Expired,
+            'package' => Package::Standard,
+            'active_until' => now()->subDay()->toDateString(),
+        ]);
     }
 }

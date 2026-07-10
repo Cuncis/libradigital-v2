@@ -5,8 +5,8 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(fn () => $this->withoutVite());
 
-test('a published invitation renders with server-side OG meta tags', function () {
-    $invitation = Invitation::factory()->published()->create([
+test('an active invitation renders with server-side OG meta tags', function () {
+    $invitation = Invitation::factory()->active()->create([
         'groom_name' => 'Budi',
         'bride_name' => 'Siti',
         'wedding_date' => '2026-12-20 08:00:00',
@@ -24,18 +24,24 @@ test('a published invitation renders with server-side OG meta tags', function ()
 });
 
 test('the invitation data is passed to the react page as a prop', function () {
-    $invitation = Invitation::factory()->published()->create();
+    $invitation = Invitation::factory()->active()->create();
 
     $this->get(route('invitation.show', $invitation->slug))
         ->assertInertia(fn (Assert $page) => $page
             ->component('invitation/PublicInvitationPage')
             ->where('invitation.slug', $invitation->slug)
-            ->where('invitation.status', 'published'),
+            ->where('invitation.status', 'active'),
         );
 });
 
 test('a draft invitation returns 404', function () {
     $invitation = Invitation::factory()->draft()->create();
+
+    $this->get(route('invitation.show', $invitation->slug))->assertNotFound();
+});
+
+test('an expired invitation returns 404', function () {
+    $invitation = Invitation::factory()->expired()->create();
 
     $this->get(route('invitation.show', $invitation->slug))->assertNotFound();
 });

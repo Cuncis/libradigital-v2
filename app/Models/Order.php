@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use App\Enums\PaymentStatus;
-use Database\Factories\PaymentFactory;
+use App\Enums\OrderStatus;
+use App\Enums\Package;
+use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,18 +13,24 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $user_id
- * @property string $order_id
- * @property int $gross_amount
- * @property PaymentStatus $status
+ * @property int $invitation_id
+ * @property string $order_number
+ * @property OrderStatus $status
+ * @property Package $package
+ * @property int $base_amount
+ * @property int $addon_amount
+ * @property int $total_amount
  * @property string|null $snap_token
+ * @property string|null $midtrans_transaction_id
  * @property Carbon|null $paid_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $user
+ * @property-read Invitation $invitation
  */
-class Payment extends Model
+class Order extends Model
 {
-    /** @use HasFactory<PaymentFactory> */
+    /** @use HasFactory<OrderFactory> */
     use HasFactory;
 
     protected $guarded = [];
@@ -31,7 +38,8 @@ class Payment extends Model
     protected function casts(): array
     {
         return [
-            'status' => PaymentStatus::class,
+            'status' => OrderStatus::class,
+            'package' => Package::class,
             'paid_at' => 'datetime',
         ];
     }
@@ -42,5 +50,13 @@ class Payment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<Invitation, $this>
+     */
+    public function invitation(): BelongsTo
+    {
+        return $this->belongsTo(Invitation::class);
     }
 }

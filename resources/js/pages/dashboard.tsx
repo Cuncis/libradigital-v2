@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { Eye, Heart, PartyPopper, Pencil, Users } from 'lucide-react';
 import InvitationController from '@/actions/App/Http/Controllers/InvitationController';
 import RsvpController from '@/actions/App/Http/Controllers/RsvpController';
@@ -16,16 +16,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes';
+import type { InvitationStatus } from '@/types/invitation';
 
 interface Invitation {
     id: number;
     slug: string;
-    status: 'draft' | 'published';
+    status: InvitationStatus;
     groom_name: string | null;
     bride_name: string | null;
     visitor_count: number;
     rsvps_count: number;
 }
+
+const STATUS_LABELS: Record<InvitationStatus, string> = {
+    draft: 'Draft',
+    pending_payment: 'Menunggu Pembayaran',
+    active: 'Aktif',
+    expired: 'Kadaluarsa',
+};
 
 export default function Dashboard({
     invitation,
@@ -47,15 +55,8 @@ export default function Dashboard({
 }
 
 function InvitationCard({ invitation }: { invitation: Invitation }) {
-    const isPublished = invitation.status === 'published';
+    const isActive = invitation.status === 'active';
     const publicUrl = `/undangan/${invitation.slug}`;
-
-    const togglePublish = () => {
-        const action = isPublished
-            ? InvitationController.unpublish(invitation.id)
-            : InvitationController.publish(invitation.id);
-        router.post(action.url, {}, { preserveScroll: true });
-    };
 
     return (
         <Card>
@@ -69,8 +70,8 @@ function InvitationCard({ invitation }: { invitation: Invitation }) {
                             libradigital.id/undangan/{invitation.slug}
                         </CardDescription>
                     </div>
-                    <Badge variant={isPublished ? 'default' : 'secondary'}>
-                        {isPublished ? 'Published' : 'Draft'}
+                    <Badge variant={isActive ? 'default' : 'secondary'}>
+                        {STATUS_LABELS[invitation.status]}
                     </Badge>
                 </div>
             </CardHeader>
@@ -91,7 +92,8 @@ function InvitationCard({ invitation }: { invitation: Invitation }) {
             <CardFooter className="flex flex-wrap gap-2">
                 <Button asChild variant="outline">
                     <Link href={InvitationController.edit(invitation.id).url}>
-                        <Pencil className="size-4" /> Edit
+                        <Pencil className="size-4" />{' '}
+                        {isActive ? 'Edit' : 'Lanjutkan & Aktifkan'}
                     </Link>
                 </Button>
                 <Button asChild variant="outline">
@@ -99,16 +101,13 @@ function InvitationCard({ invitation }: { invitation: Invitation }) {
                         <Users className="size-4" /> Daftar RSVP
                     </Link>
                 </Button>
-                {isPublished && (
+                {isActive && (
                     <Button asChild variant="outline">
                         <a href={publicUrl} target="_blank" rel="noopener noreferrer">
                             <Eye className="size-4" /> Preview
                         </a>
                     </Button>
                 )}
-                <Button onClick={togglePublish} className="ml-auto">
-                    {isPublished ? 'Unpublish' : 'Publish'}
-                </Button>
             </CardFooter>
         </Card>
     );

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\InvitationStatus;
+use App\Enums\Package;
 use App\Enums\Timezone;
 use Database\Factories\InvitationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,8 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property string $slug
  * @property InvitationStatus $status
+ * @property Package|null $package
+ * @property Carbon|null $active_until
  * @property int|null $template_id
  * @property string|null $groom_name
  * @property string|null $bride_name
@@ -49,10 +52,12 @@ class Invitation extends Model
     {
         return [
             'status' => InvitationStatus::class,
+            'package' => Package::class,
             'timezone' => Timezone::class,
             'wedding_date' => 'datetime',
             'akad_datetime' => 'datetime',
             'resepsi_datetime' => 'datetime',
+            'active_until' => 'date',
         ];
     }
 
@@ -66,9 +71,25 @@ class Invitation extends Model
         return $this->status === InvitationStatus::Draft;
     }
 
-    public function isPublished(): bool
+    public function isActive(): bool
     {
-        return $this->status === InvitationStatus::Published;
+        return $this->status === InvitationStatus::Active;
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->status === InvitationStatus::Expired
+            || ($this->active_until !== null && $this->active_until->lt(today()));
+    }
+
+    /**
+     * Whether the invitation may be shown on its public URL: active and not past
+     * its expiry date (active_until is a date, so the final day still counts).
+     */
+    public function isPubliclyVisible(): bool
+    {
+        return $this->status === InvitationStatus::Active
+            && ($this->active_until === null || $this->active_until->gte(today()));
     }
 
     /**
@@ -117,5 +138,13 @@ class Invitation extends Model
     public function visitors(): HasMany
     {
         return $this->hasMany(InvitationVisitor::class);
+    }
+
+    /**
+     * @return HasMany<Order, $this>
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
     }
 }

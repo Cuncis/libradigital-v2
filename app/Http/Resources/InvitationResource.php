@@ -20,6 +20,8 @@ class InvitationResource extends JsonResource
             'id' => $this->id,
             'slug' => $this->slug,
             'status' => $this->status->value,
+            'package' => $this->package?->value,
+            'active_until' => $this->active_until?->toDateString(),
             'template_id' => $this->template_id,
             'groom_name' => $this->groom_name,
             'bride_name' => $this->bride_name,

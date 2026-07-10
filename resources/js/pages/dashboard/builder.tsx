@@ -2,21 +2,26 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { Check, Loader2, Trash2, Upload } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import InvitationController from '@/actions/App/Http/Controllers/InvitationController';
-import UpgradeToPremiumButton from '@/components/billing/UpgradeToPremiumButton';
+import OrderController from '@/actions/App/Http/Controllers/OrderController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { postJson } from '@/lib/api';
+import { formatRupiah } from '@/lib/format';
+import { loadSnap } from '@/lib/midtrans';
 import { dashboard } from '@/routes';
 import type {
     GiftType,
     InvitationTemplate,
+    Package,
     PublicInvitation,
 } from '@/types/invitation';
 
 interface Props {
     invitation: PublicInvitation;
     templates: InvitationTemplate[];
+    packages: Package[];
     midtrans: {
         client_key: string;
         is_production: boolean;
@@ -35,7 +40,12 @@ const STEPS = [
 
 const toLocalInput = (iso: string | null) => (iso ? iso.slice(0, 16) : '');
 
-export default function Builder({ invitation, templates, midtrans }: Props) {
+export default function Builder({
+    invitation,
+    templates,
+    packages,
+    midtrans,
+}: Props) {
     const [step, setStep] = useState(0);
 
     const form = useForm({
@@ -89,13 +99,7 @@ export default function Builder({ invitation, templates, midtrans }: Props) {
         <>
             <Head title="Builder Undangan" />
             <div className="mx-auto w-full max-w-3xl p-4">
-                <div className="mb-4 flex items-center justify-between">
-                    <Stepper current={step} onStep={goTo} />
-                    <UpgradeToPremiumButton
-                        clientKey={midtrans.client_key}
-                        isProduction={midtrans.is_production}
-                    />
-                </div>
+                <Stepper current={step} onStep={goTo} />
 
                 <div className="mt-6 rounded-xl border p-6">
                     {step === 0 && <CoupleStep form={form} />}
@@ -106,7 +110,13 @@ export default function Builder({ invitation, templates, midtrans }: Props) {
                     {step === 5 && (
                         <TemplateStep form={form} templates={templates} />
                     )}
-                    {step === 6 && <ReviewStep invitation={invitation} />}
+                    {step === 6 && (
+                        <ReviewStep
+                            invitation={invitation}
+                            packages={packages}
+                            midtrans={midtrans}
+                        />
+                    )}
                 </div>
 
                 <div className="mt-4 flex items-center justify-between">
@@ -576,31 +586,33 @@ function TemplateStep({
     );
 }
 
-function ReviewStep({ invitation }: { invitation: PublicInvitation }) {
-    const isPublished = invitation.status === 'published';
+function ReviewStep({
+    invitation,
+    packages,
+    midtrans,
+}: {
+    invitation: PublicInvitation;
+    packages: Package[];
+    midtrans: { client_key: string; is_production: boolean };
+}) {
+    const [selected, setSelected] = useState<Package['value']>(
+        invitation.package ?? 'standard',
+    );
+    const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const publish = () => {
-        router.post(
-            InvitationController.publish(invitation.id).url,
-            {},
-            {
-                preserveScroll: true,
-            },
-        );
-    };
-
-    return (
-        <div className="grid gap-4 text-center">
-            <p className="text-muted-foreground">
-                Undangan Anda siap. Setelah dipublikasikan, undangan dapat
-                diakses melalui tautan publik.
-            </p>
-            <p className="font-mono text-sm">
-                libradigital.id/undangan/{invitation.slug}
-            </p>
-            {isPublished ? (
+    if (invitation.status === 'active') {
+        return (
+            <div className="grid gap-4 text-center">
+                <p className="text-muted-foreground">
+                    Undangan Anda sudah aktif dan dapat diakses melalui tautan
+                    publik.
+                </p>
+                <p className="font-mono text-sm">
+                    libradigital.id/undangan/{invitation.slug}
+                </p>
                 <div className="flex flex-col items-center gap-3">
-                    <Badge>Sudah dipublikasikan</Badge>
+                    <Badge>Aktif</Badge>
                     <Button asChild variant="outline">
                         <a
                             href={`/undangan/${invitation.slug}`}
@@ -611,11 +623,93 @@ function ReviewStep({ invitation }: { invitation: PublicInvitation }) {
                         </a>
                     </Button>
                 </div>
-            ) : (
-                <Button onClick={publish} className="mx-auto">
-                    Publikasikan Undangan
-                </Button>
+            </div>
+        );
+    }
+
+    const pay = async () => {
+        setProcessing(true);
+        setError(null);
+
+        try {
+            const response = await postJson<{ snap_token: string }>(
+                OrderController.store(invitation.id).url,
+                { package: selected },
+            );
+
+            await loadSnap(midtrans.client_key, midtrans.is_production);
+
+            window.snap?.pay(response.data.snap_token, {
+                onSuccess: () => router.reload(),
+                onPending: () => router.reload(),
+                onError: () => setProcessing(false),
+                onClose: () => setProcessing(false),
+            });
+        } catch {
+            setError('Gagal memproses pembayaran. Silakan coba lagi.');
+            setProcessing(false);
+        }
+    };
+
+    return (
+        <div className="grid gap-6">
+            <div className="text-center">
+                <p className="text-muted-foreground">
+                    Pilih paket untuk mengaktifkan undangan Anda.
+                </p>
+                <p className="font-mono text-sm">
+                    libradigital.id/undangan/{invitation.slug}
+                </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+                {packages.map((pkg) => {
+                    const isSelected = selected === pkg.value;
+
+                    return (
+                        <button
+                            key={pkg.value}
+                            onClick={() => setSelected(pkg.value)}
+                            className={`rounded-xl border p-4 text-left transition ${
+                                isSelected
+                                    ? 'border-rose-400 ring-2 ring-rose-300'
+                                    : 'hover:border-rose-300'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between">
+                                <span className="font-medium">{pkg.label}</span>
+                                {isSelected && (
+                                    <Check className="size-4 text-rose-500" />
+                                )}
+                            </div>
+                            <p className="mt-1 text-lg font-semibold">
+                                {formatRupiah(pkg.price)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                {pkg.duration_months
+                                    ? `Aktif ${pkg.duration_months} bulan`
+                                    : 'Aktif selamanya'}
+                                {pkg.gallery_limit > 0
+                                    ? ` · ${pkg.gallery_limit} foto galeri`
+                                    : ''}
+                            </p>
+                        </button>
+                    );
+                })}
+            </div>
+
+            {error && (
+                <p className="text-center text-sm text-destructive">{error}</p>
             )}
+
+            <Button
+                onClick={pay}
+                disabled={processing}
+                className="mx-auto"
+            >
+                {processing && <Loader2 className="size-4 animate-spin" />}
+                Bayar &amp; Publikasikan
+            </Button>
         </div>
     );
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\InvitationStatus;
+use App\Enums\Package;
 use App\Http\Requests\StoreInvitationRequest;
 use App\Http\Requests\SyncGiftsRequest;
 use App\Http\Requests\UpdateInvitationRequest;
@@ -55,6 +56,13 @@ class InvitationController extends Controller
             'templates' => TemplateResource::collection(
                 Template::query()->where('is_active', true)->get()
             ),
+            'packages' => collect(Package::cases())->map(fn (Package $package) => [
+                'value' => $package->value,
+                'label' => $package->label(),
+                'price' => $package->price(),
+                'duration_months' => $package->durationMonths(),
+                'gallery_limit' => $package->galleryLimit(),
+            ])->all(),
             'midtrans' => [
                 'client_key' => config('services.midtrans.client_key'),
                 'is_production' => (bool) config('services.midtrans.is_production'),
@@ -77,30 +85,6 @@ class InvitationController extends Controller
         }
 
         $invitation->update($data);
-
-        return back();
-    }
-
-    /**
-     * Publish the invitation so it is publicly reachable.
-     */
-    public function publish(Invitation $invitation): RedirectResponse
-    {
-        $this->authorize('update', $invitation);
-
-        $invitation->update(['status' => InvitationStatus::Published]);
-
-        return back();
-    }
-
-    /**
-     * Return the invitation to draft.
-     */
-    public function unpublish(Invitation $invitation): RedirectResponse
-    {
-        $this->authorize('update', $invitation);
-
-        $invitation->update(['status' => InvitationStatus::Draft]);
 
         return back();
     }

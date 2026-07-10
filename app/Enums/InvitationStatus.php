@@ -5,5 +5,7 @@ namespace App\Enums;
 enum InvitationStatus: string
 {
     case Draft = 'draft';
-    case Published = 'published';
+    case PendingPayment = 'pending_payment';
+    case Active = 'active';
+    case Expired = 'expired';
 }

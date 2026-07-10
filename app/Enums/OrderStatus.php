@@ -2,10 +2,10 @@
 
 namespace App\Enums;
 
-enum PaymentStatus: string
+enum OrderStatus: string
 {
     case Pending = 'pending';
     case Paid = 'paid';
     case Failed = 'failed';
-    case Expired = 'expired';
+    case Refunded = 'refunded';
 }

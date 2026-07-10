@@ -3,8 +3,8 @@
 use App\Models\Invitation;
 use App\Models\Rsvp;
 
-test('a visitor can view a published invitation and submit an rsvp', function () {
-    $invitation = Invitation::factory()->published()->create([
+test('a visitor can view an active invitation and submit an rsvp', function () {
+    $invitation = Invitation::factory()->active()->create([
         'groom_name' => 'Budi',
         'bride_name' => 'Siti',
     ]);
@@ -28,7 +28,7 @@ test('a visitor can view a published invitation and submit an rsvp', function ()
 });
 
 test('a guest name in the tamu query parameter is shown', function () {
-    $invitation = Invitation::factory()->published()->create();
+    $invitation = Invitation::factory()->active()->create();
 
     $page = visit(route('invitation.show', $invitation->slug).'?tamu=Rahmat');
 

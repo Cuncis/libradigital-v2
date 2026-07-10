@@ -6,8 +6,8 @@ use App\Models\Rsvp;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
-test('a guest can submit an rsvp to a published invitation', function () {
-    $invitation = Invitation::factory()->published()->create();
+test('a guest can submit an rsvp to an active invitation', function () {
+    $invitation = Invitation::factory()->active()->create();
 
     $response = $this->postJson(route('invitation.rsvp.store', $invitation->slug), [
         'guest_name' => 'Andi',
@@ -26,7 +26,7 @@ test('a guest can submit an rsvp to a published invitation', function () {
 });
 
 test('rsvp validation errors return 422', function () {
-    $invitation = Invitation::factory()->published()->create();
+    $invitation = Invitation::factory()->active()->create();
 
     $this->postJson(route('invitation.rsvp.store', $invitation->slug), [
         'guest_name' => '',
@@ -44,7 +44,7 @@ test('rsvp to a draft invitation returns 404', function () {
 });
 
 test('rsvp endpoint is rate limited to 5 per minute', function () {
-    $invitation = Invitation::factory()->published()->create();
+    $invitation = Invitation::factory()->active()->create();
 
     foreach (range(1, 5) as $i) {
         $this->postJson(route('invitation.rsvp.store', $invitation->slug), [

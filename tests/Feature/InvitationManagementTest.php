@@ -53,25 +53,14 @@ test('a non-owner cannot view or update an invitation', function () {
     ])->assertForbidden();
 });
 
-test('publish and unpublish toggle the status', function () {
-    $user = User::factory()->create();
-    $invitation = Invitation::factory()->for($user)->draft()->create();
-
-    $this->actingAs($user)->post(route('invitations.publish', $invitation))->assertRedirect();
-    expect($invitation->fresh()->status)->toBe(InvitationStatus::Published);
-
-    $this->actingAs($user)->post(route('invitations.unpublish', $invitation))->assertRedirect();
-    expect($invitation->fresh()->status)->toBe(InvitationStatus::Draft);
-});
-
-test('the slug can be changed while draft but not once published', function () {
+test('the slug can be changed while draft but not once active', function () {
     $user = User::factory()->create();
     $invitation = Invitation::factory()->for($user)->draft()->create(['slug' => 'original']);
 
     $this->actingAs($user)->put(route('invitations.update', $invitation), ['slug' => 'new-slug']);
     expect($invitation->fresh()->slug)->toBe('new-slug');
 
-    $invitation->update(['status' => InvitationStatus::Published]);
+    $invitation->update(['status' => InvitationStatus::Active]);
     $this->actingAs($user)->put(route('invitations.update', $invitation), ['slug' => 'changed-again']);
     expect($invitation->fresh()->slug)->toBe('new-slug');
 });

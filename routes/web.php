@@ -3,7 +3,7 @@
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PublicInvitationController;
 use App\Http\Controllers\RsvpController;
 use App\Http\Controllers\TemplateController;
@@ -23,8 +23,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('invitations', [InvitationController::class, 'store'])->name('invitations.store');
     Route::get('invitations/{invitation:id}/edit', [InvitationController::class, 'edit'])->name('invitations.edit');
     Route::put('invitations/{invitation:id}', [InvitationController::class, 'update'])->name('invitations.update');
-    Route::post('invitations/{invitation:id}/publish', [InvitationController::class, 'publish'])->name('invitations.publish');
-    Route::post('invitations/{invitation:id}/unpublish', [InvitationController::class, 'unpublish'])->name('invitations.unpublish');
     Route::post('invitations/{invitation:id}/photos', [InvitationController::class, 'uploadPhotos'])->name('invitations.photos.store');
     Route::post('invitations/{invitation:id}/cover', [InvitationController::class, 'uploadCover'])->name('invitations.cover.store');
     Route::delete('invitations/{invitation:id}/photos/{photo}', [InvitationController::class, 'deletePhoto'])->name('invitations.photos.destroy');
@@ -33,11 +31,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('invitations/{invitation:id}/rsvps', [RsvpController::class, 'index'])->name('invitations.rsvps.index');
     Route::get('invitations/{invitation:id}/rsvps/export', [RsvpController::class, 'export'])->name('invitations.rsvps.export');
 
-    Route::post('billing/upgrade', [PaymentController::class, 'upgrade'])->name('billing.upgrade');
+    Route::post('invitations/{invitation:id}/orders', [OrderController::class, 'store'])->name('invitations.orders.store');
 });
 
 // Midtrans server-to-server transaction notification (signature-verified, no session/CSRF).
-Route::post('billing/webhook', [PaymentController::class, 'webhook'])->name('billing.webhook');
+Route::post('billing/webhook', [OrderController::class, 'webhook'])->name('billing.webhook');
 
 // Public invitation page (published only) — see Step 4 for OG meta + SSR.
 Route::get('undangan/{slug}', [PublicInvitationController::class, 'show'])->name('invitation.show');

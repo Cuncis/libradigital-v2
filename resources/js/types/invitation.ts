@@ -14,6 +14,7 @@ export interface Package {
     price: number;
     duration_months: number | null;
     gallery_limit: number;
+    features: string[];
 }
 
 export interface InvitationTemplate {

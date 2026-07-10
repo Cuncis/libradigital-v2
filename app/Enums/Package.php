@@ -84,4 +84,56 @@ enum Package: string
 
         return $from->copy()->addMonths($months);
     }
+
+    /**
+     * Marketing highlights shown on the pricing cards.
+     *
+     * @return list<string>
+     */
+    public function features(): array
+    {
+        return match ($this) {
+            self::Starter => [
+                'Template dasar',
+                'Foto sampul',
+                'RSVP & hitung mundur',
+                'Aktif 3 bulan',
+            ],
+            self::Standard => [
+                '10+ pilihan template',
+                'Galeri hingga 20 foto',
+                'Love story & angpao digital',
+                'Aktif 6 bulan',
+            ],
+            self::Premium => [
+                'Semua fitur Standard',
+                'Galeri hingga 50 foto',
+                'Subdomain kustom',
+                'Aktif 12 bulan',
+            ],
+            self::Signature => [
+                'Semua fitur Premium',
+                'Galeri hingga 100 foto',
+                'Domain kustom sendiri',
+                'Aktif selamanya',
+            ],
+        };
+    }
+
+    /**
+     * The full package catalog for display (pricing page + builder checkout).
+     *
+     * @return list<array{value: string, label: string, price: int, duration_months: int|null, gallery_limit: int, features: list<string>}>
+     */
+    public static function catalog(): array
+    {
+        return array_map(fn (self $package): array => [
+            'value' => $package->value,
+            'label' => $package->label(),
+            'price' => $package->price(),
+            'duration_months' => $package->durationMonths(),
+            'gallery_limit' => $package->galleryLimit(),
+            'features' => $package->features(),
+        ], self::cases());
+    }
 }

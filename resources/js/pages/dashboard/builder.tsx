@@ -627,6 +627,8 @@ function ReviewStep({
         );
     }
 
+    const isPending = invitation.status === 'pending_payment';
+
     const pay = async () => {
         setProcessing(true);
         setError(null);
@@ -639,9 +641,23 @@ function ReviewStep({
 
             await loadSnap(midtrans.client_key, midtrans.is_production);
 
-            window.snap?.pay(response.data.snap_token, {
-                onSuccess: () => router.reload(),
-                onPending: () => router.reload(),
+            if (!window.snap) {
+                throw new Error('Snap belum siap');
+            }
+
+            window.snap.pay(response.data.snap_token, {
+                // The invitation only flips to "active" once Midtrans calls the
+                // billing webhook, so reload to pick up the latest status and
+                // always clear the spinner (React keeps this component mounted
+                // across an Inertia reload).
+                onSuccess: () => {
+                    setProcessing(false);
+                    router.reload();
+                },
+                onPending: () => {
+                    setProcessing(false);
+                    router.reload();
+                },
                 onError: () => setProcessing(false),
                 onClose: () => setProcessing(false),
             });
@@ -654,10 +670,26 @@ function ReviewStep({
     return (
         <div className="grid gap-6">
             <div className="text-center">
-                <p className="text-muted-foreground">
-                    Pilih paket untuk mengaktifkan undangan Anda.
-                </p>
-                <p className="font-mono text-sm">
+                {isPending ? (
+                    <div className="grid gap-3">
+                        <p className="text-muted-foreground">
+                            Pembayaran sedang diproses. Undangan akan aktif
+                            otomatis setelah pembayaran dikonfirmasi.
+                        </p>
+                        <Button
+                            variant="outline"
+                            className="mx-auto"
+                            onClick={() => router.reload()}
+                        >
+                            Perbarui Status
+                        </Button>
+                    </div>
+                ) : (
+                    <p className="text-muted-foreground">
+                        Pilih paket untuk mengaktifkan undangan Anda.
+                    </p>
+                )}
+                <p className="mt-2 font-mono text-sm">
                     libradigital.id/undangan/{invitation.slug}
                 </p>
             </div>
@@ -708,7 +740,7 @@ function ReviewStep({
                 className="mx-auto"
             >
                 {processing && <Loader2 className="size-4 animate-spin" />}
-                Bayar &amp; Publikasikan
+                {isPending ? 'Bayar Ulang' : 'Bayar & Publikasikan'}
             </Button>
         </div>
     );

@@ -56,13 +56,7 @@ class InvitationController extends Controller
             'templates' => TemplateResource::collection(
                 Template::query()->where('is_active', true)->get()
             ),
-            'packages' => collect(Package::cases())->map(fn (Package $package) => [
-                'value' => $package->value,
-                'label' => $package->label(),
-                'price' => $package->price(),
-                'duration_months' => $package->durationMonths(),
-                'gallery_limit' => $package->galleryLimit(),
-            ])->all(),
+            'packages' => Package::catalog(),
             'midtrans' => [
                 'client_key' => config('services.midtrans.client_key'),
                 'is_production' => (bool) config('services.midtrans.is_production'),

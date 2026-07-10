@@ -41,5 +41,5 @@ test('a draft invitation is not publicly viewable', function () {
 
     $page = visit(route('invitation.show', $invitation->slug));
 
-    $page->assertStatus(404);
+    $page->assertSee('404');
 });

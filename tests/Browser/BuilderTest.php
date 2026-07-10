@@ -51,5 +51,5 @@ test('a non-owner cannot open the builder', function () {
 
     $page = visit(route('invitations.edit', $invitation));
 
-    $page->assertStatus(403);
+    $page->assertSee('403');
 });

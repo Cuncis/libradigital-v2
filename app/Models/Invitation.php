@@ -1,0 +1,121 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\InvitationStatus;
+use App\Enums\Timezone;
+use Database\Factories\InvitationFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
+
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $slug
+ * @property InvitationStatus $status
+ * @property int|null $template_id
+ * @property string|null $groom_name
+ * @property string|null $bride_name
+ * @property Carbon|null $wedding_date
+ * @property Timezone $timezone
+ * @property string|null $akad_venue
+ * @property string|null $akad_address
+ * @property Carbon|null $akad_datetime
+ * @property string|null $resepsi_venue
+ * @property string|null $resepsi_address
+ * @property Carbon|null $resepsi_datetime
+ * @property string|null $maps_url_akad
+ * @property string|null $maps_url_resepsi
+ * @property string|null $cover_photo
+ * @property string|null $love_story
+ * @property string|null $music_url
+ * @property int $visitor_count
+ * @property-read User $user
+ * @property-read Template|null $template
+ */
+class Invitation extends Model
+{
+    /** @use HasFactory<InvitationFactory> */
+    use HasFactory;
+
+    // Mass-assignment is controlled by Form Requests (validated()) and explicit
+    // arrays in the controller, so the model itself stays unguarded.
+    protected $guarded = [];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => InvitationStatus::class,
+            'timezone' => Timezone::class,
+            'wedding_date' => 'datetime',
+            'akad_datetime' => 'datetime',
+            'resepsi_datetime' => 'datetime',
+        ];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->status === InvitationStatus::Draft;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === InvitationStatus::Published;
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<Template, $this>
+     */
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(Template::class);
+    }
+
+    /**
+     * @return HasMany<Rsvp, $this>
+     */
+    public function rsvps(): HasMany
+    {
+        return $this->hasMany(Rsvp::class);
+    }
+
+    /**
+     * @return HasMany<GiftAccount, $this>
+     */
+    public function giftAccounts(): HasMany
+    {
+        return $this->hasMany(GiftAccount::class)->orderBy('sort_order');
+    }
+
+    /**
+     * @return HasMany<GalleryPhoto, $this>
+     */
+    public function galleryPhotos(): HasMany
+    {
+        return $this->hasMany(GalleryPhoto::class)->orderBy('sort_order');
+    }
+
+    /**
+     * @return HasMany<InvitationVisitor, $this>
+     */
+    public function visitors(): HasMany
+    {
+        return $this->hasMany(InvitationVisitor::class);
+    }
+}

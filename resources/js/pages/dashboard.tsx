@@ -1,52 +1,200 @@
-import { Head } from '@inertiajs/react';
-import { useState } from 'react';
-import PendingInvitationsModal from '@/components/pending-invitations-modal';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Eye, Heart, PartyPopper, Pencil, Users } from 'lucide-react';
+import InvitationController from '@/actions/App/Http/Controllers/InvitationController';
+import RsvpController from '@/actions/App/Http/Controllers/RsvpController';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { dashboard } from '@/routes';
-import type { DashboardInvitation } from '@/types';
 
-type Props = {
-    pendingInvitations?: DashboardInvitation[];
-};
+interface Invitation {
+    id: number;
+    slug: string;
+    status: 'draft' | 'published';
+    groom_name: string | null;
+    bride_name: string | null;
+    visitor_count: number;
+    rsvps_count: number;
+}
 
-export default function Dashboard({ pendingInvitations = [] }: Props) {
-    const [showInvitations, setShowInvitations] = useState(
-        pendingInvitations.length > 0,
-    );
-
+export default function Dashboard({
+    invitation,
+}: {
+    invitation: Invitation | null;
+}) {
     return (
         <>
             <Head title="Dashboard" />
-            <PendingInvitationsModal
-                invitations={pendingInvitations}
-                open={pendingInvitations.length > 0 && showInvitations}
-                onOpenChange={setShowInvitations}
-            />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                </div>
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                </div>
+            <div className="mx-auto w-full max-w-4xl p-4">
+                {invitation ? (
+                    <InvitationCard invitation={invitation} />
+                ) : (
+                    <CreateInvitation />
+                )}
             </div>
         </>
     );
 }
 
-Dashboard.layout = (props: { currentTeam?: { slug: string } | null }) => ({
-    breadcrumbs: [
-        {
-            title: 'Dashboard',
-            href: props.currentTeam ? dashboard(props.currentTeam.slug) : '/',
-        },
-    ],
+function InvitationCard({ invitation }: { invitation: Invitation }) {
+    const isPublished = invitation.status === 'published';
+    const publicUrl = `/undangan/${invitation.slug}`;
+
+    const togglePublish = () => {
+        const action = isPublished
+            ? InvitationController.unpublish(invitation.id)
+            : InvitationController.publish(invitation.id);
+        router.post(action.url, {}, { preserveScroll: true });
+    };
+
+    return (
+        <Card>
+            <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <CardTitle className="text-2xl">
+                            {invitation.groom_name} &amp; {invitation.bride_name}
+                        </CardTitle>
+                        <CardDescription className="mt-1">
+                            libradigital.id/undangan/{invitation.slug}
+                        </CardDescription>
+                    </div>
+                    <Badge variant={isPublished ? 'default' : 'secondary'}>
+                        {isPublished ? 'Published' : 'Draft'}
+                    </Badge>
+                </div>
+            </CardHeader>
+
+            <CardContent className="grid grid-cols-2 gap-4">
+                <Stat
+                    icon={<Users className="size-5" />}
+                    label="Tamu membuka"
+                    value={invitation.visitor_count}
+                />
+                <Stat
+                    icon={<PartyPopper className="size-5" />}
+                    label="RSVP masuk"
+                    value={invitation.rsvps_count}
+                />
+            </CardContent>
+
+            <CardFooter className="flex flex-wrap gap-2">
+                <Button asChild variant="outline">
+                    <Link href={InvitationController.edit(invitation.id).url}>
+                        <Pencil className="size-4" /> Edit
+                    </Link>
+                </Button>
+                <Button asChild variant="outline">
+                    <Link href={RsvpController.index(invitation.id).url}>
+                        <Users className="size-4" /> Daftar RSVP
+                    </Link>
+                </Button>
+                {isPublished && (
+                    <Button asChild variant="outline">
+                        <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+                            <Eye className="size-4" /> Preview
+                        </a>
+                    </Button>
+                )}
+                <Button onClick={togglePublish} className="ml-auto">
+                    {isPublished ? 'Unpublish' : 'Publish'}
+                </Button>
+            </CardFooter>
+        </Card>
+    );
+}
+
+function Stat({
+    icon,
+    label,
+    value,
+}: {
+    icon: React.ReactNode;
+    label: string;
+    value: number;
+}) {
+    return (
+        <div className="flex items-center gap-3 rounded-lg border p-4">
+            <div className="text-muted-foreground">{icon}</div>
+            <div>
+                <div className="text-2xl font-semibold">{value}</div>
+                <div className="text-sm text-muted-foreground">{label}</div>
+            </div>
+        </div>
+    );
+}
+
+function CreateInvitation() {
+    const form = useForm({ groom_name: '', bride_name: '' });
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        form.post(InvitationController.store().url);
+    };
+
+    return (
+        <Card>
+            <CardHeader className="items-center text-center">
+                <Heart className="size-10 text-rose-500" />
+                <CardTitle>Buat undangan pernikahan pertama Anda</CardTitle>
+                <CardDescription>
+                    Masukkan nama mempelai untuk mulai membangun undangan Anda.
+                </CardDescription>
+            </CardHeader>
+            <form onSubmit={submit}>
+                <CardContent className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                        <Label htmlFor="groom_name">Nama Mempelai Pria</Label>
+                        <Input
+                            id="groom_name"
+                            value={form.data.groom_name}
+                            onChange={(e) => form.setData('groom_name', e.target.value)}
+                            placeholder="Budi"
+                            required
+                        />
+                        {form.errors.groom_name && (
+                            <p className="text-sm text-destructive">
+                                {form.errors.groom_name}
+                            </p>
+                        )}
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="bride_name">Nama Mempelai Wanita</Label>
+                        <Input
+                            id="bride_name"
+                            value={form.data.bride_name}
+                            onChange={(e) => form.setData('bride_name', e.target.value)}
+                            placeholder="Siti"
+                            required
+                        />
+                        {form.errors.bride_name && (
+                            <p className="text-sm text-destructive">
+                                {form.errors.bride_name}
+                            </p>
+                        )}
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button type="submit" disabled={form.processing} className="w-full">
+                        {form.processing && <Spinner />}
+                        Mulai Buat Undangan
+                    </Button>
+                </CardFooter>
+            </form>
+        </Card>
+    );
+}
+
+Dashboard.layout = () => ({
+    breadcrumbs: [{ title: 'Dashboard', href: dashboard.url() }],
 });

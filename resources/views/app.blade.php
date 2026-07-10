@@ -34,6 +34,24 @@
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
+        {{-- Server-rendered Open Graph / Twitter meta for link crawlers (e.g. WhatsApp). --}}
+        @isset($ogMeta)
+            <meta property="og:type" content="website">
+            <meta property="og:title" content="{{ $ogMeta['title'] }}">
+            <meta property="og:description" content="{{ $ogMeta['description'] }}">
+            @if (! empty($ogMeta['image']))
+                <meta property="og:image" content="{{ $ogMeta['image'] }}">
+            @endif
+            <meta property="og:url" content="{{ $ogMeta['url'] }}">
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:title" content="{{ $ogMeta['title'] }}">
+            <meta name="twitter:description" content="{{ $ogMeta['description'] }}">
+            @if (! empty($ogMeta['image']))
+                <meta name="twitter:image" content="{{ $ogMeta['image'] }}">
+            @endif
+            <meta name="description" content="{{ $ogMeta['description'] }}">
+        @endisset
+
         @fonts
 
         @viteReactRefresh

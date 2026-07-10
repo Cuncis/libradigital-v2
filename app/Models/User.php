@@ -28,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Invitation> $invitations
+ * @property-read Collection<int, Payment> $payments
  */
 #[Fillable(['name', 'email', 'password', 'google_id', 'plan'])]
 #[Hidden(['password', 'remember_token'])]
@@ -59,6 +60,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function invitations(): HasMany
     {
         return $this->hasMany(Invitation::class);
+    }
+
+    /**
+     * The Midtrans payments made by the user.
+     *
+     * @return HasMany<Payment, $this>
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     /**

@@ -21,8 +21,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Disk used for user-uploaded invitation media (cover + gallery photos).
-    | Defaults to the local "public" disk for development; set MEDIA_DISK=spaces
-    | in production to store on DigitalOcean Spaces and serve via its CDN.
+    | Defaults to the local "public" disk for development; set MEDIA_DISK=r2
+    | in production to store on Cloudflare R2 and serve via its public URL.
     |
     */
 
@@ -82,6 +82,21 @@ return [
             'bucket' => env('DO_SPACES_BUCKET'),
             'endpoint' => env('DO_SPACES_ENDPOINT'),
             'url' => env('DO_SPACES_URL'),
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Cloudflare R2 (S3-compatible). Serves invitation cover + gallery photos.
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET'),
+            'endpoint' => 'https://'.env('R2_ACCOUNT_ID').'.r2.cloudflarestorage.com',
+            'url' => env('R2_PUBLIC_URL'),
+            'use_path_style_endpoint' => false,
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

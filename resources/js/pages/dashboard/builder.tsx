@@ -2,6 +2,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { Check, Loader2, Trash2, Upload } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import InvitationController from '@/actions/App/Http/Controllers/InvitationController';
+import UpgradeToPremiumButton from '@/components/billing/UpgradeToPremiumButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,10 @@ import type {
 interface Props {
     invitation: PublicInvitation;
     templates: InvitationTemplate[];
+    midtrans: {
+        client_key: string;
+        is_production: boolean;
+    };
 }
 
 const STEPS = [
@@ -30,7 +35,7 @@ const STEPS = [
 
 const toLocalInput = (iso: string | null) => (iso ? iso.slice(0, 16) : '');
 
-export default function Builder({ invitation, templates }: Props) {
+export default function Builder({ invitation, templates, midtrans }: Props) {
     const [step, setStep] = useState(0);
 
     const form = useForm({
@@ -84,7 +89,13 @@ export default function Builder({ invitation, templates }: Props) {
         <>
             <Head title="Builder Undangan" />
             <div className="mx-auto w-full max-w-3xl p-4">
-                <Stepper current={step} onStep={goTo} />
+                <div className="mb-4 flex items-center justify-between">
+                    <Stepper current={step} onStep={goTo} />
+                    <UpgradeToPremiumButton
+                        clientKey={midtrans.client_key}
+                        isProduction={midtrans.is_production}
+                    />
+                </div>
 
                 <div className="mt-6 rounded-xl border p-6">
                     {step === 0 && <CoupleStep form={form} />}

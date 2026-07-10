@@ -55,6 +55,10 @@ class InvitationController extends Controller
             'templates' => TemplateResource::collection(
                 Template::query()->where('is_active', true)->get()
             ),
+            'midtrans' => [
+                'client_key' => config('services.midtrans.client_key'),
+                'is_production' => (bool) config('services.midtrans.is_production'),
+            ],
         ]);
     }
 

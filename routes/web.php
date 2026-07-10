@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PublicInvitationController;
 use App\Http\Controllers\RsvpController;
 use App\Http\Controllers\TemplateController;
@@ -31,7 +32,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('invitations/{invitation:id}/rsvps', [RsvpController::class, 'index'])->name('invitations.rsvps.index');
     Route::get('invitations/{invitation:id}/rsvps/export', [RsvpController::class, 'export'])->name('invitations.rsvps.export');
+
+    Route::post('billing/upgrade', [PaymentController::class, 'upgrade'])->name('billing.upgrade');
 });
+
+// Midtrans server-to-server transaction notification (signature-verified, no session/CSRF).
+Route::post('billing/webhook', [PaymentController::class, 'webhook'])->name('billing.webhook');
 
 // Public invitation page (published only) — see Step 4 for OG meta + SSR.
 Route::get('undangan/{slug}', [PublicInvitationController::class, 'show'])->name('invitation.show');

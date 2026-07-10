@@ -111,7 +111,7 @@ Undangan kadaluarsa bisa diperpanjang Rp 49K/6 bulan. Konversi ~40–60%.
 │  Daftar klien · Komisi berjalan · Referral link · Withdraw      │
 ├─────────────────────────────────────────────────────────────────┤
 │                     INVITATION PAGE                             │
-│  yourdomain.com/[slug]?to=NamaTamu                              │
+│  yourdomain.com/undangan/[slug]?to=NamaTamu                              │
 │  Tema CSS/GSAP/WebGL · RSVP · Gallery · Maps · Gift            │
 └─────────────────────────────────────────────────────────────────┘
 ```

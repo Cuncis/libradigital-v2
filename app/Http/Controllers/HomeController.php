@@ -25,9 +25,10 @@ class HomeController extends Controller
     }
 
     /**
-     * Published demo invitations to showcase, each with its template name.
+     * Published demo invitations to showcase, grouped by package tier on the
+     * client. Capped at six per tier so each tab stays balanced.
      *
-     * @return list<array{slug: string, groom_name: string|null, bride_name: string|null, cover_photo: string|null, template_name: string|null, url: string}>
+     * @return list<array{slug: string, package: string|null, groom_name: string|null, bride_name: string|null, cover_photo: string|null, template_name: string|null, url: string}>
      */
     private function demos(): array
     {
@@ -35,17 +36,20 @@ class HomeController extends Controller
             ->where('is_demo', true)
             ->where('status', InvitationStatus::Active)
             ->with('template')
-            ->latest('id')
-            ->take(6)
+            ->orderBy('id')
             ->get()
+            ->groupBy(fn (Invitation $invitation): string => $invitation->package?->value ?? 'other')
+            ->flatMap(fn ($group) => $group->take(6))
             ->map(fn (Invitation $invitation): array => [
                 'slug' => $invitation->slug,
+                'package' => $invitation->package?->value,
                 'groom_name' => $invitation->groom_name,
                 'bride_name' => $invitation->bride_name,
                 'cover_photo' => $invitation->cover_photo,
                 'template_name' => $invitation->template?->name,
                 'url' => route('invitation.show', $invitation->slug),
             ])
+            ->values()
             ->all();
     }
 

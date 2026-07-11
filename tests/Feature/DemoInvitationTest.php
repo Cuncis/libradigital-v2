@@ -42,3 +42,14 @@ test('a demo invitation is reachable on its public page', function () {
 
     $this->get(route('invitation.show', $demo->slug))->assertOk();
 });
+
+test('the landing page caps demos at six per package tier', function () {
+    Invitation::factory()->demo()->count(8)->create(['package' => \App\Enums\Package::Starter]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('demos', 6)
+            ->where('demos.0.package', \App\Enums\Package::Starter->value),
+        );
+});

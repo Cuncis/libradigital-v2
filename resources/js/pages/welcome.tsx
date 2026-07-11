@@ -15,6 +15,7 @@ import {
     Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { SiteFooter, SiteHeader } from '@/components/public/site-shell';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ import type { Package } from '@/types/invitation';
 
 interface Demo {
     slug: string;
+    package: string | null;
     groom_name: string | null;
     bride_name: string | null;
     cover_photo: string | null;
@@ -104,6 +106,14 @@ const STEPS: { icon: LucideIcon; title: string; body: string }[] = [
     },
 ];
 
+// Corner-ribbon colour per package tier (fallback covers any unmapped value).
+const PACKAGE_RIBBON: Record<string, string> = {
+    starter: 'bg-slate-500 text-white',
+    standard: 'bg-brand text-white',
+    premium: 'bg-gold text-gold-foreground',
+    signature: 'bg-violet-600 text-white',
+};
+
 const FAQS: { q: string; a: string }[] = [
     {
         q: 'Berapa lama undangan saya aktif?',
@@ -126,6 +136,25 @@ const FAQS: { q: string; a: string }[] = [
 export default function Welcome({ packages, demos, posts }: Props) {
     const { auth } = usePage().props;
     const ctaHref = auth.user ? dashboard.url() : register();
+
+    // Demo tabs: one per package tier that actually has demos, in catalog order.
+    const demoTabs = useMemo(
+        () =>
+            packages
+                .map((pkg) => ({
+                    value: pkg.value,
+                    label: pkg.label,
+                    demos: demos.filter((demo) => demo.package === pkg.value),
+                }))
+                .filter((tab) => tab.demos.length > 0),
+        [packages, demos],
+    );
+
+    const [activeTab, setActiveTab] = useState(demoTabs[0]?.value ?? '');
+    const activeDemos =
+        demoTabs.find((tab) => tab.value === activeTab)?.demos ??
+        demoTabs[0]?.demos ??
+        [];
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-[#eef3f6] via-white to-[#eef3f6] font-body text-neutral-800 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-100">
@@ -224,7 +253,7 @@ export default function Welcome({ packages, demos, posts }: Props) {
             </section>
 
             {/* Demo Undangan */}
-            {demos.length > 0 && (
+            {demoTabs.length > 0 && (
                 <section
                     id="demo"
                     className="mx-auto w-full max-w-6xl px-6 py-16"
@@ -233,14 +262,40 @@ export default function Welcome({ packages, demos, posts }: Props) {
                         Lihat demo undangan
                     </h2>
                     <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-                        Jelajahi contoh undangan yang sudah jadi. Klik untuk
+                        Jelajahi contoh undangan sesuai paket. Klik untuk
                         membuka undangan seperti yang akan dilihat tamu Anda.
                     </p>
-                    <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {demos.map((demo) => {
+
+                    {/* Package tabs */}
+                    <div className="mt-8 flex flex-wrap justify-center gap-2">
+                        {demoTabs.map((tab) => (
+                            <button
+                                key={tab.value}
+                                type="button"
+                                onClick={() => setActiveTab(tab.value)}
+                                className={`rounded-full border px-5 py-1.5 text-sm font-medium transition-colors ${
+                                    activeTab === tab.value
+                                        ? 'border-brand bg-brand text-white'
+                                        : 'border-brand/20 hover:bg-brand/5 dark:border-white/15 dark:hover:bg-white/5'
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
+                        {activeDemos.map((demo) => {
                             const couple = [demo.groom_name, demo.bride_name]
                                 .filter(Boolean)
                                 .join(' & ');
+                            const tierLabel =
+                                packages.find((p) => p.value === demo.package)
+                                    ?.label ?? demo.package;
+                            const ribbonColor =
+                                (demo.package &&
+                                    PACKAGE_RIBBON[demo.package]) ||
+                                'bg-brand text-white';
 
                             return (
                                 <a
@@ -248,8 +303,15 @@ export default function Welcome({ packages, demos, posts }: Props) {
                                     href={demo.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="group flex flex-col overflow-hidden rounded-2xl border border-brand/15 bg-white/70 transition-shadow hover:shadow-lg dark:border-white/10 dark:bg-neutral-900/60"
+                                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-brand/15 bg-white/70 transition-shadow hover:shadow-lg dark:border-white/10 dark:bg-neutral-900/60"
                                 >
+                                    {tierLabel && (
+                                        <span
+                                            className={`pointer-events-none absolute -right-12 top-4 z-10 w-40 rotate-45 py-1 text-center text-[11px] font-semibold tracking-wide uppercase shadow-md ${ribbonColor}`}
+                                        >
+                                            {tierLabel}
+                                        </span>
+                                    )}
                                     <div className="aspect-[3/4] overflow-hidden bg-brand/5 dark:bg-neutral-800">
                                         {demo.cover_photo && (
                                             <img
@@ -260,13 +322,13 @@ export default function Welcome({ packages, demos, posts }: Props) {
                                             />
                                         )}
                                     </div>
-                                    <div className="flex items-center justify-between gap-2 p-5">
-                                        <div>
-                                            <p className="font-heading text-xl font-semibold text-brand group-hover:text-brand/80 dark:text-white dark:group-hover:text-gold">
+                                    <div className="flex items-center justify-between gap-2 p-4 sm:p-5">
+                                        <div className="min-w-0">
+                                            <p className="truncate font-heading text-lg font-semibold text-brand group-hover:text-brand/80 sm:text-xl dark:text-white dark:group-hover:text-gold">
                                                 {couple || 'Undangan Demo'}
                                             </p>
                                             {demo.template_name && (
-                                                <p className="text-xs text-muted-foreground">
+                                                <p className="truncate text-xs text-muted-foreground">
                                                     {demo.template_name}
                                                 </p>
                                             )}

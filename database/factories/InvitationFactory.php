@@ -68,6 +68,14 @@ class InvitationFactory extends Factory
         ]);
     }
 
+    /**
+     * @param  list<string>  $addons
+     */
+    public function withAddons(array $addons): static
+    {
+        return $this->state(fn () => ['addons' => $addons]);
+    }
+
     public function expired(): static
     {
         return $this->state(fn () => [

@@ -223,6 +223,28 @@ test('a settlement webhook with a valid signature activates the invitation', fun
         ->toBe(now()->addMonths(Package::Standard->durationMonths())->toDateString());
 });
 
+test('a paid webhook copies the purchased add-ons onto the invitation', function () {
+    $user = User::factory()->create();
+    $invitation = Invitation::factory()->for($user)->pendingPayment()->create();
+    $order = Order::factory()->for($user)->for($invitation)->create([
+        'package' => Package::Standard,
+        'total_amount' => Package::Standard->price(),
+    ]);
+    $order->orderAddons()->create(['addon' => Addon::GuestBook, 'price' => Addon::GuestBook->price()]);
+
+    $payload = [
+        'order_id' => $order->order_number,
+        'status_code' => '200',
+        'gross_amount' => Package::Standard->price().'.00',
+        'transaction_status' => 'settlement',
+    ];
+    $payload['signature_key'] = midtransSignature($payload['order_id'], $payload['status_code'], $payload['gross_amount']);
+
+    $this->postJson(route('billing.webhook'), $payload)->assertOk();
+
+    expect($invitation->refresh()->hasAddon(Addon::GuestBook))->toBeTrue();
+});
+
 test('a signature webhook is rejected when the signature is invalid', function () {
     $order = Order::factory()->create();
 

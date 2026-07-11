@@ -50,6 +50,13 @@ export interface GalleryPhoto {
     sort_order: number;
 }
 
+export interface GuestBookEntry {
+    id: number;
+    name: string;
+    message: string;
+    created_at: string | null;
+}
+
 export interface PublicInvitation {
     id: number;
     slug: string;
@@ -77,4 +84,6 @@ export interface PublicInvitation {
     template: InvitationTemplate | null;
     gift_accounts: GiftAccount[];
     gallery_photos: GalleryPhoto[];
+    has_guest_book: boolean;
+    guest_book_entries?: GuestBookEntry[];
 }

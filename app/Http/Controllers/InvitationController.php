@@ -19,6 +19,7 @@ use App\Services\SlugService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -93,10 +94,19 @@ class InvitationController extends Controller
     {
         $this->authorize('update', $invitation);
 
+        $incoming = $request->file('photos');
+        $limit = $invitation->galleryLimit();
+
+        if ($invitation->galleryPhotos()->count() + count($incoming) > $limit) {
+            throw ValidationException::withMessages([
+                'photos' => "Paket Anda hanya memperbolehkan {$limit} foto galeri.",
+            ]);
+        }
+
         $disk = config('filesystems.media');
         $nextOrder = (int) $invitation->galleryPhotos()->max('sort_order');
 
-        foreach ($request->file('photos') as $photo) {
+        foreach ($incoming as $photo) {
             $path = $photo->store("invitations/{$invitation->id}/gallery", $disk);
 
             $galleryPhoto = $invitation->galleryPhotos()->create([

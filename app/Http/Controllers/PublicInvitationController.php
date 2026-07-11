@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Addon;
 use App\Http\Resources\InvitationResource;
 use App\Models\Invitation;
 use Inertia\Inertia;
@@ -24,6 +25,17 @@ class PublicInvitationController extends Controller
             ->firstOrFail();
 
         abort_unless($invitation->isPubliclyVisible(), 404);
+
+        // Only display up to the gallery allowance the invitation actually paid
+        // for (package tier + extra_gallery add-on).
+        $invitation->setRelation(
+            'galleryPhotos',
+            $invitation->galleryPhotos->take($invitation->galleryLimit()),
+        );
+
+        if ($invitation->hasAddon(Addon::GuestBook)) {
+            $invitation->load('guestBookEntries');
+        }
 
         return Inertia::render('invitation/PublicInvitationPage', [
             'invitation' => InvitationResource::make($invitation),

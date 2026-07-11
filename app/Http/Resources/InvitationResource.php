@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\Addon;
 use App\Models\Invitation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -44,6 +45,8 @@ class InvitationResource extends JsonResource
             'template' => TemplateResource::make($this->whenLoaded('template')),
             'gift_accounts' => GiftAccountResource::collection($this->whenLoaded('giftAccounts')),
             'gallery_photos' => GalleryPhotoResource::collection($this->whenLoaded('galleryPhotos')),
+            'has_guest_book' => $this->hasAddon(Addon::GuestBook),
+            'guest_book_entries' => GuestBookEntryResource::collection($this->whenLoaded('guestBookEntries')),
         ];
     }
 }

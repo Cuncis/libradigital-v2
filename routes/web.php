@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GuestBookController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\OrderController;
@@ -59,6 +60,7 @@ Route::post('billing/webhook', [OrderController::class, 'webhook'])->name('billi
 // Public invitation page (published only) — see Step 4 for OG meta + SSR.
 Route::get('undangan/{slug}', [PublicInvitationController::class, 'show'])->name('invitation.show');
 Route::post('undangan/{slug}/rsvp', [RsvpController::class, 'store'])->middleware('throttle:5,1')->name('invitation.rsvp.store');
+Route::post('undangan/{slug}/guestbook', [GuestBookController::class, 'store'])->middleware('throttle:5,1')->name('invitation.guestbook.store');
 Route::post('undangan/{slug}/visit', [VisitorController::class, 'store'])->middleware('throttle:30,1')->name('invitation.visit');
 Route::get('undangan/{slug}/visitors', [VisitorController::class, 'count'])->middleware('throttle:60,1')->name('invitation.visitors');
 

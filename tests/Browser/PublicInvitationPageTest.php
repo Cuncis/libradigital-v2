@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\Addon;
+use App\Models\GuestBookEntry;
 use App\Models\Invitation;
 use App\Models\Rsvp;
 
@@ -33,6 +35,32 @@ test('a guest name in the tamu query parameter is shown', function () {
     $page = visit(route('invitation.show', $invitation->slug).'?tamu=Rahmat');
 
     $page->assertSee('Rahmat')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a visitor can sign the guest book when the add-on is active', function () {
+    $invitation = Invitation::factory()->active()->withAddons([Addon::GuestBook->value])->create();
+    GuestBookEntry::factory()->for($invitation)->create(['name' => 'Dewi', 'message' => 'Bahagia selalu']);
+
+    $page = visit(route('invitation.show', $invitation->slug));
+
+    $page->assertSee('Buku Tamu')
+        ->assertSee('Dewi')
+        ->assertNoJavaScriptErrors()
+        ->fill('gb_name', 'Rahmat')
+        ->fill('gb_message', 'Selamat menempuh hidup baru!')
+        ->click('Kirim Ucapan')
+        ->assertSee('Rahmat');
+
+    expect(GuestBookEntry::query()->where('name', 'Rahmat')->exists())->toBeTrue();
+});
+
+test('the guest book section is hidden without the add-on', function () {
+    $invitation = Invitation::factory()->active()->create();
+
+    $page = visit(route('invitation.show', $invitation->slug));
+
+    $page->assertDontSee('Buku Tamu')
         ->assertNoJavaScriptErrors();
 });
 

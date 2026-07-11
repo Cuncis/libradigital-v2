@@ -101,6 +101,7 @@ class OrderController extends Controller
                 $order->invitation->update([
                     'status' => InvitationStatus::Active,
                     'active_until' => $order->package->activeUntil(now())?->toDateString(),
+                    'addons' => $order->orderAddons()->pluck('addon')->all(),
                 ]);
             } elseif ($status === OrderStatus::Failed) {
                 $order->invitation->update(['status' => InvitationStatus::Draft]);

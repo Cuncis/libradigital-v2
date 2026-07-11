@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Addon;
 use App\Enums\InvitationStatus;
 use App\Enums\Package;
 use App\Enums\Timezone;
@@ -18,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $slug
  * @property InvitationStatus $status
  * @property Package|null $package
+ * @property list<string>|null $addons
  * @property Carbon|null $active_until
  * @property int|null $template_id
  * @property string|null $groom_name
@@ -54,12 +56,33 @@ class Invitation extends Model
         return [
             'status' => InvitationStatus::class,
             'package' => Package::class,
+            'addons' => 'array',
             'timezone' => Timezone::class,
             'wedding_date' => 'datetime',
             'akad_datetime' => 'datetime',
             'resepsi_datetime' => 'datetime',
             'active_until' => 'date',
         ];
+    }
+
+    /**
+     * Whether this invitation has purchased the given add-on.
+     */
+    public function hasAddon(Addon $addon): bool
+    {
+        return in_array($addon->value, $this->addons ?? [], true);
+    }
+
+    /**
+     * Effective gallery photo allowance: the package limit plus any add-on
+     * bonus. A draft (no package yet) uses the highest tier so building isn't
+     * blocked before checkout.
+     */
+    public function galleryLimit(): int
+    {
+        $base = ($this->package ?? Package::Signature)->galleryLimit();
+
+        return $base + ($this->hasAddon(Addon::ExtraGallery) ? 50 : 0);
     }
 
     public function getRouteKeyName(): string
@@ -147,5 +170,13 @@ class Invitation extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * @return HasMany<GuestBookEntry, $this>
+     */
+    public function guestBookEntries(): HasMany
+    {
+        return $this->hasMany(GuestBookEntry::class)->latest();
     }
 }

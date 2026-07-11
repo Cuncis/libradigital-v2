@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { CalendarHeart, MapPin } from 'lucide-react';
 import Countdown from '@/components/invitation/Countdown';
 import GiftCard from '@/components/invitation/GiftCard';
+import GuestBook from '@/components/invitation/GuestBook';
 import RsvpForm from '@/components/invitation/RsvpForm';
 import VisitorCounter from '@/components/invitation/VisitorCounter';
 import WaShareButton from '@/components/invitation/WaShareButton';
@@ -220,6 +221,20 @@ export default function PublicInvitationPage({
                 )}
                 <RsvpForm slug={invitation.slug} defaultName={tamu} />
             </Section>
+
+            {/* 7b. Guest book (guest_book add-on) */}
+            {invitation.has_guest_book && (
+                <Section>
+                    <SectionTitle>Buku Tamu</SectionTitle>
+                    <p className="mb-6 text-muted-foreground">
+                        Tinggalkan ucapan dan doa untuk kedua mempelai.
+                    </p>
+                    <GuestBook
+                        slug={invitation.slug}
+                        initialEntries={invitation.guest_book_entries ?? []}
+                    />
+                </Section>
+            )}
 
             {/* 8. Digital Gift */}
             {invitation.gift_accounts.length > 0 && (

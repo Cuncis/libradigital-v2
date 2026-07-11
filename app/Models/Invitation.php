@@ -33,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $maps_url_akad
  * @property string|null $maps_url_resepsi
  * @property string|null $cover_photo
+ * @property string|null $cover_path
  * @property string|null $love_story
  * @property string|null $music_url
  * @property int $visitor_count

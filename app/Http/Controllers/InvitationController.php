@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateInvitationRequest;
 use App\Http\Requests\UploadPhotosRequest;
 use App\Http\Resources\InvitationResource;
 use App\Http\Resources\TemplateResource;
+use App\Jobs\OptimizeImage;
 use App\Models\GalleryPhoto;
 use App\Models\Invitation;
 use App\Models\Template;
@@ -96,10 +97,13 @@ class InvitationController extends Controller
         foreach ($request->file('photos') as $photo) {
             $path = $photo->store("invitations/{$invitation->id}/gallery", $disk);
 
-            $invitation->galleryPhotos()->create([
+            $galleryPhoto = $invitation->galleryPhotos()->create([
                 'photo_url' => Storage::disk($disk)->url($path),
+                'path' => $path,
                 'sort_order' => ++$nextOrder,
             ]);
+
+            OptimizeImage::dispatch($galleryPhoto, 'path', 'photo_url');
         }
 
         return back();
@@ -119,7 +123,12 @@ class InvitationController extends Controller
         $disk = config('filesystems.media');
         $path = $request->file('cover')->store("invitations/{$invitation->id}/cover", $disk);
 
-        $invitation->update(['cover_photo' => Storage::disk($disk)->url($path)]);
+        $invitation->update([
+            'cover_photo' => Storage::disk($disk)->url($path),
+            'cover_path' => $path,
+        ]);
+
+        OptimizeImage::dispatch($invitation, 'cover_path', 'cover_photo');
 
         return back();
     }
@@ -132,6 +141,10 @@ class InvitationController extends Controller
         $this->authorize('update', $invitation);
 
         abort_unless($photo->invitation_id === $invitation->id, 404);
+
+        if ($photo->path !== null) {
+            Storage::disk(config('filesystems.media'))->delete($photo->path);
+        }
 
         $photo->delete();
 

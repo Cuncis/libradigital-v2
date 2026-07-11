@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $invitation_id
  * @property string $photo_url
+ * @property string|null $path
  * @property int $sort_order
  * @property-read Invitation $invitation
  */

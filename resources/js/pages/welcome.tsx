@@ -1,26 +1,51 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
+    ArrowRight,
     CalendarHeart,
     Check,
+    CreditCard,
     Gift,
     Heart,
     Images,
+    LayoutTemplate,
     MapPin,
-    Moon,
+    PencilLine,
+    Send,
     Sparkles,
-    Sun,
     Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { SiteFooter, SiteHeader } from '@/components/public/site-shell';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useAppearance } from '@/hooks/use-appearance';
-import { formatRupiah } from '@/lib/format';
-import { dashboard, login, register } from '@/routes';
+import { formatIndoDate, formatRupiah } from '@/lib/format';
+import { dashboard, register } from '@/routes';
+import blog from '@/routes/blog';
 import type { Package } from '@/types/invitation';
+
+interface Demo {
+    slug: string;
+    groom_name: string | null;
+    bride_name: string | null;
+    cover_photo: string | null;
+    template_name: string | null;
+    url: string;
+}
+
+interface Post {
+    title: string;
+    slug: string;
+    category_label: string;
+    cover_url: string | null;
+    excerpt: string | null;
+    published_at: string | null;
+    url: string;
+}
 
 interface Props {
     packages: Package[];
+    demos: Demo[];
+    posts: Post[];
 }
 
 const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
@@ -56,67 +81,67 @@ const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
     },
 ];
 
-function ThemeToggle() {
-    const { resolvedAppearance, updateAppearance } = useAppearance();
-    const isDark = resolvedAppearance === 'dark';
+const STEPS: { icon: LucideIcon; title: string; body: string }[] = [
+    {
+        icon: LayoutTemplate,
+        title: 'Pilih template',
+        body: 'Tentukan tema yang paling sesuai dengan konsep pernikahan Anda.',
+    },
+    {
+        icon: PencilLine,
+        title: 'Isi data mempelai',
+        body: 'Lengkapi nama, tanggal, lokasi, galeri, dan love story lewat stepper.',
+    },
+    {
+        icon: CreditCard,
+        title: 'Bayar sekali',
+        body: 'Selesaikan pembayaran aman via Midtrans, tanpa biaya langganan.',
+    },
+    {
+        icon: Send,
+        title: 'Bagikan tautan',
+        body: 'Undangan aktif di tautan pribadi dan siap disebar ke seluruh tamu.',
+    },
+];
 
-    return (
-        <Button
-            variant="ghost"
-            size="icon"
-            className="cursor-pointer"
-            onClick={() => updateAppearance(isDark ? 'light' : 'dark')}
-        >
-            <span className="sr-only">Ganti tema</span>
-            {isDark ? (
-                <Sun className="size-5" />
-            ) : (
-                <Moon className="size-5" />
-            )}
-        </Button>
-    );
-}
+const FAQS: { q: string; a: string }[] = [
+    {
+        q: 'Berapa lama undangan saya aktif?',
+        a: 'Tergantung paket yang dipilih: mulai dari 3 bulan hingga aktif selamanya pada paket Signature.',
+    },
+    {
+        q: 'Apakah saya bisa mengubah data setelah undangan terbit?',
+        a: 'Bisa. Anda dapat mengedit data mempelai, galeri, dan detail acara kapan saja lewat dashboard.',
+    },
+    {
+        q: 'Bagaimana tamu melakukan RSVP?',
+        a: 'Tamu cukup membuka tautan undangan lalu mengisi form konfirmasi kehadiran dan ucapan langsung di halaman.',
+    },
+    {
+        q: 'Apakah ada biaya langganan bulanan?',
+        a: 'Tidak. Anda hanya membayar sekali per undangan sesuai paket yang dipilih.',
+    },
+];
 
-export default function Welcome({ packages }: Props) {
+export default function Welcome({ packages, demos, posts }: Props) {
     const { auth } = usePage().props;
+    const ctaHref = auth.user ? dashboard.url() : register();
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-rose-50 via-white to-rose-50 text-neutral-800 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-100">
+        <div className="min-h-screen bg-gradient-to-b from-[#eef3f6] via-white to-[#eef3f6] font-body text-neutral-800 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-100">
             <Head title="LibraDigital — Undangan Digital Pernikahan" />
 
-            {/* Nav */}
-            <header className="sticky top-0 z-20 border-b border-rose-200/50 bg-white/70 backdrop-blur dark:border-rose-900/30 dark:bg-neutral-950/60">
-                <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-                    <Link href="/" className="flex items-center gap-2 font-serif text-xl font-semibold">
-                        <Heart className="size-5 text-rose-500" />
-                        LibraDigital
-                    </Link>
-                    <div className="flex items-center gap-2">
-                        <ThemeToggle />
-                        {auth.user ? (
-                            <Button asChild>
-                                <Link href={dashboard.url()}>Dashboard</Link>
-                            </Button>
-                        ) : (
-                            <>
-                                <Button asChild variant="ghost">
-                                    <Link href={login()}>Masuk</Link>
-                                </Button>
-                                <Button asChild>
-                                    <Link href={register()}>Daftar</Link>
-                                </Button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </header>
+            <SiteHeader />
 
             {/* Hero */}
             <section className="mx-auto w-full max-w-4xl px-6 py-24 text-center">
-                <Badge variant="secondary" className="mb-6">
+                <Badge
+                    variant="outline"
+                    className="mb-6 border-gold/40 bg-gold/10 text-brand dark:text-gold"
+                >
                     Undangan digital untuk pasangan Indonesia
                 </Badge>
-                <h1 className="font-serif text-4xl font-semibold text-rose-900 sm:text-6xl dark:text-rose-100">
+                <h1 className="font-heading text-5xl font-semibold text-brand sm:text-7xl dark:text-white">
                     Buat undangan pernikahan digital dalam 10 menit
                 </h1>
                 <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
@@ -125,29 +150,68 @@ export default function Welcome({ packages }: Props) {
                     di tautan pribadi Anda.
                 </p>
                 <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                    <Button asChild size="lg">
-                        <Link href={auth.user ? dashboard.url() : register()}>
+                    <Button
+                        asChild
+                        size="lg"
+                        className="bg-brand text-brand-foreground hover:bg-brand/90"
+                    >
+                        <Link href={ctaHref}>
                             <Heart className="size-4" /> Buat Undangan
                         </Link>
                     </Button>
-                    <Button asChild size="lg" variant="outline">
-                        <a href="#harga">Lihat Paket</a>
+                    <Button
+                        asChild
+                        size="lg"
+                        variant="outline"
+                        className="border-brand/30 text-brand hover:bg-brand/5 dark:border-white/20 dark:text-white dark:hover:bg-white/5"
+                    >
+                        <a href="#demo">Lihat Demo</a>
                     </Button>
+                </div>
+            </section>
+
+            {/* How it works */}
+            <section id="cara" className="mx-auto w-full max-w-6xl px-6 py-16">
+                <h2 className="text-center font-heading text-4xl font-semibold text-brand dark:text-white">
+                    Cara kerjanya
+                </h2>
+                <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
+                    Empat langkah sederhana dari nol hingga undangan siap
+                    dibagikan.
+                </p>
+                <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    {STEPS.map((step, index) => (
+                        <div
+                            key={step.title}
+                            className="relative rounded-2xl border border-brand/15 bg-white/70 p-6 dark:border-white/10 dark:bg-neutral-900/60"
+                        >
+                            <span className="absolute -top-3 right-4 font-heading text-5xl font-bold text-gold/40 dark:text-gold/25">
+                                {index + 1}
+                            </span>
+                            <step.icon className="size-8 text-gold" />
+                            <h3 className="mt-4 text-lg font-medium">
+                                {step.title}
+                            </h3>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                {step.body}
+                            </p>
+                        </div>
+                    ))}
                 </div>
             </section>
 
             {/* Features */}
             <section className="mx-auto w-full max-w-6xl px-6 py-16">
-                <h2 className="text-center font-serif text-3xl font-semibold text-rose-900 dark:text-rose-100">
+                <h2 className="text-center font-heading text-4xl font-semibold text-brand dark:text-white">
                     Semua yang Anda butuhkan
                 </h2>
                 <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {FEATURES.map((feature) => (
                         <div
                             key={feature.title}
-                            className="rounded-2xl border border-rose-200/60 bg-white/70 p-6 dark:border-rose-900/40 dark:bg-neutral-900/60"
+                            className="rounded-2xl border border-brand/15 bg-white/70 p-6 dark:border-white/10 dark:bg-neutral-900/60"
                         >
-                            <feature.icon className="size-8 text-rose-500" />
+                            <feature.icon className="size-8 text-gold" />
                             <h3 className="mt-4 text-lg font-medium">
                                 {feature.title}
                             </h3>
@@ -159,9 +223,66 @@ export default function Welcome({ packages }: Props) {
                 </div>
             </section>
 
+            {/* Demo Undangan */}
+            {demos.length > 0 && (
+                <section
+                    id="demo"
+                    className="mx-auto w-full max-w-6xl px-6 py-16"
+                >
+                    <h2 className="text-center font-heading text-4xl font-semibold text-brand dark:text-white">
+                        Lihat demo undangan
+                    </h2>
+                    <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
+                        Jelajahi contoh undangan yang sudah jadi. Klik untuk
+                        membuka undangan seperti yang akan dilihat tamu Anda.
+                    </p>
+                    <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {demos.map((demo) => {
+                            const couple = [demo.groom_name, demo.bride_name]
+                                .filter(Boolean)
+                                .join(' & ');
+
+                            return (
+                                <a
+                                    key={demo.slug}
+                                    href={demo.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="group flex flex-col overflow-hidden rounded-2xl border border-brand/15 bg-white/70 transition-shadow hover:shadow-lg dark:border-white/10 dark:bg-neutral-900/60"
+                                >
+                                    <div className="aspect-[3/4] overflow-hidden bg-brand/5 dark:bg-neutral-800">
+                                        {demo.cover_photo && (
+                                            <img
+                                                src={demo.cover_photo}
+                                                alt={couple}
+                                                loading="lazy"
+                                                className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2 p-5">
+                                        <div>
+                                            <p className="font-heading text-xl font-semibold text-brand group-hover:text-brand/80 dark:text-white dark:group-hover:text-gold">
+                                                {couple || 'Undangan Demo'}
+                                            </p>
+                                            {demo.template_name && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {demo.template_name}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <ArrowRight className="size-5 shrink-0 text-gold transition-transform group-hover:translate-x-1" />
+                                    </div>
+                                </a>
+                            );
+                        })}
+                    </div>
+                </section>
+            )}
+
             {/* Pricing */}
             <section id="harga" className="mx-auto w-full max-w-6xl px-6 py-16">
-                <h2 className="text-center font-serif text-3xl font-semibold text-rose-900 dark:text-rose-100">
+                <h2 className="text-center font-heading text-4xl font-semibold text-brand dark:text-white">
                     Pilih paket Anda
                 </h2>
                 <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
@@ -177,16 +298,16 @@ export default function Welcome({ packages }: Props) {
                                 key={pkg.value}
                                 className={`relative flex flex-col rounded-2xl border p-6 ${
                                     popular
-                                        ? 'border-rose-400 bg-white shadow-lg ring-2 ring-rose-300 dark:bg-neutral-900'
-                                        : 'border-rose-200/60 bg-white/70 dark:border-rose-900/40 dark:bg-neutral-900/60'
+                                        ? 'border-gold bg-white shadow-lg ring-2 ring-gold dark:bg-neutral-900'
+                                        : 'border-brand/15 bg-white/70 dark:border-white/10 dark:bg-neutral-900/60'
                                 }`}
                             >
                                 {popular && (
-                                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-gold-foreground hover:bg-gold/90">
                                         Paling Populer
                                     </Badge>
                                 )}
-                                <h3 className="font-serif text-xl font-semibold">
+                                <h3 className="font-heading text-2xl font-semibold text-brand dark:text-white">
                                     {pkg.label}
                                 </h3>
                                 <p className="mt-3 text-3xl font-bold">
@@ -203,19 +324,21 @@ export default function Welcome({ packages }: Props) {
                                             key={feature}
                                             className="flex items-start gap-2"
                                         >
-                                            <Check className="mt-0.5 size-4 shrink-0 text-rose-500" />
+                                            <Check className="mt-0.5 size-4 shrink-0 text-gold" />
                                             {feature}
                                         </li>
                                     ))}
                                 </ul>
                                 <Button
                                     asChild
-                                    className="mt-8"
+                                    className={`mt-8 ${
+                                        popular
+                                            ? 'bg-brand text-brand-foreground hover:bg-brand/90'
+                                            : 'border-brand/30 bg-transparent text-brand hover:bg-brand/5 dark:border-white/20 dark:text-white dark:hover:bg-white/5'
+                                    }`}
                                     variant={popular ? 'default' : 'outline'}
                                 >
-                                    <Link
-                                        href={auth.user ? dashboard.url() : register()}
-                                    >
+                                    <Link href={ctaHref}>
                                         Pilih {pkg.label}
                                     </Link>
                                 </Button>
@@ -225,16 +348,124 @@ export default function Welcome({ packages }: Props) {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="border-t border-rose-200/50 py-10 text-center dark:border-rose-900/30">
-                <p className="font-serif text-lg">
-                    <Heart className="mr-1 inline size-4 text-rose-500" />
-                    LibraDigital
-                </p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                    Dibuat dengan 🤍 untuk pasangan Indonesia
-                </p>
-            </footer>
+            {/* Blog */}
+            {posts.length > 0 && (
+                <section className="mx-auto w-full max-w-6xl px-6 py-16">
+                    <div className="flex items-end justify-between gap-4">
+                        <div>
+                            <h2 className="font-heading text-4xl font-semibold text-brand dark:text-white">
+                                Dari blog kami
+                            </h2>
+                            <p className="mt-3 max-w-xl text-muted-foreground">
+                                Tips, inspirasi, dan panduan seputar undangan
+                                pernikahan digital.
+                            </p>
+                        </div>
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="hidden border-brand/30 text-brand hover:bg-brand/5 sm:inline-flex dark:border-white/20 dark:text-white dark:hover:bg-white/5"
+                        >
+                            <Link href={blog.index().url}>
+                                Semua artikel <ArrowRight className="size-4" />
+                            </Link>
+                        </Button>
+                    </div>
+                    <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                        {posts.map((post) => (
+                            <Link
+                                key={post.slug}
+                                href={post.url}
+                                className="group flex flex-col overflow-hidden rounded-2xl border border-brand/15 bg-white/70 transition-shadow hover:shadow-lg dark:border-white/10 dark:bg-neutral-900/60"
+                            >
+                                <div className="aspect-[16/9] overflow-hidden bg-brand/5 dark:bg-neutral-800">
+                                    {post.cover_url && (
+                                        <img
+                                            src={post.cover_url}
+                                            alt={post.title}
+                                            loading="lazy"
+                                            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                        />
+                                    )}
+                                </div>
+                                <div className="flex flex-1 flex-col p-5">
+                                    <Badge variant="secondary" className="w-fit">
+                                        {post.category_label}
+                                    </Badge>
+                                    <h3 className="mt-3 font-heading text-xl font-semibold leading-snug text-brand group-hover:text-brand/80 dark:text-white dark:group-hover:text-gold">
+                                        {post.title}
+                                    </h3>
+                                    {post.excerpt && (
+                                        <p className="mt-2 line-clamp-2 flex-1 text-sm text-muted-foreground">
+                                            {post.excerpt}
+                                        </p>
+                                    )}
+                                    {post.published_at && (
+                                        <p className="mt-4 text-xs text-muted-foreground">
+                                            {formatIndoDate(post.published_at)}
+                                        </p>
+                                    )}
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                    <div className="mt-8 text-center sm:hidden">
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="border-brand/30 text-brand hover:bg-brand/5 dark:border-white/20 dark:text-white dark:hover:bg-white/5"
+                        >
+                            <Link href={blog.index().url}>
+                                Semua artikel <ArrowRight className="size-4" />
+                            </Link>
+                        </Button>
+                    </div>
+                </section>
+            )}
+
+            {/* FAQ */}
+            <section className="mx-auto w-full max-w-3xl px-6 py-16">
+                <h2 className="text-center font-heading text-4xl font-semibold text-brand dark:text-white">
+                    Pertanyaan umum
+                </h2>
+                <div className="mt-10 divide-y divide-brand/15 dark:divide-white/10">
+                    {FAQS.map((faq) => (
+                        <details key={faq.q} className="group py-4">
+                            <summary className="flex cursor-pointer items-center justify-between gap-4 font-medium">
+                                {faq.q}
+                                <ArrowRight className="size-4 shrink-0 text-gold transition-transform group-open:rotate-90" />
+                            </summary>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                {faq.a}
+                            </p>
+                        </details>
+                    ))}
+                </div>
+            </section>
+
+            {/* Final CTA */}
+            <section className="mx-auto w-full max-w-4xl px-6 pb-24">
+                <div className="rounded-3xl bg-gradient-to-br from-brand to-[#12354c] px-8 py-14 text-center text-white shadow-xl">
+                    <h2 className="font-heading text-4xl font-semibold sm:text-5xl">
+                        Siap membuat undangan impian Anda?
+                    </h2>
+                    <p className="mx-auto mt-4 max-w-xl text-white/80">
+                        Mulai sekarang, gratis untuk mencoba. Bayar hanya saat
+                        undangan siap Anda terbitkan.
+                    </p>
+                    <Button
+                        asChild
+                        size="lg"
+                        className="mt-8 bg-gold text-gold-foreground hover:bg-gold/90"
+                    >
+                        <Link href={ctaHref}>
+                            <Heart className="size-4" /> Buat Undangan Sekarang
+                        </Link>
+                    </Button>
+                </div>
+            </section>
+
+            <SiteFooter />
         </div>
     );
 }

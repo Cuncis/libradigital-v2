@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property string $slug
  * @property InvitationStatus $status
+ * @property bool $is_demo
  * @property Package|null $package
  * @property list<string>|null $addons
  * @property Carbon|null $active_until
@@ -55,6 +56,7 @@ class Invitation extends Model
     {
         return [
             'status' => InvitationStatus::class,
+            'is_demo' => 'boolean',
             'package' => Package::class,
             'addons' => 'array',
             'timezone' => Timezone::class,

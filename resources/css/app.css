@@ -13,6 +13,16 @@
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
+    /* Public marketing typography. */
+    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-heading: 'Cormorant Garamond', ui-serif, Georgia, 'Times New Roman', serif;
+
+    /* Brand palette (landing + public marketing pages). */
+    --color-brand: #1b4965;
+    --color-brand-foreground: #ffffff;
+    --color-gold: #ffbb05;
+    --color-gold-foreground: #1b4965;
+
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);

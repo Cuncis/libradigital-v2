@@ -5,6 +5,7 @@ import {
     FileText,
     FolderGit2,
     LayoutGrid,
+    Newspaper,
     Shield,
     Users,
 } from 'lucide-react';
@@ -57,6 +58,11 @@ export function AppSidebar() {
             title: 'Pesanan',
             href: admin.orders.index().url,
             icon: CreditCard,
+        },
+        {
+            title: 'Blog',
+            href: admin.blog.index().url,
+            icon: Newspaper,
         },
     ];
 

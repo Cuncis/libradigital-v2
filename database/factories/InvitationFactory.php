@@ -55,6 +55,20 @@ class InvitationFactory extends Factory
         ]);
     }
 
+    /**
+     * A public demo invitation showcased on the landing page: active,
+     * top-tier package (so every feature renders), and flagged is_demo.
+     */
+    public function demo(): static
+    {
+        return $this->state(fn () => [
+            'status' => InvitationStatus::Active,
+            'is_demo' => true,
+            'package' => Package::Signature,
+            'active_until' => null,
+        ]);
+    }
+
     public function draft(): static
     {
         return $this->state(fn () => ['status' => InvitationStatus::Draft]);

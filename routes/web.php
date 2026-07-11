@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\InvitationController as AdminInvitationController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuestBookController;
 use App\Http\Controllers\HomeController;
@@ -52,6 +54,14 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::patch('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
+
+    // Blog authoring is restricted to superadmins (this whole group is is_admin).
+    Route::get('blog', [AdminBlogController::class, 'index'])->name('blog.index');
+    Route::get('blog/create', [AdminBlogController::class, 'create'])->name('blog.create');
+    Route::post('blog', [AdminBlogController::class, 'store'])->name('blog.store');
+    Route::get('blog/{post}/edit', [AdminBlogController::class, 'edit'])->name('blog.edit');
+    Route::post('blog/{post}', [AdminBlogController::class, 'update'])->name('blog.update');
+    Route::delete('blog/{post}', [AdminBlogController::class, 'destroy'])->name('blog.destroy');
 });
 
 // Midtrans server-to-server transaction notification (signature-verified, no session/CSRF).
@@ -63,6 +73,10 @@ Route::post('undangan/{slug}/rsvp', [RsvpController::class, 'store'])->middlewar
 Route::post('undangan/{slug}/guestbook', [GuestBookController::class, 'store'])->middleware('throttle:5,1')->name('invitation.guestbook.store');
 Route::post('undangan/{slug}/visit', [VisitorController::class, 'store'])->middleware('throttle:30,1')->name('invitation.visit');
 Route::get('undangan/{slug}/visitors', [VisitorController::class, 'count'])->middleware('throttle:60,1')->name('invitation.visitors');
+
+// Public blog.
+Route::get('blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('blog/{post}', [BlogController::class, 'show'])->name('blog.show');
 
 // Templates listing (used by the builder's template selector).
 Route::get('templates', [TemplateController::class, 'index'])->name('templates.index');

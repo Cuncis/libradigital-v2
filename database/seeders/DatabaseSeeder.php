@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             TemplateSeeder::class,
+            DemoInvitationSeeder::class,
+            BlogPostSeeder::class,
         ]);
 
         User::factory()->create([

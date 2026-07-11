@@ -116,6 +116,22 @@ test('the rsvp mail renders with the guest name and dashboard link', function ()
     expect(implode(' ', $mail->introLines))->toContain('Ahmad');
 });
 
+test('the queued notifications retry with escalating backoff', function () {
+    $invitation = Invitation::factory()->create();
+    $rsvp = $invitation->rsvps()->create([
+        'guest_name' => 'Ahmad',
+        'attendance' => 'hadir',
+    ]);
+
+    $activated = new InvitationActivated($invitation);
+    $received = new RsvpReceived($rsvp);
+
+    expect($activated->tries)->toBe(3);
+    expect($activated->backoff())->toBe([60, 300, 900]);
+    expect($received->tries)->toBe(3);
+    expect($received->backoff())->toBe([60, 300, 900]);
+});
+
 test('the owner is notified when a guest submits an rsvp', function () {
     Notification::fake();
 

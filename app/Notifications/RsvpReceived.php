@@ -13,7 +13,22 @@ class RsvpReceived extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * Retry to ride out transient mail-transport failures.
+     */
+    public int $tries = 3;
+
     public function __construct(public Rsvp $rsvp) {}
+
+    /**
+     * Escalating backoff between attempts (seconds).
+     *
+     * @return list<int>
+     */
+    public function backoff(): array
+    {
+        return [60, 300, 900];
+    }
 
     /**
      * @return array<int, string>

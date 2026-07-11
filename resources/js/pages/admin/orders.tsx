@@ -1,8 +1,10 @@
 import { Head, router } from '@inertiajs/react';
-import { Search } from 'lucide-react';
+import { RotateCcw, Search } from 'lucide-react';
 import { useState } from 'react';
+import { ConfirmDialog } from '@/components/admin/confirm-dialog';
 import { Pagination } from '@/components/admin/pagination';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
@@ -56,6 +58,14 @@ const ALL = 'all';
 
 export default function AdminOrders({ orders, filters }: Props) {
     const [search, setSearch] = useState(filters.search);
+
+    const refund = (order: AdminOrder, close: () => void) => {
+        router.patch(
+            admin.orders.refund(order.id).url,
+            {},
+            { preserveScroll: true, onFinish: close },
+        );
+    };
 
     const navigate = (next: { search?: string; status?: string }) => {
         router.get(
@@ -121,13 +131,16 @@ export default function AdminOrders({ orders, filters }: Props) {
                                     </TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Dibayar</TableHead>
+                                    <TableHead className="text-right">
+                                        Aksi
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {orders.data.length === 0 ? (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={6}
+                                            colSpan={7}
                                             className="py-8 text-center text-muted-foreground"
                                         >
                                             Tidak ada pesanan ditemukan.
@@ -171,6 +184,31 @@ export default function AdminOrders({ orders, filters }: Props) {
                                                               order.paid_at,
                                                           )
                                                         : '—'}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {order.status === 'paid' && (
+                                                        <ConfirmDialog
+                                                            trigger={
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                >
+                                                                    <RotateCcw className="size-4" />
+                                                                    Refund
+                                                                </Button>
+                                                            }
+                                                            title="Tandai sebagai refund?"
+                                                            description={`Pesanan ${order.order_number} akan ditandai refund. Akses undangan tidak otomatis dicabut — kadaluarsakan undangan dari halaman Undangan bila perlu.`}
+                                                            confirmLabel="Tandai Refund"
+                                                            destructive
+                                                            onConfirm={(close) =>
+                                                                refund(
+                                                                    order,
+                                                                    close,
+                                                                )
+                                                            }
+                                                        />
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         );

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -48,5 +49,27 @@ class OrderController extends Controller
                 'status' => $status?->value,
             ],
         ]);
+    }
+
+    /**
+     * Mark a paid order as refunded. Invitation access is left untouched — expire
+     * it separately from the invitations screen if the refund should revoke it.
+     */
+    public function refund(Order $order): RedirectResponse
+    {
+        abort_unless(
+            $order->status === OrderStatus::Paid,
+            403,
+            'Hanya pesanan lunas yang dapat direfund.',
+        );
+
+        $order->update(['status' => OrderStatus::Refunded]);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => "Pesanan {$order->order_number} ditandai sebagai refund.",
+        ]);
+
+        return back();
     }
 }

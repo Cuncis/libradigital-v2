@@ -42,9 +42,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Superadmin panel (is_admin only).
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', AdminDashboardController::class)->name('dashboard');
+
     Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::patch('users/{user}/admin', [AdminUserController::class, 'toggleAdmin'])->name('users.admin.toggle');
+
     Route::get('invitations', [AdminInvitationController::class, 'index'])->name('invitations.index');
+    Route::patch('invitations/{invitation:id}', [AdminInvitationController::class, 'update'])->name('invitations.update');
+
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::patch('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
 });
 
 // Midtrans server-to-server transaction notification (signature-verified, no session/CSRF).

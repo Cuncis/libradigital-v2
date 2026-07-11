@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -40,5 +41,28 @@ class UserController extends Controller
             'users' => $users,
             'filters' => ['search' => $search],
         ]);
+    }
+
+    /**
+     * Grant or revoke superadmin access for a user.
+     */
+    public function toggleAdmin(Request $request, User $user): RedirectResponse
+    {
+        abort_if(
+            $user->is($request->user()),
+            403,
+            'Anda tidak dapat mengubah peran akun sendiri.',
+        );
+
+        $user->forceFill(['is_admin' => ! $user->is_admin])->save();
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $user->is_admin
+                ? "{$user->name} kini menjadi admin."
+                : "Akses admin {$user->name} dicabut.",
+        ]);
+
+        return back();
     }
 }

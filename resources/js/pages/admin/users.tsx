@@ -1,8 +1,10 @@
-import { Head, router } from '@inertiajs/react';
-import { Search } from 'lucide-react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Search, ShieldCheck, ShieldMinus } from 'lucide-react';
 import { useState } from 'react';
+import { ConfirmDialog } from '@/components/admin/confirm-dialog';
 import { Pagination } from '@/components/admin/pagination';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
@@ -34,7 +36,16 @@ interface Props {
 }
 
 export default function AdminUsers({ users, filters }: Props) {
+    const currentUserId = usePage().props.auth.user.id;
     const [search, setSearch] = useState(filters.search);
+
+    const toggleAdmin = (user: AdminUser, close: () => void) => {
+        router.patch(
+            admin.users.admin.toggle(user.id).url,
+            {},
+            { preserveScroll: true, onFinish: close },
+        );
+    };
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -76,13 +87,16 @@ export default function AdminUsers({ users, filters }: Props) {
                                     </TableHead>
                                     <TableHead>Bergabung</TableHead>
                                     <TableHead>Peran</TableHead>
+                                    <TableHead className="text-right">
+                                        Aksi
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {users.data.length === 0 ? (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={6}
+                                            colSpan={7}
                                             className="py-8 text-center text-muted-foreground"
                                         >
                                             Tidak ada pengguna ditemukan.
@@ -124,6 +138,59 @@ export default function AdminUsers({ users, filters }: Props) {
                                                     <Badge variant="secondary">
                                                         Pengguna
                                                     </Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {user.id === currentUserId ? (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        Anda
+                                                    </span>
+                                                ) : (
+                                                    <ConfirmDialog
+                                                        trigger={
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                            >
+                                                                {user.is_admin ? (
+                                                                    <>
+                                                                        <ShieldMinus className="size-4" />
+                                                                        Cabut
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <ShieldCheck className="size-4" />
+                                                                        Jadikan
+                                                                        Admin
+                                                                    </>
+                                                                )}
+                                                            </Button>
+                                                        }
+                                                        title={
+                                                            user.is_admin
+                                                                ? 'Cabut akses admin?'
+                                                                : 'Jadikan admin?'
+                                                        }
+                                                        description={
+                                                            user.is_admin
+                                                                ? `${user.name} tidak akan lagi memiliki akses ke panel admin.`
+                                                                : `${user.name} akan mendapat akses penuh ke panel admin.`
+                                                        }
+                                                        confirmLabel={
+                                                            user.is_admin
+                                                                ? 'Cabut'
+                                                                : 'Jadikan Admin'
+                                                        }
+                                                        destructive={
+                                                            user.is_admin
+                                                        }
+                                                        onConfirm={(close) =>
+                                                            toggleAdmin(
+                                                                user,
+                                                                close,
+                                                            )
+                                                        }
+                                                    />
                                                 )}
                                             </TableCell>
                                         </TableRow>

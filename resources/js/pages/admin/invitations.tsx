@@ -1,10 +1,22 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { ExternalLink, Search } from 'lucide-react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { ExternalLink, Search, SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { Pagination } from '@/components/admin/pagination';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -12,6 +24,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import {
     Table,
     TableBody,
@@ -127,14 +140,16 @@ export default function AdminInvitations({ invitations, filters }: Props) {
                                     <TableHead className="text-center">
                                         RSVP
                                     </TableHead>
-                                    <TableHead />
+                                    <TableHead className="text-right">
+                                        Aksi
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {invitations.data.length === 0 ? (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={8}
+                                            colSpan={9}
                                             className="py-8 text-center text-muted-foreground"
                                         >
                                             Tidak ada undangan ditemukan.
@@ -179,16 +194,28 @@ export default function AdminInvitations({ invitations, filters }: Props) {
                                                     {invitation.rsvps_count}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {invitation.status ===
-                                                        'active' && (
-                                                        <Link
-                                                            href={`/undangan/${invitation.slug}`}
-                                                            className="text-muted-foreground hover:text-foreground"
-                                                            aria-label="Buka undangan"
-                                                        >
-                                                            <ExternalLink className="size-4" />
-                                                        </Link>
-                                                    )}
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        {invitation.status ===
+                                                            'active' && (
+                                                            <Button
+                                                                asChild
+                                                                variant="ghost"
+                                                                size="icon"
+                                                            >
+                                                                <Link
+                                                                    href={`/undangan/${invitation.slug}`}
+                                                                    aria-label="Buka undangan"
+                                                                >
+                                                                    <ExternalLink className="size-4" />
+                                                                </Link>
+                                                            </Button>
+                                                        )}
+                                                        <ManageInvitationDialog
+                                                            invitation={
+                                                                invitation
+                                                            }
+                                                        />
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         );
@@ -207,6 +234,109 @@ export default function AdminInvitations({ invitations, filters }: Props) {
                 />
             </div>
         </>
+    );
+}
+
+function ManageInvitationDialog({
+    invitation,
+}: {
+    invitation: AdminInvitation;
+}) {
+    const [open, setOpen] = useState(false);
+    const form = useForm({
+        status: invitation.status,
+        active_until: invitation.active_until ?? '',
+    });
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        form.transform((data) => ({
+            ...data,
+            active_until: data.active_until === '' ? null : data.active_until,
+        }));
+        form.patch(admin.invitations.update(invitation.id).url, {
+            preserveScroll: true,
+            onSuccess: () => setOpen(false),
+        });
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                    <SlidersHorizontal className="size-4" />
+                    Kelola
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Kelola undangan</DialogTitle>
+                    <DialogDescription>
+                        {invitation.couple || invitation.slug}
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={submit} className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="status">Status</Label>
+                        <Select
+                            value={form.data.status}
+                            onValueChange={(value) =>
+                                form.setData(
+                                    'status',
+                                    value as InvitationStatus,
+                                )
+                            }
+                        >
+                            <SelectTrigger id="status">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="draft">Draft</SelectItem>
+                                <SelectItem value="pending_payment">
+                                    Menunggu Pembayaran
+                                </SelectItem>
+                                <SelectItem value="active">Aktif</SelectItem>
+                                <SelectItem value="expired">
+                                    Kadaluarsa
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="active_until">
+                            Aktif sampai (opsional)
+                        </Label>
+                        <Input
+                            id="active_until"
+                            type="date"
+                            value={form.data.active_until}
+                            onChange={(e) =>
+                                form.setData('active_until', e.target.value)
+                            }
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Kosongkan untuk masa aktif selamanya.
+                        </p>
+                        {form.errors.active_until && (
+                            <p className="text-sm text-destructive">
+                                {form.errors.active_until}
+                            </p>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline">
+                                Batal
+                            </Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing && <Spinner />}
+                            Simpan
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
 

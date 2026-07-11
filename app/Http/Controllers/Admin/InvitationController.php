@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\InvitationStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Invitation;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,5 +52,28 @@ class InvitationController extends Controller
                 'status' => $status?->value,
             ],
         ]);
+    }
+
+    /**
+     * Override an invitation's status and expiry (comp, extend, or force-expire).
+     */
+    public function update(Request $request, Invitation $invitation): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', Rule::enum(InvitationStatus::class)],
+            'active_until' => ['nullable', 'date'],
+        ]);
+
+        $invitation->update([
+            'status' => $validated['status'],
+            'active_until' => $validated['active_until'] ?? null,
+        ]);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Undangan diperbarui.',
+        ]);
+
+        return back();
     }
 }

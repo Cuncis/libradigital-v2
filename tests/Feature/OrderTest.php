@@ -5,6 +5,7 @@ use App\Enums\OrderStatus;
 use App\Enums\Package;
 use App\Models\Invitation;
 use App\Models\Order;
+use App\Models\Template;
 use App\Models\User;
 use App\Services\MidtransService;
 
@@ -65,6 +66,43 @@ test('the package is required and must be valid', function () {
     $this->actingAs($user)->postJson(route('invitations.orders.store', $invitation), [
         'package' => 'platinum',
     ])->assertStatus(422)->assertJsonValidationErrors('package');
+});
+
+test('an order is rejected when the package tier is below the template requirement', function () {
+    $user = User::factory()->create();
+    $template = Template::factory()->requires(Package::Premium)->create();
+    $invitation = Invitation::factory()->for($user)->draft()->create([
+        'template_id' => $template->id,
+    ]);
+
+    $this->mock(MidtransService::class, function ($mock) {
+        $mock->shouldNotReceive('createSnapToken');
+    });
+
+    $this->actingAs($user)->postJson(route('invitations.orders.store', $invitation), [
+        'package' => 'standard',
+    ])->assertStatus(422)->assertJsonValidationErrors('package');
+
+    expect(Order::query()->where('invitation_id', $invitation->id)->count())->toBe(0);
+});
+
+test('an order succeeds when the package tier meets the template requirement', function () {
+    $user = User::factory()->create();
+    $template = Template::factory()->requires(Package::Premium)->create();
+    $invitation = Invitation::factory()->for($user)->draft()->create([
+        'template_id' => $template->id,
+    ]);
+
+    $this->mock(MidtransService::class, function ($mock) {
+        $mock->shouldReceive('createSnapToken')->once()->andReturn('fake-snap-token');
+    });
+
+    $this->actingAs($user)->postJson(route('invitations.orders.store', $invitation), [
+        'package' => 'signature',
+    ])->assertCreated();
+
+    expect(Order::query()->where('invitation_id', $invitation->id)->sole()->package)
+        ->toBe(Package::Signature);
 });
 
 test('creating an order for an already active invitation is a no-op', function () {

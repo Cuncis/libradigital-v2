@@ -25,6 +25,7 @@ export interface InvitationTemplate {
     category: 'javanese' | 'sundanese' | 'batak' | 'modern';
     thumbnail: string | null;
     is_premium: boolean;
+    min_package: PackageTier;
 }
 
 export interface GiftAccount {

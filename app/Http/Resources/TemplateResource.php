@@ -23,6 +23,7 @@ class TemplateResource extends JsonResource
             'category' => $this->category->value,
             'thumbnail' => $this->thumbnail,
             'is_premium' => $this->is_premium,
+            'min_package' => $this->min_package->value,
         ];
     }
 }

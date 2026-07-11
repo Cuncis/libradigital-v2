@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { Check, Loader2, Trash2, Upload } from 'lucide-react';
+import { Check, Loader2, Lock, Trash2, Upload } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import InvitationController from '@/actions/App/Http/Controllers/InvitationController';
 import OrderController from '@/actions/App/Http/Controllers/OrderController';
@@ -15,6 +15,7 @@ import type {
     GiftType,
     InvitationTemplate,
     Package,
+    PackageTier,
     PublicInvitation,
 } from '@/types/invitation';
 
@@ -39,6 +40,20 @@ const STEPS = [
 ];
 
 const toLocalInput = (iso: string | null) => (iso ? iso.slice(0, 16) : '');
+
+const PACKAGE_RANK: Record<PackageTier, number> = {
+    starter: 1,
+    standard: 2,
+    premium: 3,
+    signature: 4,
+};
+
+const PACKAGE_LABEL: Record<PackageTier, string> = {
+    starter: 'Starter',
+    standard: 'Standard',
+    premium: 'Premium',
+    signature: 'Signature',
+};
 
 export default function Builder({
     invitation,
@@ -115,6 +130,9 @@ export default function Builder({
                             invitation={invitation}
                             packages={packages}
                             midtrans={midtrans}
+                            selectedTemplate={templates.find(
+                                (t) => t.id === form.data.template_id,
+                            )}
                         />
                     )}
                 </div>
@@ -565,9 +583,9 @@ function TemplateStep({
                                     className="h-full w-full object-cover"
                                 />
                             )}
-                            {template.is_premium && (
+                            {template.min_package !== 'starter' && (
                                 <Badge className="absolute top-2 right-2">
-                                    Premium
+                                    {PACKAGE_LABEL[template.min_package]}+
                                 </Badge>
                             )}
                         </div>
@@ -590,14 +608,25 @@ function ReviewStep({
     invitation,
     packages,
     midtrans,
+    selectedTemplate,
 }: {
     invitation: PublicInvitation;
     packages: Package[];
     midtrans: { client_key: string; is_production: boolean };
+    selectedTemplate?: InvitationTemplate;
 }) {
-    const [selected, setSelected] = useState<Package['value']>(
-        invitation.package ?? 'standard',
-    );
+    const requiredTier: PackageTier = selectedTemplate?.min_package ?? 'starter';
+    const requiredRank = PACKAGE_RANK[requiredTier];
+    const isEligible = (value: PackageTier) =>
+        PACKAGE_RANK[value] >= requiredRank;
+
+    const defaultPackage: Package['value'] =
+        invitation.package && isEligible(invitation.package)
+            ? invitation.package
+            : (packages.find((pkg) => isEligible(pkg.value))?.value ??
+              'starter');
+
+    const [selected, setSelected] = useState<Package['value']>(defaultPackage);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -694,24 +723,46 @@ function ReviewStep({
                 </p>
             </div>
 
+            {requiredTier !== 'starter' && (
+                <p className="rounded-lg bg-muted px-4 py-3 text-center text-sm text-muted-foreground">
+                    Template{' '}
+                    <span className="font-medium text-foreground">
+                        {selectedTemplate?.name}
+                    </span>{' '}
+                    membutuhkan paket minimal{' '}
+                    <span className="font-medium text-foreground">
+                        {PACKAGE_LABEL[requiredTier]}
+                    </span>
+                    .
+                </p>
+            )}
+
             <div className="grid gap-3 sm:grid-cols-2">
                 {packages.map((pkg) => {
                     const isSelected = selected === pkg.value;
+                    const eligible = isEligible(pkg.value);
 
                     return (
                         <button
                             key={pkg.value}
-                            onClick={() => setSelected(pkg.value)}
+                            onClick={() => eligible && setSelected(pkg.value)}
+                            disabled={!eligible}
                             className={`rounded-xl border p-4 text-left transition ${
                                 isSelected
                                     ? 'border-rose-400 ring-2 ring-rose-300'
-                                    : 'hover:border-rose-300'
+                                    : eligible
+                                      ? 'hover:border-rose-300'
+                                      : 'cursor-not-allowed opacity-50'
                             }`}
                         >
                             <div className="flex items-center justify-between">
                                 <span className="font-medium">{pkg.label}</span>
-                                {isSelected && (
+                                {isSelected ? (
                                     <Check className="size-4 text-rose-500" />
+                                ) : (
+                                    !eligible && (
+                                        <Lock className="size-4 text-muted-foreground" />
+                                    )
                                 )}
                             </div>
                             <p className="mt-1 text-lg font-semibold">

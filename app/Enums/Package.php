@@ -22,6 +22,27 @@ enum Package: string
     }
 
     /**
+     * Tier ranking used to compare package levels (Starter = 1 … Signature = 4).
+     */
+    public function rank(): int
+    {
+        return match ($this) {
+            self::Starter => 1,
+            self::Standard => 2,
+            self::Premium => 3,
+            self::Signature => 4,
+        };
+    }
+
+    /**
+     * Whether this package is at least the given minimum tier.
+     */
+    public function includes(self $minimum): bool
+    {
+        return $this->rank() >= $minimum->rank();
+    }
+
+    /**
      * Price in Rupiah.
      */
     public function price(): int

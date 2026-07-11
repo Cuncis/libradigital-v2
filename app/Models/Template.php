@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Package;
 use App\Enums\TemplateCategory;
 use Database\Factories\TemplateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property TemplateCategory $category
  * @property string|null $thumbnail
  * @property bool $is_premium
+ * @property Package $min_package
  * @property bool $is_active
  */
 class Template extends Model
@@ -29,8 +31,17 @@ class Template extends Model
         return [
             'category' => TemplateCategory::class,
             'is_premium' => 'boolean',
+            'min_package' => Package::class,
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Whether the given package tier is high enough to use this template.
+     */
+    public function isAvailableFor(Package $package): bool
+    {
+        return $package->includes($this->min_package);
     }
 
     /**

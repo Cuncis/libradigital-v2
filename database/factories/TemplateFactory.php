@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Package;
 use App\Enums\TemplateCategory;
 use App\Models\Template;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,14 +22,26 @@ class TemplateFactory extends Factory
             'slug' => Str::slug($name),
             'category' => fake()->randomElement(TemplateCategory::cases()),
             'thumbnail' => 'https://placehold.co/400x600',
-            'is_premium' => fake()->boolean(30),
+            'is_premium' => false,
+            'min_package' => Package::Starter,
             'is_active' => true,
         ];
     }
 
     public function premium(): static
     {
-        return $this->state(fn () => ['is_premium' => true]);
+        return $this->state(fn () => [
+            'is_premium' => true,
+            'min_package' => Package::Premium,
+        ]);
+    }
+
+    public function requires(Package $package): static
+    {
+        return $this->state(fn () => [
+            'is_premium' => $package !== Package::Starter,
+            'min_package' => $package,
+        ]);
     }
 
     public function inactive(): static

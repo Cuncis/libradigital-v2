@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Addon;
 use App\Enums\InvitationStatus;
 use App\Enums\Package;
 use App\Http\Requests\StoreInvitationRequest;
@@ -58,6 +59,7 @@ class InvitationController extends Controller
                 Template::query()->where('is_active', true)->get()
             ),
             'packages' => Package::catalog(),
+            'addons' => Addon::catalog(),
             'midtrans' => [
                 'client_key' => config('services.midtrans.client_key'),
                 'is_production' => (bool) config('services.midtrans.is_production'),

@@ -5,6 +5,7 @@ import InvitationController from '@/actions/App/Http/Controllers/InvitationContr
 import OrderController from '@/actions/App/Http/Controllers/OrderController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { postJson } from '@/lib/api';
@@ -12,6 +13,7 @@ import { formatRupiah } from '@/lib/format';
 import { loadSnap } from '@/lib/midtrans';
 import { dashboard } from '@/routes';
 import type {
+    Addon,
     GiftType,
     InvitationTemplate,
     Package,
@@ -23,6 +25,7 @@ interface Props {
     invitation: PublicInvitation;
     templates: InvitationTemplate[];
     packages: Package[];
+    addons: Addon[];
     midtrans: {
         client_key: string;
         is_production: boolean;
@@ -59,6 +62,7 @@ export default function Builder({
     invitation,
     templates,
     packages,
+    addons,
     midtrans,
 }: Props) {
     const [step, setStep] = useState(0);
@@ -129,6 +133,7 @@ export default function Builder({
                         <ReviewStep
                             invitation={invitation}
                             packages={packages}
+                            addons={addons}
                             midtrans={midtrans}
                             selectedTemplate={templates.find(
                                 (t) => t.id === form.data.template_id,
@@ -607,11 +612,13 @@ function TemplateStep({
 function ReviewStep({
     invitation,
     packages,
+    addons,
     midtrans,
     selectedTemplate,
 }: {
     invitation: PublicInvitation;
     packages: Package[];
+    addons: Addon[];
     midtrans: { client_key: string; is_production: boolean };
     selectedTemplate?: InvitationTemplate;
 }) {
@@ -627,8 +634,23 @@ function ReviewStep({
               'starter');
 
     const [selected, setSelected] = useState<Package['value']>(defaultPackage);
+    const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const toggleAddon = (value: string) =>
+        setSelectedAddons((current) =>
+            current.includes(value)
+                ? current.filter((v) => v !== value)
+                : [...current, value],
+        );
+
+    const packagePrice =
+        packages.find((pkg) => pkg.value === selected)?.price ?? 0;
+    const addonTotal = addons
+        .filter((addon) => selectedAddons.includes(addon.value))
+        .reduce((sum, addon) => sum + addon.price, 0);
+    const grandTotal = packagePrice + addonTotal;
 
     if (invitation.status === 'active') {
         return (
@@ -665,7 +687,7 @@ function ReviewStep({
         try {
             const response = await postJson<{ snap_token: string }>(
                 OrderController.store(invitation.id).url,
-                { package: selected },
+                { package: selected, addons: selectedAddons },
             );
 
             await loadSnap(midtrans.client_key, midtrans.is_production);
@@ -779,6 +801,54 @@ function ReviewStep({
                         </button>
                     );
                 })}
+            </div>
+
+            {addons.length > 0 && (
+                <div className="grid gap-2">
+                    <p className="text-sm font-medium">Tambahan (opsional)</p>
+                    {addons.map((addon) => {
+                        const checked = selectedAddons.includes(addon.value);
+
+                        return (
+                            <label
+                                key={addon.value}
+                                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition ${
+                                    checked
+                                        ? 'border-rose-400 bg-rose-50/50 dark:bg-rose-950/20'
+                                        : 'hover:border-rose-300'
+                                }`}
+                            >
+                                <Checkbox
+                                    checked={checked}
+                                    onCheckedChange={() =>
+                                        toggleAddon(addon.value)
+                                    }
+                                    className="mt-0.5"
+                                />
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-sm font-medium">
+                                            {addon.label}
+                                        </span>
+                                        <span className="text-sm font-semibold">
+                                            {formatRupiah(addon.price)}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        {addon.description}
+                                    </p>
+                                </div>
+                            </label>
+                        );
+                    })}
+                </div>
+            )}
+
+            <div className="flex items-center justify-between border-t pt-4">
+                <span className="text-sm text-muted-foreground">Total</span>
+                <span className="text-xl font-semibold">
+                    {formatRupiah(grandTotal)}
+                </span>
             </div>
 
             {error && (

@@ -8,6 +8,7 @@ use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -58,5 +59,13 @@ class Order extends Model
     public function invitation(): BelongsTo
     {
         return $this->belongsTo(Invitation::class);
+    }
+
+    /**
+     * @return HasMany<OrderAddon, $this>
+     */
+    public function orderAddons(): HasMany
+    {
+        return $this->hasMany(OrderAddon::class);
     }
 }

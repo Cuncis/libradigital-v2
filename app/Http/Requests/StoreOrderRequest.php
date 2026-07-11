@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\Addon;
 use App\Enums\Package;
 use App\Models\Invitation;
 use Illuminate\Contracts\Validation\Validator;
@@ -22,6 +23,8 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'package' => ['required', Rule::enum(Package::class)],
+            'addons' => ['sometimes', 'array'],
+            'addons.*' => [Rule::enum(Addon::class)],
         ];
     }
 

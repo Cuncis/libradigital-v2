@@ -36,6 +36,7 @@ class OrderController extends Controller
                 'user_name' => $order->user->name,
                 'user_email' => $order->user->email,
                 'package' => $order->package->label(),
+                'addon_amount' => $order->addon_amount,
                 'total_amount' => $order->total_amount,
                 'status' => $order->status->value,
                 'paid_at' => $order->paid_at?->toIso8601String(),

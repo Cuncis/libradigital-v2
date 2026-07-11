@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Addon;
 use App\Enums\InvitationStatus;
 use App\Enums\OrderStatus;
 use App\Enums\Package;
@@ -44,6 +45,78 @@ test('the owner can create an order which moves the invitation to pending paymen
     $invitation->refresh();
     expect($invitation->status)->toBe(InvitationStatus::PendingPayment);
     expect($invitation->package)->toBe(Package::Premium);
+});
+
+test('an order can include add-ons which are recorded and summed into the total sent to midtrans', function () {
+    $user = User::factory()->create();
+    $invitation = Invitation::factory()->for($user)->draft()->create();
+
+    $expectedTotal = Package::Standard->price()
+        + Addon::ExtraGallery->price()
+        + Addon::GuestBook->price();
+
+    $this->mock(MidtransService::class, function ($mock) use ($expectedTotal) {
+        $mock->shouldReceive('createSnapToken')
+            ->once()
+            ->withArgs(fn (Order $order) => $order->total_amount === $expectedTotal)
+            ->andReturn('fake-snap-token');
+    });
+
+    $this->actingAs($user)->postJson(route('invitations.orders.store', $invitation), [
+        'package' => 'standard',
+        'addons' => ['extra_gallery', 'guest_book'],
+    ])->assertCreated();
+
+    $order = Order::query()->where('invitation_id', $invitation->id)->sole();
+    expect($order->addon_amount)->toBe(Addon::ExtraGallery->price() + Addon::GuestBook->price());
+    expect($order->total_amount)->toBe($expectedTotal);
+    expect($order->orderAddons()->count())->toBe(2);
+});
+
+test('duplicate add-ons are only charged once', function () {
+    $user = User::factory()->create();
+    $invitation = Invitation::factory()->for($user)->draft()->create();
+
+    $this->mock(MidtransService::class, function ($mock) {
+        $mock->shouldReceive('createSnapToken')->once()->andReturn('fake-snap-token');
+    });
+
+    $this->actingAs($user)->postJson(route('invitations.orders.store', $invitation), [
+        'package' => 'standard',
+        'addons' => ['extra_gallery', 'extra_gallery'],
+    ])->assertCreated();
+
+    $order = Order::query()->where('invitation_id', $invitation->id)->sole();
+    expect($order->orderAddons()->count())->toBe(1);
+    expect($order->addon_amount)->toBe(Addon::ExtraGallery->price());
+});
+
+test('an invalid add-on is rejected', function () {
+    $user = User::factory()->create();
+    $invitation = Invitation::factory()->for($user)->draft()->create();
+
+    $this->actingAs($user)->postJson(route('invitations.orders.store', $invitation), [
+        'package' => 'standard',
+        'addons' => ['bogus_addon'],
+    ])->assertStatus(422)->assertJsonValidationErrors('addons.0');
+});
+
+test('an order without add-ons has a zero add-on amount', function () {
+    $user = User::factory()->create();
+    $invitation = Invitation::factory()->for($user)->draft()->create();
+
+    $this->mock(MidtransService::class, function ($mock) {
+        $mock->shouldReceive('createSnapToken')->once()->andReturn('fake-snap-token');
+    });
+
+    $this->actingAs($user)->postJson(route('invitations.orders.store', $invitation), [
+        'package' => 'premium',
+    ])->assertCreated();
+
+    $order = Order::query()->where('invitation_id', $invitation->id)->sole();
+    expect($order->addon_amount)->toBe(0);
+    expect($order->total_amount)->toBe(Package::Premium->price());
+    expect($order->orderAddons()->count())->toBe(0);
 });
 
 test('a non-owner cannot create an order for an invitation', function () {

@@ -33,6 +33,7 @@ interface AdminOrder {
     user_name: string;
     user_email: string;
     package: string;
+    addon_amount: number;
     total_amount: number;
     status: OrderStatus;
     paid_at: string | null;
@@ -169,6 +170,15 @@ export default function AdminOrders({ orders, filters }: Props) {
                                                 <TableCell className="text-right font-medium">
                                                     {formatRupiah(
                                                         order.total_amount,
+                                                    )}
+                                                    {order.addon_amount > 0 && (
+                                                        <div className="text-xs font-normal text-muted-foreground">
+                                                            +
+                                                            {formatRupiah(
+                                                                order.addon_amount,
+                                                            )}{' '}
+                                                            add-on
+                                                        </div>
                                                     )}
                                                 </TableCell>
                                                 <TableCell>

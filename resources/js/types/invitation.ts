@@ -18,6 +18,13 @@ export interface Package {
     features: string[];
 }
 
+export interface Addon {
+    value: string;
+    label: string;
+    price: number;
+    description: string;
+}
+
 export interface InvitationTemplate {
     id: number;
     name: string;

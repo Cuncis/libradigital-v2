@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithJson;
+use App\Enums\Addon;
 use App\Enums\InvitationStatus;
 use App\Enums\OrderStatus;
 use App\Enums\Package;
@@ -36,15 +37,27 @@ class OrderController extends Controller
         $package = $request->enum('package', Package::class);
         $user = $request->user();
 
+        $addons = collect($request->validated('addons') ?? [])
+            ->map(fn (string $value): Addon => Addon::from($value))
+            ->unique(fn (Addon $addon): string => $addon->value);
+        $addonAmount = $addons->sum(fn (Addon $addon): int => $addon->price());
+
         $order = $invitation->orders()->create([
             'user_id' => $user->id,
             'order_number' => 'INV-'.now()->format('Ymd').'-'.Str::upper(Str::random(6)),
             'status' => OrderStatus::Pending,
             'package' => $package,
             'base_amount' => $package->price(),
-            'addon_amount' => 0,
-            'total_amount' => $package->price(),
+            'addon_amount' => $addonAmount,
+            'total_amount' => $package->price() + $addonAmount,
         ]);
+
+        $order->orderAddons()->createMany(
+            $addons->map(fn (Addon $addon): array => [
+                'addon' => $addon,
+                'price' => $addon->price(),
+            ])->all(),
+        );
 
         $invitation->update([
             'package' => $package,

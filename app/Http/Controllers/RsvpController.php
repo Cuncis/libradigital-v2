@@ -7,6 +7,7 @@ use App\Enums\Attendance;
 use App\Http\Requests\StoreRsvpRequest;
 use App\Http\Resources\RsvpResource;
 use App\Models\Invitation;
+use App\Notifications\RsvpReceived;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,6 +28,8 @@ class RsvpController extends Controller
             ...$request->validated(),
             'ip_address' => $request->ip(),
         ]);
+
+        $invitation->user->notify(new RsvpReceived($rsvp));
 
         return $this->success(
             RsvpResource::make($rsvp),

@@ -9,6 +9,7 @@ use App\Enums\Package;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Invitation;
 use App\Models\Order;
+use App\Notifications\InvitationActivated;
 use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -74,6 +75,8 @@ class OrderController extends Controller
             $order->status,
         );
 
+        $justActivated = $status === OrderStatus::Paid && $order->status !== OrderStatus::Paid;
+
         DB::transaction(function () use ($order, $status, $payload) {
             $order->update([
                 'status' => $status,
@@ -90,6 +93,12 @@ class OrderController extends Controller
                 $order->invitation->update(['status' => InvitationStatus::Draft]);
             }
         });
+
+        // Notify the couple only on the first transition to paid so duplicate
+        // Midtrans callbacks don't send repeat emails.
+        if ($justActivated) {
+            $order->invitation->user->notify(new InvitationActivated($order->invitation));
+        }
 
         return $this->success();
     }

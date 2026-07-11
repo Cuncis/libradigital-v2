@@ -178,8 +178,8 @@ export default function AdminUsers({ users, filters }: Props) {
                                                         }
                                                         confirmLabel={
                                                             user.is_admin
-                                                                ? 'Cabut'
-                                                                : 'Jadikan Admin'
+                                                                ? 'Ya, cabut akses'
+                                                                : 'Ya, jadikan admin'
                                                         }
                                                         destructive={
                                                             user.is_admin

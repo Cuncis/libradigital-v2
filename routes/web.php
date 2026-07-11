@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\InvitationController as AdminInvitationController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
@@ -33,6 +37,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('invitations/{invitation:id}/rsvps/export', [RsvpController::class, 'export'])->name('invitations.rsvps.export');
 
     Route::post('invitations/{invitation:id}/orders', [OrderController::class, 'store'])->name('invitations.orders.store');
+});
+
+// Superadmin panel (is_admin only).
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', AdminDashboardController::class)->name('dashboard');
+    Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::get('invitations', [AdminInvitationController::class, 'index'])->name('invitations.index');
+    Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
 });
 
 // Midtrans server-to-server transaction notification (signature-verified, no session/CSRF).

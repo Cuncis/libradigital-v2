@@ -7,6 +7,7 @@ export type InvitationStatus =
     | 'active'
     | 'expired';
 export type PackageTier = 'starter' | 'standard' | 'premium' | 'signature';
+export type OrderStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
 export interface Package {
     value: PackageTier;

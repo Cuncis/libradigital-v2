@@ -1,5 +1,13 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    BookOpen,
+    CreditCard,
+    FileText,
+    FolderGit2,
+    LayoutGrid,
+    Shield,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,9 +22,11 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import admin from '@/routes/admin';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
+    const isAdmin = usePage().props.auth.user.is_admin === true;
     const dashboardUrl = dashboard.url();
 
     const mainNavItems: NavItem[] = [
@@ -24,6 +34,29 @@ export function AppSidebar() {
             title: 'Dashboard',
             href: dashboardUrl,
             icon: LayoutGrid,
+        },
+    ];
+
+    const adminNavItems: NavItem[] = [
+        {
+            title: 'Ringkasan',
+            href: admin.dashboard().url,
+            icon: Shield,
+        },
+        {
+            title: 'Pengguna',
+            href: admin.users.index().url,
+            icon: Users,
+        },
+        {
+            title: 'Undangan',
+            href: admin.invitations.index().url,
+            icon: FileText,
+        },
+        {
+            title: 'Pesanan',
+            href: admin.orders.index().url,
+            icon: CreditCard,
         },
     ];
 
@@ -56,6 +89,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                {isAdmin && <NavMain items={adminNavItems} label="Admin" />}
             </SidebarContent>
 
             <SidebarFooter>

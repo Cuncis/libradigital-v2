@@ -223,6 +223,13 @@ class InvitationController extends Controller
                 continue;
             }
 
+            // Guard: never persist an animation the invitation's package can't use.
+            $animation = Animation::find($animationId);
+
+            if ($animation === null || ! $animation->isUnlockedFor($invitation->package)) {
+                continue;
+            }
+
             $invitation->animationSelections()->updateOrCreate(
                 ['section' => $section],
                 ['animation_id' => $animationId],

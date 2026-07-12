@@ -28,6 +28,8 @@ export interface Animation {
     section_label: string;
     effect: AnimationEffect;
     effect_label: string;
+    min_package: PackageTier | null;
+    min_package_label: string | null;
     asset_url: string | null;
     is_active: boolean;
     sort_order: number;

@@ -25,6 +25,8 @@ class AnimationResource extends JsonResource
             'section_label' => $this->section->label(),
             'effect' => $this->effect->value,
             'effect_label' => $this->effect->label(),
+            'min_package' => $this->min_package?->value,
+            'min_package_label' => $this->min_package?->label(),
             'asset_url' => $this->asset_url,
             'is_active' => $this->is_active,
             'sort_order' => $this->sort_order,

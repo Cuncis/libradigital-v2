@@ -165,6 +165,7 @@ export default function Builder({
                             form={form}
                             library={animationLibrary}
                             sections={animationSections}
+                            packageTier={invitation.package}
                         />
                     )}
                     {step === 7 && (
@@ -500,15 +501,25 @@ function AnimationStep({
     form,
     library,
     sections,
+    packageTier,
 }: {
     form: Form;
     library: Animation[];
     sections: AnimationSectionOption[];
+    packageTier: PackageTier | null;
 }) {
     const selections = form.data.animations as Record<
         AnimationSection,
         number | null
     >;
+
+    // A draft with no package yet ranks below Starter, so gated animations
+    // stay locked until a package is purchased.
+    const userRank = packageTier ? PACKAGE_RANK[packageTier] : 0;
+    const isLocked = (animation: Animation) =>
+        animation.min_package
+            ? PACKAGE_RANK[animation.min_package] > userRank
+            : false;
 
     const setSection = (section: AnimationSection, value: number | null) => {
         form.setData('animations', { ...selections, [section]: value });
@@ -518,7 +529,8 @@ function AnimationStep({
         <div className="grid gap-5">
             <p className="text-sm text-muted-foreground">
                 Pilih animasi untuk tiap bagian undangan. Biarkan “Bawaan” untuk
-                memakai animasi standar.
+                memakai animasi standar. Animasi bertanda 🔒 memerlukan paket
+                yang lebih tinggi.
             </p>
             {sections.map((section) => {
                 const options = library.filter(
@@ -545,11 +557,23 @@ function AnimationStep({
                             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
                         >
                             <option value="">Bawaan (default)</option>
-                            {options.map((animation) => (
-                                <option key={animation.id} value={animation.id}>
-                                    {animation.name} — {animation.effect_label}
-                                </option>
-                            ))}
+                            {options.map((animation) => {
+                                const locked = isLocked(animation);
+
+                                return (
+                                    <option
+                                        key={animation.id}
+                                        value={animation.id}
+                                        disabled={locked}
+                                    >
+                                        {animation.name} —{' '}
+                                        {animation.effect_label}
+                                        {locked
+                                            ? ` 🔒 ${animation.min_package_label}`
+                                            : ''}
+                                    </option>
+                                );
+                            })}
                         </select>
                         {options.length === 0 && (
                             <p className="text-xs text-muted-foreground">

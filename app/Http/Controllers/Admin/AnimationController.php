@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\AnimationEffect;
 use App\Enums\AnimationSection;
+use App\Enums\Package;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAnimationRequest;
 use App\Http\Requests\UpdateAnimationRequest;
@@ -28,6 +29,7 @@ class AnimationController extends Controller
             'animations' => AnimationResource::collection($animations),
             'sections' => AnimationSection::catalog(),
             'effects' => AnimationEffect::catalog(),
+            'packages' => Package::catalog(),
         ]);
     }
 

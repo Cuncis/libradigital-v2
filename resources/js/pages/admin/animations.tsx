@@ -27,18 +27,24 @@ import type {
     Animation,
     AnimationEffectOption,
     AnimationSectionOption,
+    Package,
 } from '@/types/invitation';
+
+// Sentinel option value for "available to all packages".
+const ALL_PACKAGES = 'all';
 
 interface Props {
     animations: Animation[];
     sections: AnimationSectionOption[];
     effects: AnimationEffectOption[];
+    packages: Package[];
 }
 
 interface AnimationForm {
     name: string;
     section: string;
     effect: string;
+    min_package: string;
     asset: File | null;
     is_active: boolean;
     [key: string]: FormDataConvertible;
@@ -51,6 +57,7 @@ export default function AdminAnimations({
     animations,
     sections,
     effects,
+    packages,
 }: Props) {
     const [editing, setEditing] = useState<Animation | null>(null);
 
@@ -58,6 +65,7 @@ export default function AdminAnimations({
         name: '',
         section: sections[0]?.value ?? 'cover',
         effect: '',
+        min_package: ALL_PACKAGES,
         asset: null,
         is_active: true,
     });
@@ -79,6 +87,7 @@ export default function AdminAnimations({
             name: animation.name,
             section: animation.section,
             effect: animation.effect,
+            min_package: animation.min_package ?? ALL_PACKAGES,
             asset: null,
             is_active: animation.is_active,
         });
@@ -231,6 +240,38 @@ export default function AdminAnimations({
                             </div>
 
                             <div className="grid gap-1.5">
+                                <Label>Paket minimum</Label>
+                                <Select
+                                    value={data.min_package}
+                                    onValueChange={(value) =>
+                                        setData('min_package', value)
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={ALL_PACKAGES}>
+                                            Semua paket
+                                        </SelectItem>
+                                        {packages.map((pkg) => (
+                                            <SelectItem
+                                                key={pkg.value}
+                                                value={pkg.value}
+                                            >
+                                                {pkg.label} ke atas
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
+                                    Animasi tetap tampil di dropdown pasangan,
+                                    tetapi terkunci bila paketnya belum
+                                    memenuhi.
+                                </p>
+                            </div>
+
+                            <div className="grid gap-1.5">
                                 <Label htmlFor="asset">
                                     Aset (PNG tanpa background)
                                     {selectedEffect?.requires_asset && (
@@ -321,6 +362,7 @@ export default function AdminAnimations({
                                         <TableRow>
                                             <TableHead>Nama</TableHead>
                                             <TableHead>Efek</TableHead>
+                                            <TableHead>Paket</TableHead>
                                             <TableHead>Aset</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead className="text-right">
@@ -336,6 +378,20 @@ export default function AdminAnimations({
                                                 </TableCell>
                                                 <TableCell>
                                                     {animation.effect_label}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {animation.min_package_label ? (
+                                                        <Badge variant="outline">
+                                                            {
+                                                                animation.min_package_label
+                                                            }
+                                                            +
+                                                        </Badge>
+                                                    ) : (
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Semua
+                                                        </span>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>
                                                     {animation.asset_url ? (

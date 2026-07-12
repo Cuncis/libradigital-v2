@@ -2,6 +2,7 @@
 
 use App\Enums\AnimationEffect;
 use App\Enums\AnimationSection;
+use App\Enums\Package;
 use App\Models\Animation;
 use App\Models\Invitation;
 use App\Models\User;
@@ -111,6 +112,62 @@ test('passing a null selection clears that section', function () {
         'animations' => ['cover' => null],
     ]);
     expect($invitation->animationSelections()->count())->toBe(0);
+});
+
+test('a package-locked animation is not saved for a lower tier', function () {
+    $user = User::factory()->create();
+    $invitation = Invitation::factory()->for($user)->create([
+        'package' => Package::Standard,
+    ]);
+    $locked = Animation::factory()->cover()->create([
+        'min_package' => Package::Signature,
+    ]);
+
+    $this->actingAs($user)->put(route('invitations.update', $invitation), [
+        'animations' => ['cover' => $locked->id],
+    ])->assertRedirect();
+
+    expect($invitation->animationSelections()->count())->toBe(0);
+});
+
+test('a package-locked animation saves once the tier qualifies', function () {
+    $user = User::factory()->create();
+    $invitation = Invitation::factory()->for($user)->create([
+        'package' => Package::Signature,
+    ]);
+    $locked = Animation::factory()->cover()->create([
+        'min_package' => Package::Signature,
+    ]);
+
+    $this->actingAs($user)->put(route('invitations.update', $invitation), [
+        'animations' => ['cover' => $locked->id],
+    ])->assertRedirect();
+
+    expect($invitation->animationSelections()->count())->toBe(1);
+});
+
+test('an admin can set a minimum package tier on an animation', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->post(route('admin.animations.store'), [
+        'name' => 'Premium Zoom',
+        'section' => AnimationSection::Gift->value,
+        'effect' => AnimationEffect::Zoom->value,
+        'min_package' => Package::Premium->value,
+    ])->assertRedirect();
+
+    expect(Animation::firstOrFail()->min_package)->toBe(Package::Premium);
+});
+
+test('the all-packages sentinel clears the minimum tier', function () {
+    $admin = User::factory()->admin()->create();
+    $animation = Animation::factory()->create(['min_package' => Package::Premium]);
+
+    $this->actingAs($admin)->post(route('admin.animations.update', $animation), [
+        'min_package' => 'all',
+    ])->assertRedirect();
+
+    expect($animation->refresh()->min_package)->toBeNull();
 });
 
 test('the public invitation serializes chosen animations per section', function () {

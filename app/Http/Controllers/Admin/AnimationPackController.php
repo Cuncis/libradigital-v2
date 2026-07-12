@@ -70,7 +70,7 @@ class AnimationPackController extends Controller
                 $this->createAsset($pack, $asset, $index);
             }
 
-            $this->refreshThumbnail($pack);
+            $this->applyThumbnail($request, $pack);
 
             return $pack;
         });
@@ -125,7 +125,7 @@ class AnimationPackController extends Controller
                 $this->createAsset($pack, $asset, $offset + $index);
             }
 
-            $this->refreshThumbnail($pack->fresh('assets'));
+            $this->applyThumbnail($request, $pack->fresh('assets'));
         });
 
         return back()->with('success', 'Animation pack berhasil diperbarui.');
@@ -190,11 +190,20 @@ class AnimationPackController extends Controller
     }
 
     /**
-     * Phase 1 uses the first asset as the pack thumbnail (the drag-drop builder
-     * will replace this with an html2canvas capture in Phase 2).
+     * Store the html2canvas thumbnail capture when present; otherwise fall back
+     * to the first asset image so the pack always has a preview.
      */
-    private function refreshThumbnail(AnimationPack $pack): void
+    private function applyThumbnail(StoreAnimationPackRequest|UpdateAnimationPackRequest $request, AnimationPack $pack): void
     {
+        if ($request->hasFile('thumbnail')) {
+            $disk = config('filesystems.media');
+            $path = $request->file('thumbnail')->store("animation-packs/{$pack->slug}", $disk);
+
+            $pack->update(['thumbnail_url' => Storage::disk($disk)->url($path)]);
+
+            return;
+        }
+
         $pack->update([
             'thumbnail_url' => $pack->assets()->orderBy('sort_order')->value('asset_url'),
         ]);

@@ -28,6 +28,7 @@ class StoreAnimationPackRequest extends FormRequest
             'available_for' => ['required', 'array', 'min:1'],
             'available_for.*' => [Rule::enum(Package::class)],
             'is_active' => ['boolean'],
+            'thumbnail' => ['nullable', 'image', 'mimes:png,webp,jpeg,jpg', 'max:1024'],
 
             'assets' => ['required', 'array', 'min:1', 'max:10'],
             'assets.*.file' => ['required', 'image', 'mimes:png,webp', 'max:200'],

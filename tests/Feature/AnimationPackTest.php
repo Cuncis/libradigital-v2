@@ -52,6 +52,24 @@ test('an admin can create a pack with assets', function () {
     Storage::disk(config('filesystems.media'))->assertExists($pack->assets->first()->asset_path);
 });
 
+test('a captured thumbnail is stored instead of the first asset', function () {
+    Storage::fake(config('filesystems.media'));
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->post(route('admin.animation-packs.store'), [
+        'name' => 'With Thumb',
+        'section' => AnimationPackSection::Hero->value,
+        'available_for' => [Package::Premium->value],
+        'thumbnail' => UploadedFile::fake()->image('thumbnail.png', 300, 500),
+        'assets' => [packAssetPayload()],
+    ])->assertRedirect();
+
+    $pack = AnimationPack::firstOrFail();
+    // The thumbnail is its own stored file, distinct from the asset image.
+    expect($pack->thumbnail_url)->not->toBe($pack->assets->first()->asset_url);
+    expect($pack->thumbnail_url)->toContain('animation-packs/with-thumb');
+});
+
 test('creating a pack requires at least one asset', function () {
     $admin = User::factory()->admin()->create();
 

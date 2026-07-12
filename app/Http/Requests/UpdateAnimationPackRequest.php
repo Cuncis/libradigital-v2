@@ -33,6 +33,7 @@ class UpdateAnimationPackRequest extends FormRequest
             'available_for' => ['sometimes', 'required', 'array', 'min:1'],
             'available_for.*' => [Rule::enum(Package::class)],
             'is_active' => ['boolean'],
+            'thumbnail' => ['nullable', 'image', 'mimes:png,webp,jpeg,jpg', 'max:1024'],
 
             'assets' => ['sometimes', 'array', 'max:10'],
             'assets.*.id' => [

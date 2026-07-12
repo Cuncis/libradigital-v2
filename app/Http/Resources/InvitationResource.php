@@ -56,6 +56,13 @@ class InvitationResource extends JsonResource
                     ])
                     ->all(),
             ),
+            'animation_pack_slug' => $this->animation_pack_slug,
+            'animation_pack' => $this->when(
+                $this->relationLoaded('animationPack')
+                    && $this->animationPack !== null
+                    && $this->animationPack->isAvailableFor($this->package),
+                fn () => AnimationPackResource::make($this->animationPack),
+            ),
         ];
     }
 }

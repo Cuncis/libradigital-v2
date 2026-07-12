@@ -191,4 +191,14 @@ class Invitation extends Model
     {
         return $this->hasMany(InvitationAnimation::class);
     }
+
+    /**
+     * The floating-overlay animation pack the couple chose (by slug).
+     *
+     * @return BelongsTo<AnimationPack, $this>
+     */
+    public function animationPack(): BelongsTo
+    {
+        return $this->belongsTo(AnimationPack::class, 'animation_pack_slug', 'slug');
+    }
 }

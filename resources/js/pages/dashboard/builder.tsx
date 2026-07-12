@@ -3,18 +3,20 @@ import { Check, Loader2, Lock, Trash2, Upload } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import InvitationController from '@/actions/App/Http/Controllers/InvitationController';
 import OrderController from '@/actions/App/Http/Controllers/OrderController';
+import AnimationPreviewModal from '@/components/invitation/AnimationPreviewModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { postJson } from '@/lib/api';
-import { formatRupiah } from '@/lib/format';
+import { formatIndoDate, formatRupiah } from '@/lib/format';
 import { loadSnap } from '@/lib/midtrans';
 import { dashboard } from '@/routes';
 import type {
     Addon,
     Animation,
+    AnimationPack,
     AnimationSection,
     AnimationSectionOption,
     GiftType,
@@ -29,6 +31,7 @@ interface Props {
     templates: InvitationTemplate[];
     animationLibrary: Animation[];
     animationSections: AnimationSectionOption[];
+    animationPacks: AnimationPack[];
     packages: Package[];
     addons: Addon[];
     midtrans: {
@@ -91,6 +94,7 @@ export default function Builder({
     templates,
     animationLibrary,
     animationSections,
+    animationPacks,
     packages,
     addons,
     midtrans,
@@ -113,6 +117,7 @@ export default function Builder({
         love_story: invitation.love_story ?? '',
         template_id: invitation.template_id,
         animations: initialAnimations(invitation),
+        animation_pack_slug: invitation.animation_pack_slug,
     });
 
     const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -165,6 +170,7 @@ export default function Builder({
                             form={form}
                             library={animationLibrary}
                             sections={animationSections}
+                            packs={animationPacks}
                             packageTier={invitation.package}
                         />
                     )}
@@ -501,11 +507,13 @@ function AnimationStep({
     form,
     library,
     sections,
+    packs,
     packageTier,
 }: {
     form: Form;
     library: Animation[];
     sections: AnimationSectionOption[];
+    packs: AnimationPack[];
     packageTier: PackageTier | null;
 }) {
     const selections = form.data.animations as Record<
@@ -520,10 +528,17 @@ function AnimationStep({
         animation.min_package
             ? PACKAGE_RANK[animation.min_package] > userRank
             : false;
+    // Packs lock only once a package is chosen; drafts may preview everything.
+    const packLocked = (pack: AnimationPack) =>
+        packageTier ? !pack.available_for.includes(packageTier) : false;
 
     const setSection = (section: AnimationSection, value: number | null) => {
         form.setData('animations', { ...selections, [section]: value });
     };
+
+    const packSlug = form.data.animation_pack_slug as string | null;
+    const selectedPack = packs.find((p) => p.slug === packSlug) ?? null;
+    const [previewPack, setPreviewPack] = useState<AnimationPack | null>(null);
 
     return (
         <div className="grid gap-5">
@@ -532,6 +547,71 @@ function AnimationStep({
                 memakai animasi standar. Animasi bertanda 🔒 memerlukan paket
                 yang lebih tinggi.
             </p>
+
+            {/* Floating overlay pack picker */}
+            <Field label="Efek Melayang (Animation Pack)" name="animation-pack">
+                <div className="flex flex-wrap items-center gap-2">
+                    <select
+                        id="animation-pack"
+                        value={packSlug ?? ''}
+                        onChange={(e) =>
+                            form.setData(
+                                'animation_pack_slug',
+                                e.target.value || null,
+                            )
+                        }
+                        className="h-9 min-w-56 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                        <option value="">Tanpa Animasi</option>
+                        {packs.map((pack) => {
+                            const locked = packLocked(pack);
+
+                            return (
+                                <option
+                                    key={pack.slug}
+                                    value={pack.slug}
+                                    disabled={locked}
+                                >
+                                    {pack.name} — {pack.section_label}
+                                    {locked ? ' 🔒' : ''}
+                                </option>
+                            );
+                        })}
+                    </select>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={!selectedPack}
+                        onClick={() => setPreviewPack(selectedPack)}
+                    >
+                        👁 Preview
+                    </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                    Elemen melayang (kelopak, glitter) di atas satu bagian
+                    undangan. Pack bertanda 🔒 butuh paket lebih tinggi.
+                </p>
+            </Field>
+
+            {previewPack && (
+                <AnimationPreviewModal
+                    pack={previewPack}
+                    brideName={form.data.bride_name || 'Nama Pengantin'}
+                    groomName={form.data.groom_name || 'Nama Pengantin'}
+                    dateLabel={
+                        form.data.wedding_date
+                            ? formatIndoDate(form.data.wedding_date)
+                            : '00 Bulan 0000'
+                    }
+                    onConfirm={(slug) =>
+                        form.setData('animation_pack_slug', slug)
+                    }
+                    onClose={() => setPreviewPack(null)}
+                />
+            )}
+
+            <div className="h-px bg-border" />
+
             {sections.map((section) => {
                 const options = library.filter(
                     (a) => a.section === section.value,

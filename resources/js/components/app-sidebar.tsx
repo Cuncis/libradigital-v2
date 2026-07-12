@@ -9,6 +9,7 @@ import {
     Shield,
     Sparkles,
     Users,
+    Wand2,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -69,6 +70,11 @@ export function AppSidebar() {
             title: 'Animasi',
             href: admin.animations.index().url,
             icon: Sparkles,
+        },
+        {
+            title: 'Animation Packs',
+            href: admin.animationPacks.index().url,
+            icon: Wand2,
         },
     ];
 

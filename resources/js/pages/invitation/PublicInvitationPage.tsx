@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { CalendarHeart, MapPin } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import AnimatedReveal from '@/components/invitation/AnimatedReveal';
+import AnimationLayer from '@/components/invitation/AnimationLayer';
 import Countdown from '@/components/invitation/Countdown';
 import GiftCard from '@/components/invitation/GiftCard';
 import GuestBook from '@/components/invitation/GuestBook';
@@ -110,6 +111,13 @@ export default function PublicInvitationPage({
     const couple = `${invitation.groom_name ?? ''} & ${invitation.bride_name ?? ''}`;
     const theme = resolveTheme(invitation.template?.category);
 
+    // Floating-overlay animation pack (one per invitation, targeting one section).
+    const pack = invitation.animation_pack ?? null;
+    const layerFor = (section: string) =>
+        pack && pack.section === section ? (
+            <AnimationLayer pack={pack} />
+        ) : null;
+
     // The invitation stays behind a full-screen cover until the guest taps
     // "Buka Undangan". While the cover is up we lock body scroll so the page
     // underneath can't be reached.
@@ -178,6 +186,13 @@ export default function PublicInvitationPage({
                 <audio ref={audioRef} src={invitation.music_url} loop />
             )}
 
+            {/* Full-page floating overlay pack (pinned to the viewport). */}
+            {pack?.section === 'full_page' && (
+                <div className="pointer-events-none fixed inset-0 z-40">
+                    <AnimationLayer pack={pack} />
+                </div>
+            )}
+
             {/* 1. Hero */}
             <header className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center text-white">
                 {invitation.cover_photo && (
@@ -218,6 +233,7 @@ export default function PublicInvitationPage({
                         </div>
                     )}
                 </AnimatedReveal>
+                {layerFor('hero')}
             </header>
 
             {/* 2. Countdown */}
@@ -233,7 +249,8 @@ export default function PublicInvitationPage({
             )}
 
             {/* 3 + 4. Akad & Resepsi */}
-            <Section>
+            <Section className="relative">
+                {layerFor('event')}
                 <div className="grid gap-6 sm:grid-cols-2">
                     <EventBlock
                         title="Akad Nikah"
@@ -256,7 +273,8 @@ export default function PublicInvitationPage({
 
             {/* 5. Love Story */}
             {invitation.love_story && (
-                <Section>
+                <Section className="relative">
+                    {layerFor('story')}
                     <AnimatedReveal
                         animation={invitation.animations?.love_story}
                         fallback="slide_left"
@@ -269,7 +287,8 @@ export default function PublicInvitationPage({
 
             {/* 6. Gallery */}
             {invitation.gallery_photos.length > 0 && (
-                <Section className="max-w-4xl">
+                <Section className="relative max-w-4xl">
+                    {layerFor('gallery')}
                     <SectionTitle>Galeri</SectionTitle>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                         {invitation.gallery_photos.map((photo) => (
@@ -345,7 +364,8 @@ export default function PublicInvitationPage({
             </Section>
 
             {/* 10 + 11. Visitor counter + footer */}
-            <footer className="border-t border-[var(--inv-card-border)] py-10 text-center">
+            <footer className="relative border-t border-[var(--inv-card-border)] py-10 text-center">
+                {layerFor('footer')}
                 <div className="mb-4">
                     <VisitorCounter slug={invitation.slug} />
                 </div>

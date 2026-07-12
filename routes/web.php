@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AnimationController as AdminAnimationController;
+use App\Http\Controllers\Admin\AnimationPackController as AdminAnimationPackController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\InvitationController as AdminInvitationController;
@@ -61,6 +62,14 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::post('animations', [AdminAnimationController::class, 'store'])->name('animations.store');
     Route::post('animations/{animation}', [AdminAnimationController::class, 'update'])->name('animations.update');
     Route::delete('animations/{animation}', [AdminAnimationController::class, 'destroy'])->name('animations.destroy');
+
+    // Animation packs (floating GSAP overlays built by superadmin, chosen by couples).
+    Route::get('animation-packs', [AdminAnimationPackController::class, 'index'])->name('animation-packs.index');
+    Route::get('animation-packs/create', [AdminAnimationPackController::class, 'create'])->name('animation-packs.create');
+    Route::post('animation-packs', [AdminAnimationPackController::class, 'store'])->name('animation-packs.store');
+    Route::get('animation-packs/{pack}/edit', [AdminAnimationPackController::class, 'edit'])->name('animation-packs.edit');
+    Route::post('animation-packs/{pack}', [AdminAnimationPackController::class, 'update'])->name('animation-packs.update');
+    Route::delete('animation-packs/{pack}', [AdminAnimationPackController::class, 'destroy'])->name('animation-packs.destroy');
 
     // Blog authoring is restricted to superadmins (this whole group is is_admin).
     Route::get('blog', [AdminBlogController::class, 'index'])->name('blog.index');

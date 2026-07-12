@@ -51,6 +51,62 @@ export interface AnimationEffectOption {
 /** Map of the couple's chosen animation per section (absent = default). */
 export type InvitationAnimations = Partial<Record<AnimationSection, Animation>>;
 
+// --- Animation packs (floating GSAP overlays) ---
+
+export type MotionType =
+    | 'float-y'
+    | 'float-x'
+    | 'fall-down'
+    | 'fall-up'
+    | 'sway'
+    | 'breathe'
+    | 'spin'
+    | 'spin-slow'
+    | 'drift'
+    | 'twinkle';
+
+export type AnimationPackSectionType =
+    'hero' | 'gallery' | 'story' | 'event' | 'footer' | 'full_page';
+
+export interface AnimationAsset {
+    id: number;
+    asset_url: string;
+    motion_type: MotionType;
+    position_x: number;
+    position_y: number;
+    width_percent: number;
+    opacity: number;
+    duration_ms: number;
+    delay_ms: number;
+    repeat_count: number;
+    z_index: number;
+    sort_order: number;
+}
+
+export interface AnimationPack {
+    id: number;
+    name: string;
+    slug: string;
+    section: AnimationPackSectionType;
+    section_label: string;
+    thumbnail_url: string | null;
+    available_for: PackageTier[];
+    is_active: boolean;
+    sort_order: number;
+    assets_count?: number;
+    assets?: AnimationAsset[];
+}
+
+export interface MotionOption {
+    value: MotionType;
+    label: string;
+}
+
+export interface AnimationPackSectionOption {
+    value: AnimationPackSectionType;
+    label: string;
+}
+
 export interface Package {
     value: PackageTier;
     label: string;
@@ -129,4 +185,6 @@ export interface PublicInvitation {
     has_guest_book: boolean;
     guest_book_entries?: GuestBookEntry[];
     animations?: InvitationAnimations;
+    animation_pack_slug: string | null;
+    animation_pack?: AnimationPack | null;
 }

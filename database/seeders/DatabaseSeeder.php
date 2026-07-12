@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             TemplateSeeder::class,
             AnimationSeeder::class,
+            AnimationPackSeeder::class,
             DemoInvitationSeeder::class,
             BlogPostSeeder::class,
         ]);

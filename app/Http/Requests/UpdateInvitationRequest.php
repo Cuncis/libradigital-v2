@@ -48,6 +48,9 @@ class UpdateInvitationRequest extends FormRequest
             // Per-section animation choices: { section: animation_id|null }.
             'animations' => ['sometimes', 'array'],
             'animations.*' => ['nullable', 'integer', 'exists:animations,id'],
+
+            // Floating overlay pack (by slug), or null for none.
+            'animation_pack_slug' => ['sometimes', 'nullable', 'string', 'exists:animation_packs,slug'],
         ];
     }
 }

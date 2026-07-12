@@ -21,7 +21,7 @@ class PublicInvitationController extends Controller
     {
         $invitation = Invitation::query()
             ->where('slug', $slug)
-            ->with(['template', 'giftAccounts', 'galleryPhotos', 'animationSelections.animation'])
+            ->with(['template', 'giftAccounts', 'galleryPhotos', 'animationSelections.animation', 'animationPack.assets'])
             ->firstOrFail();
 
         abort_unless($invitation->isPubliclyVisible(), 404);

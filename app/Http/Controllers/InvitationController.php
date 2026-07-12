@@ -10,11 +10,13 @@ use App\Http\Requests\StoreInvitationRequest;
 use App\Http\Requests\SyncGiftsRequest;
 use App\Http\Requests\UpdateInvitationRequest;
 use App\Http\Requests\UploadPhotosRequest;
+use App\Http\Resources\AnimationPackResource;
 use App\Http\Resources\AnimationResource;
 use App\Http\Resources\InvitationResource;
 use App\Http\Resources\TemplateResource;
 use App\Jobs\OptimizeImage;
 use App\Models\Animation;
+use App\Models\AnimationPack;
 use App\Models\GalleryPhoto;
 use App\Models\Invitation;
 use App\Models\Template;
@@ -70,6 +72,15 @@ class InvitationController extends Controller
                     ->get()
             ),
             'animationSections' => AnimationSection::catalog(),
+            'animationPacks' => AnimationPackResource::collection(
+                AnimationPack::query()
+                    ->where('is_active', true)
+                    ->with('assets')
+                    ->orderBy('section')
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get()
+            ),
             'packages' => Package::catalog(),
             'addons' => Addon::catalog(),
             'midtrans' => [

@@ -47,7 +47,10 @@ interface Props {
 
 const STATUS: Record<
     OrderStatus,
-    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+    {
+        label: string;
+        variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    }
 > = {
     pending: { label: 'Menunggu', variant: 'secondary' },
     paid: { label: 'Lunas', variant: 'default' },
@@ -196,7 +199,8 @@ export default function AdminOrders({ orders, filters }: Props) {
                                                         : '—'}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    {order.status === 'paid' && (
+                                                    {order.status ===
+                                                        'paid' && (
                                                         <ConfirmDialog
                                                             trigger={
                                                                 <Button
@@ -211,7 +215,9 @@ export default function AdminOrders({ orders, filters }: Props) {
                                                             description={`Pesanan ${order.order_number} akan ditandai refund. Akses undangan tidak otomatis dicabut — kadaluarsakan undangan dari halaman Undangan bila perlu.`}
                                                             confirmLabel="Tandai Refund"
                                                             destructive
-                                                            onConfirm={(close) =>
+                                                            onConfirm={(
+                                                                close,
+                                                            ) =>
                                                                 refund(
                                                                     order,
                                                                     close,

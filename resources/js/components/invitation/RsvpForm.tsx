@@ -54,7 +54,7 @@ export default function RsvpForm({
     if (done) {
         return (
             <div className="rounded-xl border border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] p-6 text-center">
-                <p className="text-xl [font-family:var(--inv-font-heading)]">
+                <p className="[font-family:var(--inv-font-heading)] text-xl">
                     Terima kasih 🤍
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground">

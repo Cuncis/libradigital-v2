@@ -36,7 +36,11 @@ export function SiteHeader() {
                     LibraDigital
                 </Link>
                 <div className="flex items-center gap-2">
-                    <Button asChild variant="ghost" className="hidden sm:inline-flex">
+                    <Button
+                        asChild
+                        variant="ghost"
+                        className="hidden sm:inline-flex"
+                    >
                         <Link href={blog.index().url}>Blog</Link>
                     </Button>
                     <ThemeToggle />
@@ -66,7 +70,10 @@ export function SiteHeader() {
     );
 }
 
-const FOOTER_LINKS: { heading: string; links: { label: string; href: string }[] }[] = [
+const FOOTER_LINKS: {
+    heading: string;
+    links: { label: string; href: string }[];
+}[] = [
     {
         heading: 'Produk',
         links: [

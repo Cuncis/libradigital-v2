@@ -181,4 +181,14 @@ class Invitation extends Model
     {
         return $this->hasMany(GuestBookEntry::class)->latest();
     }
+
+    /**
+     * Per-section animation choices, each pointing at a library Animation.
+     *
+     * @return HasMany<InvitationAnimation, $this>
+     */
+    public function animationSelections(): HasMany
+    {
+        return $this->hasMany(InvitationAnimation::class);
+    }
 }

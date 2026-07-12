@@ -47,6 +47,15 @@ class InvitationResource extends JsonResource
             'gallery_photos' => GalleryPhotoResource::collection($this->whenLoaded('galleryPhotos')),
             'has_guest_book' => $this->hasAddon(Addon::GuestBook),
             'guest_book_entries' => GuestBookEntryResource::collection($this->whenLoaded('guestBookEntries')),
+            'animations' => $this->when(
+                $this->relationLoaded('animationSelections'),
+                fn (): array => $this->animationSelections
+                    ->filter(fn ($selection): bool => $selection->animation !== null)
+                    ->mapWithKeys(fn ($selection): array => [
+                        $selection->section->value => AnimationResource::make($selection->animation),
+                    ])
+                    ->all(),
+            ),
         ];
     }
 }

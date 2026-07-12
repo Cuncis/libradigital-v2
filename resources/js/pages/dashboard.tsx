@@ -64,7 +64,8 @@ function InvitationCard({ invitation }: { invitation: Invitation }) {
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <CardTitle className="text-2xl">
-                            {invitation.groom_name} &amp; {invitation.bride_name}
+                            {invitation.groom_name} &amp;{' '}
+                            {invitation.bride_name}
                         </CardTitle>
                         <CardDescription className="mt-1">
                             libradigital.id/undangan/{invitation.slug}
@@ -103,7 +104,11 @@ function InvitationCard({ invitation }: { invitation: Invitation }) {
                 </Button>
                 {isActive && (
                     <Button asChild variant="outline">
-                        <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+                        <a
+                            href={publicUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
                             <Eye className="size-4" /> Preview
                         </a>
                     </Button>
@@ -157,7 +162,9 @@ function CreateInvitation() {
                         <Input
                             id="groom_name"
                             value={form.data.groom_name}
-                            onChange={(e) => form.setData('groom_name', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('groom_name', e.target.value)
+                            }
                             placeholder="Budi"
                             required
                         />
@@ -172,7 +179,9 @@ function CreateInvitation() {
                         <Input
                             id="bride_name"
                             value={form.data.bride_name}
-                            onChange={(e) => form.setData('bride_name', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('bride_name', e.target.value)
+                            }
                             placeholder="Siti"
                             required
                         />
@@ -184,7 +193,11 @@ function CreateInvitation() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button type="submit" disabled={form.processing} className="w-full">
+                    <Button
+                        type="submit"
+                        disabled={form.processing}
+                        className="w-full"
+                    >
                         {form.processing && <Spinner />}
                         Mulai Buat Undangan
                     </Button>

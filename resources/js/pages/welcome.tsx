@@ -112,7 +112,12 @@ const STEPS: { icon: LucideIcon; title: string; body: string }[] = [
     },
 ];
 
-const STATS: { value: number; suffix: string; label: string; decimals?: number }[] = [
+const STATS: {
+    value: number;
+    suffix: string;
+    label: string;
+    decimals?: number;
+}[] = [
     { value: 2500, suffix: '+', label: 'Undangan dibuat' },
     { value: 180, suffix: 'K+', label: 'Tamu RSVP' },
     { value: 25, suffix: '+', label: 'Pilihan template' },
@@ -203,8 +208,9 @@ export default function Welcome({ packages, demos, posts }: Props) {
 
     const heroDemo = demos[0];
     const heroCouple =
-        [heroDemo?.groom_name, heroDemo?.bride_name].filter(Boolean).join(' & ') ||
-        'Rara & Bayu';
+        [heroDemo?.groom_name, heroDemo?.bride_name]
+            .filter(Boolean)
+            .join(' & ') || 'Rara & Bayu';
 
     const heroBase = cn(
         'transition-all duration-700 ease-out motion-reduce:transition-none',
@@ -424,7 +430,8 @@ export default function Welcome({ packages, demos, posts }: Props) {
                         </h2>
                         <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
                             Jelajahi contoh undangan sesuai paket. Klik untuk
-                            membuka undangan seperti yang akan dilihat tamu Anda.
+                            membuka undangan seperti yang akan dilihat tamu
+                            Anda.
                         </p>
 
                         {/* Package tabs */}
@@ -469,7 +476,7 @@ export default function Welcome({ packages, demos, posts }: Props) {
                                 >
                                     {tierLabel && (
                                         <span
-                                            className={`pointer-events-none absolute -right-12 top-4 z-10 w-40 rotate-45 py-1 text-center text-[11px] font-semibold tracking-wide uppercase shadow-md ${ribbonColor}`}
+                                            className={`pointer-events-none absolute top-4 -right-12 z-10 w-40 rotate-45 py-1 text-center text-[11px] font-semibold tracking-wide uppercase shadow-md ${ribbonColor}`}
                                         >
                                             {tierLabel}
                                         </span>
@@ -609,7 +616,9 @@ export default function Welcome({ packages, demos, posts }: Props) {
                                     }`}
                                     variant={popular ? 'default' : 'outline'}
                                 >
-                                    <Link href={ctaHref}>Pilih {pkg.label}</Link>
+                                    <Link href={ctaHref}>
+                                        Pilih {pkg.label}
+                                    </Link>
                                 </Button>
                             </div>
                         );
@@ -627,8 +636,8 @@ export default function Welcome({ packages, demos, posts }: Props) {
                                     Dari blog kami
                                 </h2>
                                 <p className="mt-3 max-w-xl text-muted-foreground">
-                                    Tips, inspirasi, dan panduan seputar undangan
-                                    pernikahan digital.
+                                    Tips, inspirasi, dan panduan seputar
+                                    undangan pernikahan digital.
                                 </p>
                             </div>
                             <Button
@@ -637,7 +646,8 @@ export default function Welcome({ packages, demos, posts }: Props) {
                                 className="hidden border-brand/30 text-brand hover:bg-brand/5 sm:inline-flex dark:border-white/20 dark:text-white dark:hover:bg-white/5"
                             >
                                 <Link href={blog.index().url}>
-                                    Semua artikel <ArrowRight className="size-4" />
+                                    Semua artikel{' '}
+                                    <ArrowRight className="size-4" />
                                 </Link>
                             </Button>
                         </div>
@@ -660,10 +670,13 @@ export default function Welcome({ packages, demos, posts }: Props) {
                                     )}
                                 </div>
                                 <div className="flex flex-1 flex-col p-5">
-                                    <Badge variant="secondary" className="w-fit">
+                                    <Badge
+                                        variant="secondary"
+                                        className="w-fit"
+                                    >
                                         {post.category_label}
                                     </Badge>
-                                    <h3 className="mt-3 font-heading text-xl font-semibold leading-snug text-brand group-hover:text-brand/80 dark:text-white dark:group-hover:text-gold">
+                                    <h3 className="mt-3 font-heading text-xl leading-snug font-semibold text-brand group-hover:text-brand/80 dark:text-white dark:group-hover:text-gold">
                                         {post.title}
                                     </h3>
                                     {post.excerpt && (
@@ -727,8 +740,8 @@ export default function Welcome({ packages, demos, posts }: Props) {
                             Siap membuat undangan impian Anda?
                         </h2>
                         <p className="mx-auto mt-4 max-w-xl text-white/80">
-                            Mulai sekarang, gratis untuk mencoba. Bayar hanya saat
-                            undangan siap Anda terbitkan.
+                            Mulai sekarang, gratis untuk mencoba. Bayar hanya
+                            saat undangan siap Anda terbitkan.
                         </p>
                         <Button
                             asChild
@@ -736,7 +749,8 @@ export default function Welcome({ packages, demos, posts }: Props) {
                             className="mt-8 bg-gold text-gold-foreground hover:bg-gold/90"
                         >
                             <Link href={ctaHref}>
-                                <Heart className="size-4" /> Buat Undangan Sekarang
+                                <Heart className="size-4" /> Buat Undangan
+                                Sekarang
                             </Link>
                         </Button>
                     </div>

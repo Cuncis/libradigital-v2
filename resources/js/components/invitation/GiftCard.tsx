@@ -26,7 +26,7 @@ export default function GiftCard({ gift }: { gift: GiftAccount }) {
                     {gift.type === 'bank' ? 'Bank' : 'E-Wallet'}
                 </span>
             </div>
-            <p className="mt-2 text-lg [font-family:var(--inv-font-heading)]">
+            <p className="mt-2 [font-family:var(--inv-font-heading)] text-lg">
                 {gift.provider_name}
             </p>
             <p className="font-mono text-xl tracking-wider tabular-nums">

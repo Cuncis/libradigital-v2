@@ -55,7 +55,10 @@ interface Props {
 
 const ORDER_STATUS: Record<
     OrderStatus,
-    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+    {
+        label: string;
+        variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    }
 > = {
     pending: { label: 'Menunggu', variant: 'secondary' },
     paid: { label: 'Lunas', variant: 'default' },
@@ -100,8 +103,8 @@ export default function AdminDashboard({
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <HeartHandshake className="size-5" /> Undangan per
-                                Status
+                                <HeartHandshake className="size-5" /> Undangan
+                                per Status
                             </CardTitle>
                             <CardDescription>
                                 Sebaran undangan berdasarkan status saat ini.

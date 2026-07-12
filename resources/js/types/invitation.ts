@@ -2,12 +2,52 @@ export type Timezone = 'WIB' | 'WITA' | 'WIT';
 export type Attendance = 'hadir' | 'tidak_hadir' | 'ragu';
 export type GiftType = 'bank' | 'ewallet';
 export type InvitationStatus =
-    | 'draft'
-    | 'pending_payment'
-    | 'active'
-    | 'expired';
+    'draft' | 'pending_payment' | 'active' | 'expired';
 export type PackageTier = 'starter' | 'standard' | 'premium' | 'signature';
 export type OrderStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+
+export type AnimationSection =
+    'cover' | 'header' | 'countdown' | 'love_story' | 'rsvp' | 'gift';
+
+export type AnimationEffect =
+    | 'curtain_split'
+    | 'doors'
+    | 'cover_slide_up'
+    | 'cover_zoom'
+    | 'cover_fade'
+    | 'fade'
+    | 'slide_up'
+    | 'slide_left'
+    | 'slide_right'
+    | 'zoom';
+
+export interface Animation {
+    id: number;
+    name: string;
+    section: AnimationSection;
+    section_label: string;
+    effect: AnimationEffect;
+    effect_label: string;
+    asset_url: string | null;
+    is_active: boolean;
+    sort_order: number;
+}
+
+export interface AnimationSectionOption {
+    value: AnimationSection;
+    label: string;
+    is_cover: boolean;
+}
+
+export interface AnimationEffectOption {
+    value: AnimationEffect;
+    label: string;
+    requires_asset: boolean;
+    is_cover: boolean;
+}
+
+/** Map of the couple's chosen animation per section (absent = default). */
+export type InvitationAnimations = Partial<Record<AnimationSection, Animation>>;
 
 export interface Package {
     value: PackageTier;
@@ -86,4 +126,5 @@ export interface PublicInvitation {
     gallery_photos: GalleryPhoto[];
     has_guest_book: boolean;
     guest_book_entries?: GuestBookEntry[];
+    animations?: InvitationAnimations;
 }

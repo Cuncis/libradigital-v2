@@ -114,31 +114,54 @@ class DemoInvitationSeeder extends Seeder
                 'maps_url_akad' => 'https://maps.google.com/?q=-6.175,106.827',
                 'maps_url_resepsi' => 'https://maps.google.com/?q=-6.200,106.816',
                 'cover_photo' => "https://placehold.co/1200x1600/1b4965/ffbb05?text={$groom}+%26+{$bride}",
-                'love_story' => "Kisah cinta {$groom} dan {$bride} bermula dari pertemuan sederhana yang tumbuh menjadi komitmen sehidup semati.",
+                'love_story' => implode("\n", [
+                    "2019 - Pertama bertemu di sebuah acara kampus, {$groom} dan {$bride} langsung merasa saling terhubung.",
+                    '2021 - Hubungan semakin serius, keduanya memutuskan untuk berkomitmen menjalani hari bersama.',
+                    '2024 - Lamaran berlangsung hangat di hadapan keluarga besar kedua belah pihak.',
+                    '2025 - Menyatukan janji suci dalam ikatan pernikahan, memulai babak baru sehidup semati.',
+                ]),
                 'music_url' => null,
                 'visitor_count' => fake()->numberBetween(80, 400),
             ],
         );
 
-        if ($invitation->galleryPhotos()->count() === 0) {
-            foreach (range(1, 4) as $photo) {
-                GalleryPhoto::create([
+        foreach (range(1, 6) as $photo) {
+            GalleryPhoto::updateOrCreate(
+                [
                     'invitation_id' => $invitation->id,
-                    'photo_url' => "https://placehold.co/800x800/1b4965/ffbb05?text=Galeri+{$photo}",
                     'sort_order' => $photo,
-                ]);
-            }
+                ],
+                [
+                    'photo_url' => "https://placehold.co/800x800/1b4965/ffbb05?text=Galeri+{$photo}",
+                ],
+            );
         }
 
-        if ($invitation->giftAccounts()->count() === 0) {
-            GiftAccount::create([
-                'invitation_id' => $invitation->id,
+        $giftAccounts = [
+            [
                 'type' => GiftType::Bank,
                 'provider_name' => 'BCA',
                 'account_number' => '1234567890',
                 'account_name' => "{$groom} {$bride}",
                 'sort_order' => 0,
-            ]);
+            ],
+            [
+                'type' => GiftType::Ewallet,
+                'provider_name' => 'GoPay',
+                'account_number' => '081234567890',
+                'account_name' => "{$groom} {$bride}",
+                'sort_order' => 1,
+            ],
+        ];
+
+        foreach ($giftAccounts as $account) {
+            GiftAccount::updateOrCreate(
+                [
+                    'invitation_id' => $invitation->id,
+                    'sort_order' => $account['sort_order'],
+                ],
+                $account,
+            );
         }
     }
 }

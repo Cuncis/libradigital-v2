@@ -38,7 +38,13 @@ interface Props {
 export default function AdminBlogForm({ post, categories, statuses }: Props) {
     const isEdit = post !== null;
 
-    const { data, setData, post: submit, processing, errors } = useForm<{
+    const {
+        data,
+        setData,
+        post: submit,
+        processing,
+        errors,
+    } = useForm<{
         title: string;
         category: string;
         status: string;
@@ -65,7 +71,9 @@ export default function AdminBlogForm({ post, categories, statuses }: Props) {
 
     return (
         <>
-            <Head title={isEdit ? 'Edit Artikel — Admin' : 'Artikel Baru — Admin'} />
+            <Head
+                title={isEdit ? 'Edit Artikel — Admin' : 'Artikel Baru — Admin'}
+            />
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
                 <button
                     type="button"
@@ -77,7 +85,10 @@ export default function AdminBlogForm({ post, categories, statuses }: Props) {
 
                 <Card>
                     <CardContent className="p-6">
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                        <form
+                            onSubmit={handleSubmit}
+                            className="flex flex-col gap-5"
+                        >
                             <div className="grid gap-2">
                                 <Label htmlFor="title">Judul</Label>
                                 <Input

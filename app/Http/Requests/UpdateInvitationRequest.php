@@ -44,6 +44,10 @@ class UpdateInvitationRequest extends FormRequest
             'cover_photo' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'love_story' => ['sometimes', 'nullable', 'string', 'max:10000'],
             'music_url' => ['sometimes', 'nullable', 'url', 'max:1000'],
+
+            // Per-section animation choices: { section: animation_id|null }.
+            'animations' => ['sometimes', 'array'],
+            'animations.*' => ['nullable', 'integer', 'exists:animations,id'],
         ];
     }
 }

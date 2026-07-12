@@ -28,11 +28,11 @@ interface Props {
 
 export default function BlogIndex({ posts, categories, filters }: Props) {
     const filterBy = (category: string | null) => {
-        router.get(
-            blog.index().url,
-            category ? { category } : {},
-            { preserveScroll: true, preserveState: true, replace: true },
-        );
+        router.get(blog.index().url, category ? { category } : {}, {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        });
     };
 
     return (
@@ -113,10 +113,13 @@ export default function BlogIndex({ posts, categories, filters }: Props) {
                                     )}
                                 </div>
                                 <div className="flex flex-1 flex-col p-5">
-                                    <Badge variant="secondary" className="w-fit">
+                                    <Badge
+                                        variant="secondary"
+                                        className="w-fit"
+                                    >
                                         {post.category_label}
                                     </Badge>
-                                    <h2 className="mt-3 font-heading text-xl font-semibold leading-snug text-brand group-hover:text-brand/80 dark:text-white dark:group-hover:text-gold">
+                                    <h2 className="mt-3 font-heading text-xl leading-snug font-semibold text-brand group-hover:text-brand/80 dark:text-white dark:group-hover:text-gold">
                                         {post.title}
                                     </h2>
                                     {post.excerpt && (

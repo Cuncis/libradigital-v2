@@ -14,6 +14,9 @@ import { loadSnap } from '@/lib/midtrans';
 import { dashboard } from '@/routes';
 import type {
     Addon,
+    Animation,
+    AnimationSection,
+    AnimationSectionOption,
     GiftType,
     InvitationTemplate,
     Package,
@@ -24,12 +27,36 @@ import type {
 interface Props {
     invitation: PublicInvitation;
     templates: InvitationTemplate[];
+    animationLibrary: Animation[];
+    animationSections: AnimationSectionOption[];
     packages: Package[];
     addons: Addon[];
     midtrans: {
         client_key: string;
         is_production: boolean;
     };
+}
+
+const ANIMATION_SECTIONS: AnimationSection[] = [
+    'cover',
+    'header',
+    'countdown',
+    'love_story',
+    'rsvp',
+    'gift',
+];
+
+/** Build the initial { section: animation_id|null } map from the invitation. */
+function initialAnimations(
+    invitation: PublicInvitation,
+): Record<AnimationSection, number | null> {
+    const map = {} as Record<AnimationSection, number | null>;
+
+    for (const section of ANIMATION_SECTIONS) {
+        map[section] = invitation.animations?.[section]?.id ?? null;
+    }
+
+    return map;
 }
 
 const STEPS = [
@@ -39,6 +66,7 @@ const STEPS = [
     'Kisah',
     'Angpao',
     'Template',
+    'Animasi',
     'Review',
 ];
 
@@ -61,6 +89,8 @@ const PACKAGE_LABEL: Record<PackageTier, string> = {
 export default function Builder({
     invitation,
     templates,
+    animationLibrary,
+    animationSections,
     packages,
     addons,
     midtrans,
@@ -82,6 +112,7 @@ export default function Builder({
         maps_url_resepsi: invitation.maps_url_resepsi ?? '',
         love_story: invitation.love_story ?? '',
         template_id: invitation.template_id,
+        animations: initialAnimations(invitation),
     });
 
     const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -130,6 +161,13 @@ export default function Builder({
                         <TemplateStep form={form} templates={templates} />
                     )}
                     {step === 6 && (
+                        <AnimationStep
+                            form={form}
+                            library={animationLibrary}
+                            sections={animationSections}
+                        />
+                    )}
+                    {step === 7 && (
                         <ReviewStep
                             invitation={invitation}
                             packages={packages}
@@ -321,7 +359,10 @@ function VenueStep({ form }: { form: Form }) {
                                 }
                             />
                         </Field>
-                        <Field label="Link Google Maps" name={`maps_url_${kind}`}>
+                        <Field
+                            label="Link Google Maps"
+                            name={`maps_url_${kind}`}
+                        >
                             <Input
                                 id={`maps_url_${kind}`}
                                 name={`maps_url_${kind}`}
@@ -452,6 +493,73 @@ function StoryStep({ form }: { form: Form }) {
                 placeholder="Ceritakan perjalanan cinta kalian…"
             />
         </Field>
+    );
+}
+
+function AnimationStep({
+    form,
+    library,
+    sections,
+}: {
+    form: Form;
+    library: Animation[];
+    sections: AnimationSectionOption[];
+}) {
+    const selections = form.data.animations as Record<
+        AnimationSection,
+        number | null
+    >;
+
+    const setSection = (section: AnimationSection, value: number | null) => {
+        form.setData('animations', { ...selections, [section]: value });
+    };
+
+    return (
+        <div className="grid gap-5">
+            <p className="text-sm text-muted-foreground">
+                Pilih animasi untuk tiap bagian undangan. Biarkan “Bawaan” untuk
+                memakai animasi standar.
+            </p>
+            {sections.map((section) => {
+                const options = library.filter(
+                    (a) => a.section === section.value,
+                );
+
+                return (
+                    <Field
+                        key={section.value}
+                        label={section.label}
+                        name={`animation-${section.value}`}
+                    >
+                        <select
+                            id={`animation-${section.value}`}
+                            value={selections[section.value] ?? ''}
+                            onChange={(e) =>
+                                setSection(
+                                    section.value,
+                                    e.target.value
+                                        ? Number(e.target.value)
+                                        : null,
+                                )
+                            }
+                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                            <option value="">Bawaan (default)</option>
+                            {options.map((animation) => (
+                                <option key={animation.id} value={animation.id}>
+                                    {animation.name} — {animation.effect_label}
+                                </option>
+                            ))}
+                        </select>
+                        {options.length === 0 && (
+                            <p className="text-xs text-muted-foreground">
+                                Belum ada animasi untuk bagian ini.
+                            </p>
+                        )}
+                    </Field>
+                );
+            })}
+        </div>
     );
 }
 
@@ -622,7 +730,8 @@ function ReviewStep({
     midtrans: { client_key: string; is_production: boolean };
     selectedTemplate?: InvitationTemplate;
 }) {
-    const requiredTier: PackageTier = selectedTemplate?.min_package ?? 'starter';
+    const requiredTier: PackageTier =
+        selectedTemplate?.min_package ?? 'starter';
     const requiredRank = PACKAGE_RANK[requiredTier];
     const isEligible = (value: PackageTier) =>
         PACKAGE_RANK[value] >= requiredRank;
@@ -855,11 +964,7 @@ function ReviewStep({
                 <p className="text-center text-sm text-destructive">{error}</p>
             )}
 
-            <Button
-                onClick={pay}
-                disabled={processing}
-                className="mx-auto"
-            >
+            <Button onClick={pay} disabled={processing} className="mx-auto">
                 {processing && <Loader2 className="size-4 animate-spin" />}
                 {isPending ? 'Bayar Ulang' : 'Bayar & Publikasikan'}
             </Button>

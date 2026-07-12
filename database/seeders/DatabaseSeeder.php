@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             TemplateSeeder::class,
+            AnimationSeeder::class,
             DemoInvitationSeeder::class,
             BlogPostSeeder::class,
         ]);

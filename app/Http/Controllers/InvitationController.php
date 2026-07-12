@@ -3,15 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Addon;
+use App\Enums\AnimationSection;
 use App\Enums\InvitationStatus;
 use App\Enums\Package;
 use App\Http\Requests\StoreInvitationRequest;
 use App\Http\Requests\SyncGiftsRequest;
 use App\Http\Requests\UpdateInvitationRequest;
 use App\Http\Requests\UploadPhotosRequest;
+use App\Http\Resources\AnimationResource;
 use App\Http\Resources\InvitationResource;
 use App\Http\Resources\TemplateResource;
 use App\Jobs\OptimizeImage;
+use App\Models\Animation;
 use App\Models\GalleryPhoto;
 use App\Models\Invitation;
 use App\Models\Template;
@@ -52,13 +55,21 @@ class InvitationController extends Controller
     {
         $this->authorize('update', $invitation);
 
-        $invitation->load(['template', 'giftAccounts', 'galleryPhotos']);
+        $invitation->load(['template', 'giftAccounts', 'galleryPhotos', 'animationSelections.animation']);
 
         return Inertia::render('dashboard/builder', [
             'invitation' => InvitationResource::make($invitation),
             'templates' => TemplateResource::collection(
                 Template::query()->where('is_active', true)->get()
             ),
+            'animationLibrary' => AnimationResource::collection(
+                Animation::query()
+                    ->where('is_active', true)
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get()
+            ),
+            'animationSections' => AnimationSection::catalog(),
             'packages' => Package::catalog(),
             'addons' => Addon::catalog(),
             'midtrans' => [
@@ -77,12 +88,20 @@ class InvitationController extends Controller
 
         $data = $request->validated();
 
+        // Per-section animation choices live in a pivot table, not on the row.
+        $animations = $data['animations'] ?? null;
+        unset($data['animations']);
+
         // The slug may only change while the invitation is a draft.
         if (! $invitation->isDraft()) {
             unset($data['slug']);
         }
 
         $invitation->update($data);
+
+        if ($animations !== null) {
+            $this->syncAnimations($invitation, $animations);
+        }
 
         return back();
     }
@@ -183,5 +202,31 @@ class InvitationController extends Controller
         }
 
         return back();
+    }
+
+    /**
+     * Persist per-section animation choices. A null value clears the section's
+     * selection; unknown sections are ignored.
+     *
+     * @param  array<string, int|null>  $animations
+     */
+    private function syncAnimations(Invitation $invitation, array $animations): void
+    {
+        foreach ($animations as $section => $animationId) {
+            if (AnimationSection::tryFrom((string) $section) === null) {
+                continue;
+            }
+
+            if ($animationId === null) {
+                $invitation->animationSelections()->where('section', $section)->delete();
+
+                continue;
+            }
+
+            $invitation->animationSelections()->updateOrCreate(
+                ['section' => $section],
+                ['animation_id' => $animationId],
+            );
+        }
     }
 }

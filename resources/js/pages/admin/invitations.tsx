@@ -58,7 +58,10 @@ interface Props {
 
 const STATUS: Record<
     InvitationStatus,
-    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+    {
+        label: string;
+        variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    }
 > = {
     draft: { label: 'Draft', variant: 'secondary' },
     pending_payment: { label: 'Menunggu Pembayaran', variant: 'outline' },
@@ -157,7 +160,8 @@ export default function AdminInvitations({ invitations, filters }: Props) {
                                     </TableRow>
                                 ) : (
                                     invitations.data.map((invitation) => {
-                                        const status = STATUS[invitation.status];
+                                        const status =
+                                            STATUS[invitation.status];
 
                                         return (
                                             <TableRow key={invitation.id}>

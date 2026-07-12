@@ -108,7 +108,10 @@ export default function BlogShow({ post, related }: Props) {
                                     )}
                                 </div>
                                 <div className="p-4">
-                                    <Badge variant="secondary" className="text-xs">
+                                    <Badge
+                                        variant="secondary"
+                                        className="text-xs"
+                                    >
                                         {item.category_label}
                                     </Badge>
                                     <p className="mt-2 line-clamp-2 text-sm font-medium text-brand group-hover:text-brand/80 dark:text-white dark:group-hover:text-gold">

@@ -7,6 +7,7 @@ import {
     LayoutGrid,
     Newspaper,
     Shield,
+    Sparkles,
     Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -63,6 +64,11 @@ export function AppSidebar() {
             title: 'Blog',
             href: admin.blog.index().url,
             icon: Newspaper,
+        },
+        {
+            title: 'Animasi',
+            href: admin.animations.index().url,
+            icon: Sparkles,
         },
     ];
 

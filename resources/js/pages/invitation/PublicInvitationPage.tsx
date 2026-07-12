@@ -1,13 +1,18 @@
 import { Head } from '@inertiajs/react';
 import { CalendarHeart, MapPin } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import AnimatedReveal from '@/components/invitation/AnimatedReveal';
 import Countdown from '@/components/invitation/Countdown';
 import GiftCard from '@/components/invitation/GiftCard';
 import GuestBook from '@/components/invitation/GuestBook';
+import InvitationCover from '@/components/invitation/InvitationCover';
+import LoveStoryTimeline from '@/components/invitation/LoveStoryTimeline';
 import RsvpForm from '@/components/invitation/RsvpForm';
 import VisitorCounter from '@/components/invitation/VisitorCounter';
 import WaShareButton from '@/components/invitation/WaShareButton';
 import { Button } from '@/components/ui/button';
 import { useHydrated } from '@/hooks/use-hydrated';
+import { resolveCoverEffect } from '@/lib/cover-animation';
 import { formatIndoDate, formatIndoTime } from '@/lib/format';
 import { resolveTheme } from '@/lib/themes';
 import { cn } from '@/lib/utils';
@@ -46,7 +51,7 @@ function Section({
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
     return (
-        <h2 className="mb-8 text-3xl font-semibold text-[var(--inv-accent-strong)] [font-family:var(--inv-font-heading)]">
+        <h2 className="mb-8 [font-family:var(--inv-font-heading)] text-3xl font-semibold text-[var(--inv-accent-strong)]">
             {children}
         </h2>
     );
@@ -70,7 +75,7 @@ function EventBlock({
     return (
         <div className="rounded-2xl border border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] p-8">
             <CalendarHeart className="mx-auto size-8 text-[var(--inv-accent)]" />
-            <h3 className="mt-3 text-2xl [font-family:var(--inv-font-heading)]">
+            <h3 className="mt-3 [font-family:var(--inv-font-heading)] text-2xl">
                 {title}
             </h3>
             {datetime && (
@@ -105,12 +110,73 @@ export default function PublicInvitationPage({
     const couple = `${invitation.groom_name ?? ''} & ${invitation.bride_name ?? ''}`;
     const theme = resolveTheme(invitation.template?.category);
 
+    // The invitation stays behind a full-screen cover until the guest taps
+    // "Buka Undangan". While the cover is up we lock body scroll so the page
+    // underneath can't be reached.
+    const [opened, setOpened] = useState(false);
+    const [coverGone, setCoverGone] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
+
+    useEffect(() => {
+        if (opened) {
+            return;
+        }
+
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, [opened]);
+
+    const handleOpen = () => {
+        setOpened(true);
+        window.scrollTo({ top: 0 });
+
+        // Keep the cover mounted long enough to finish its exit animation.
+        window.setTimeout(
+            () => setCoverGone(true),
+            resolveCoverEffect(invitation.animations?.cover, invitation.package)
+                .durationMs,
+        );
+
+        // Opening is a user gesture, so background music is allowed to start.
+        if (invitation.music_url && audioRef.current) {
+            audioRef.current.play().catch(() => {
+                // Autoplay may still be blocked; ignore silently.
+            });
+        }
+    };
+
     return (
         <div
-            className={cn('invitation-scope min-h-screen', theme.page, theme.text)}
+            className={cn(
+                'invitation-scope min-h-screen',
+                theme.page,
+                theme.text,
+            )}
             style={theme.vars}
         >
             <Head title={`Undangan Pernikahan ${couple}`} />
+
+            {!coverGone && (
+                <InvitationCover
+                    tier={invitation.package}
+                    animation={invitation.animations?.cover}
+                    coverPhoto={invitation.cover_photo}
+                    groomName={invitation.groom_name}
+                    brideName={invitation.bride_name}
+                    weddingDate={invitation.wedding_date}
+                    guestName={tamu}
+                    ornament={theme.ornament}
+                    onOpen={handleOpen}
+                />
+            )}
+
+            {invitation.music_url && (
+                <audio ref={audioRef} src={invitation.music_url} loop />
+            )}
 
             {/* 1. Hero */}
             <header className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center text-white">
@@ -122,11 +188,15 @@ export default function PublicInvitationPage({
                     />
                 )}
                 <div className="absolute inset-0 bg-black/45" />
-                <div className="relative">
+                <AnimatedReveal
+                    animation={invitation.animations?.header}
+                    fallback="zoom"
+                    className="relative"
+                >
                     <p className="text-sm tracking-[0.3em] uppercase">
                         The Wedding Of
                     </p>
-                    <h1 className="mt-4 text-5xl font-semibold [font-family:var(--inv-font-heading)] sm:text-6xl">
+                    <h1 className="mt-4 [font-family:var(--inv-font-heading)] text-5xl font-semibold sm:text-6xl">
                         {invitation.groom_name}
                         <span className="mx-3 text-white/70">&amp;</span>
                         {invitation.bride_name}
@@ -147,14 +217,18 @@ export default function PublicInvitationPage({
                             <p className="font-serif text-xl">{tamu}</p>
                         </div>
                     )}
-                </div>
+                </AnimatedReveal>
             </header>
 
             {/* 2. Countdown */}
             {invitation.wedding_date && (
                 <Section>
-                    <SectionTitle>Menuju Hari Bahagia</SectionTitle>
-                    <Countdown targetIso={invitation.wedding_date} />
+                    <AnimatedReveal
+                        animation={invitation.animations?.countdown}
+                    >
+                        <SectionTitle>Menuju Hari Bahagia</SectionTitle>
+                        <Countdown targetIso={invitation.wedding_date} />
+                    </AnimatedReveal>
                 </Section>
             )}
 
@@ -183,10 +257,13 @@ export default function PublicInvitationPage({
             {/* 5. Love Story */}
             {invitation.love_story && (
                 <Section>
-                    <SectionTitle>Kisah Kami</SectionTitle>
-                    <p className="mx-auto max-w-xl leading-relaxed whitespace-pre-line text-muted-foreground">
-                        {invitation.love_story}
-                    </p>
+                    <AnimatedReveal
+                        animation={invitation.animations?.love_story}
+                        fallback="slide_left"
+                    >
+                        <SectionTitle>Kisah Kami</SectionTitle>
+                        <LoveStoryTimeline story={invitation.love_story} />
+                    </AnimatedReveal>
                 </Section>
             )}
 
@@ -210,16 +287,21 @@ export default function PublicInvitationPage({
 
             {/* 7. RSVP */}
             <Section>
-                <SectionTitle>Konfirmasi Kehadiran</SectionTitle>
-                {tamu && (
-                    <p className="mb-6 text-muted-foreground">
-                        Kepada Bapak/Ibu/Saudara/i{' '}
-                        <span className="font-medium text-foreground">
-                            {tamu}
-                        </span>
-                    </p>
-                )}
-                <RsvpForm slug={invitation.slug} defaultName={tamu} />
+                <AnimatedReveal
+                    animation={invitation.animations?.rsvp}
+                    fallback="slide_up"
+                >
+                    <SectionTitle>Konfirmasi Kehadiran</SectionTitle>
+                    {tamu && (
+                        <p className="mb-6 text-muted-foreground">
+                            Kepada Bapak/Ibu/Saudara/i{' '}
+                            <span className="font-medium text-foreground">
+                                {tamu}
+                            </span>
+                        </p>
+                    )}
+                    <RsvpForm slug={invitation.slug} defaultName={tamu} />
+                </AnimatedReveal>
             </Section>
 
             {/* 7b. Guest book (guest_book add-on) */}
@@ -239,16 +321,21 @@ export default function PublicInvitationPage({
             {/* 8. Digital Gift */}
             {invitation.gift_accounts.length > 0 && (
                 <Section>
-                    <SectionTitle>Angpao Digital</SectionTitle>
-                    <p className="mb-6 text-muted-foreground">
-                        Doa restu Anda merupakan karunia yang sangat berarti.
-                        Jika memberi tanda kasih, dapat melalui:
-                    </p>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {invitation.gift_accounts.map((gift) => (
-                            <GiftCard key={gift.id} gift={gift} />
-                        ))}
-                    </div>
+                    <AnimatedReveal
+                        animation={invitation.animations?.gift}
+                        fallback="zoom"
+                    >
+                        <SectionTitle>Angpao Digital</SectionTitle>
+                        <p className="mb-6 text-muted-foreground">
+                            Doa restu Anda merupakan karunia yang sangat
+                            berarti. Jika memberi tanda kasih, dapat melalui:
+                        </p>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            {invitation.gift_accounts.map((gift) => (
+                                <GiftCard key={gift.id} gift={gift} />
+                            ))}
+                        </div>
+                    </AnimatedReveal>
                 </Section>
             )}
 
@@ -262,7 +349,7 @@ export default function PublicInvitationPage({
                 <div className="mb-4">
                     <VisitorCounter slug={invitation.slug} />
                 </div>
-                <p className="text-lg [font-family:var(--inv-font-heading)]">
+                <p className="[font-family:var(--inv-font-heading)] text-lg">
                     {couple}
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">

@@ -66,7 +66,7 @@ export default function Countdown({ targetIso }: { targetIso: string }) {
                     key={label}
                     className="flex min-w-[64px] flex-col items-center rounded-xl border border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] px-3 py-3 shadow-sm backdrop-blur"
                 >
-                    <span className="text-3xl font-semibold tabular-nums [font-family:var(--inv-font-heading)]">
+                    <span className="[font-family:var(--inv-font-heading)] text-3xl font-semibold tabular-nums">
                         {value}
                     </span>
                     <span className="mt-1 text-xs tracking-wide text-muted-foreground uppercase">

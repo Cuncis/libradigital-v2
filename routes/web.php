@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AnimationController as AdminAnimationController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\InvitationController as AdminInvitationController;
@@ -54,6 +55,12 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::patch('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
+
+    // Custom animation library (per-section effects couples can choose in the builder).
+    Route::get('animations', [AdminAnimationController::class, 'index'])->name('animations.index');
+    Route::post('animations', [AdminAnimationController::class, 'store'])->name('animations.store');
+    Route::post('animations/{animation}', [AdminAnimationController::class, 'update'])->name('animations.update');
+    Route::delete('animations/{animation}', [AdminAnimationController::class, 'destroy'])->name('animations.destroy');
 
     // Blog authoring is restricted to superadmins (this whole group is is_admin).
     Route::get('blog', [AdminBlogController::class, 'index'])->name('blog.index');

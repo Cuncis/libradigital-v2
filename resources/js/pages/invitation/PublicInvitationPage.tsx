@@ -1,9 +1,9 @@
 import { Head } from '@inertiajs/react';
-import { CalendarHeart, MapPin } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import AnimatedReveal from '@/components/invitation/AnimatedReveal';
 import AnimationLayer from '@/components/invitation/AnimationLayer';
 import Countdown from '@/components/invitation/Countdown';
+import EventBlock from '@/components/invitation/EventBlock';
 import GiftCard from '@/components/invitation/GiftCard';
 import GuestBook from '@/components/invitation/GuestBook';
 import InvitationCover from '@/components/invitation/InvitationCover';
@@ -11,10 +11,9 @@ import LoveStoryTimeline from '@/components/invitation/LoveStoryTimeline';
 import RsvpForm from '@/components/invitation/RsvpForm';
 import VisitorCounter from '@/components/invitation/VisitorCounter';
 import WaShareButton from '@/components/invitation/WaShareButton';
-import { Button } from '@/components/ui/button';
 import { useHydrated } from '@/hooks/use-hydrated';
 import { resolveCoverEffect } from '@/lib/cover-animation';
-import { formatIndoDate, formatIndoTime } from '@/lib/format';
+import { formatIndoDate } from '@/lib/format';
 import { resolveTheme } from '@/lib/themes';
 import { cn } from '@/lib/utils';
 import type { PublicInvitation } from '@/types/invitation';
@@ -55,50 +54,6 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
         <h2 className="mb-8 [font-family:var(--inv-font-heading)] text-3xl font-semibold text-[var(--inv-accent-strong)]">
             {children}
         </h2>
-    );
-}
-
-function EventBlock({
-    title,
-    datetime,
-    tz,
-    venue,
-    address,
-    mapsUrl,
-}: {
-    title: string;
-    datetime: string | null;
-    tz: string;
-    venue: string | null;
-    address: string | null;
-    mapsUrl: string | null;
-}) {
-    return (
-        <div className="rounded-2xl border border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] p-8">
-            <CalendarHeart className="mx-auto size-8 text-[var(--inv-accent)]" />
-            <h3 className="mt-3 [font-family:var(--inv-font-heading)] text-2xl">
-                {title}
-            </h3>
-            {datetime && (
-                <>
-                    <p className="mt-3 text-lg">{formatIndoDate(datetime)}</p>
-                    <p className="text-muted-foreground">
-                        {formatIndoTime(datetime, tz)} - selesai
-                    </p>
-                </>
-            )}
-            {venue && <p className="mt-4 font-medium">{venue}</p>}
-            {address && (
-                <p className="text-sm text-muted-foreground">{address}</p>
-            )}
-            {mapsUrl && (
-                <Button asChild variant="outline" className="mt-5">
-                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
-                        <MapPin className="size-4" /> Buka di Google Maps
-                    </a>
-                </Button>
-            )}
-        </div>
     );
 }
 

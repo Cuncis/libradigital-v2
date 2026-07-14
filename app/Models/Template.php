@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $slug
  * @property TemplateCategory $category
  * @property string|null $thumbnail
+ * @property array<string, mixed>|null $layout
+ * @property int $builder_version
  * @property bool $is_premium
  * @property Package $min_package
  * @property bool $is_active
@@ -30,6 +32,8 @@ class Template extends Model
     {
         return [
             'category' => TemplateCategory::class,
+            'layout' => 'array',
+            'builder_version' => 'integer',
             'is_premium' => 'boolean',
             'min_package' => Package::class,
             'is_active' => 'boolean',

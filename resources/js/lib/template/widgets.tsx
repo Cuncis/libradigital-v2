@@ -35,6 +35,15 @@ export interface WidgetSpec {
     render: (resolved: Record<string, string>, ctx: RenderContext) => ReactNode;
 }
 
+/** Static, non-interactive stand-in shown for live widgets in the builder canvas. */
+function PreviewStub({ label }: { label: string }): ReactNode {
+    return (
+        <div className="rounded-xl border border-dashed border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] px-6 py-8 text-sm text-muted-foreground">
+            {label}
+        </div>
+    );
+}
+
 function GuestGreeting({
     variant,
     ctx,
@@ -130,9 +139,12 @@ export const WIDGET_REGISTRY: Record<WidgetKind, WidgetSpec> = {
         label: 'Konfirmasi Kehadiran',
         bindingSchema: { slug: { label: 'Slug', required: true } },
         isRepeater: false,
-        render: (resolved, ctx) => (
-            <RsvpForm slug={resolved.slug} defaultName={ctx.guestName} />
-        ),
+        render: (resolved, ctx) =>
+            ctx.preview ? (
+                <PreviewStub label="Formulir RSVP" />
+            ) : (
+                <RsvpForm slug={resolved.slug} defaultName={ctx.guestName} />
+            ),
     },
     guest_book: {
         kind: 'guest_book',
@@ -140,12 +152,15 @@ export const WIDGET_REGISTRY: Record<WidgetKind, WidgetSpec> = {
         bindingSchema: { slug: { label: 'Slug', required: true } },
         isRepeater: true,
         defaultVisibleWhen: { when: 'addon', addon: 'guest_book' },
-        render: (resolved, ctx) => (
-            <GuestBook
-                slug={resolved.slug}
-                initialEntries={ctx.invitation.guest_book_entries ?? []}
-            />
-        ),
+        render: (resolved, ctx) =>
+            ctx.preview ? (
+                <PreviewStub label="Buku Tamu" />
+            ) : (
+                <GuestBook
+                    slug={resolved.slug}
+                    initialEntries={ctx.invitation.guest_book_entries ?? []}
+                />
+            ),
     },
     gift: {
         kind: 'gift',
@@ -166,16 +181,24 @@ export const WIDGET_REGISTRY: Record<WidgetKind, WidgetSpec> = {
         label: 'Penghitung Pengunjung',
         bindingSchema: { slug: { label: 'Slug', required: true } },
         isRepeater: false,
-        render: (resolved) => <VisitorCounter slug={resolved.slug} />,
+        render: (resolved, ctx) =>
+            ctx.preview ? (
+                <PreviewStub label="Penghitung Pengunjung" />
+            ) : (
+                <VisitorCounter slug={resolved.slug} />
+            ),
     },
     wa_share: {
         kind: 'wa_share',
         label: 'Bagikan WhatsApp',
         bindingSchema: { slug: { label: 'Slug', required: true } },
         isRepeater: false,
-        render: (resolved, ctx) => (
-            <WaShareButton slug={resolved.slug} guestName={ctx.guestName} />
-        ),
+        render: (resolved, ctx) =>
+            ctx.preview ? (
+                <PreviewStub label="Tombol Bagikan WhatsApp" />
+            ) : (
+                <WaShareButton slug={resolved.slug} guestName={ctx.guestName} />
+            ),
     },
     guest_greeting: {
         kind: 'guest_greeting',

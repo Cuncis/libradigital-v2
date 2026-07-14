@@ -415,17 +415,26 @@ Per-node animation reuses both existing systems — nothing new rendered here:
 
 ```ts
 export interface AnimationRef {
-  reveal?: AnimationEffect | null;  // scroll reveal via <AnimatedReveal>
-  packSlug?: string | null;         // floating GSAP overlay via <AnimationLayer>
+  reveal?: AnimationEffect | null;               // scroll-reveal fallback via <AnimatedReveal>
+  revealSection?: AnimationSection | null;        // couple-override slot (see below)
+  packSection?: AnimationPackSectionType | null;  // floating-overlay region marker (section nodes)
 }
 ```
 
-- `reveal` → wraps the node in your existing `AnimatedReveal` (fade/slide/zoom).
-  At render time the actual effect can still be overridden by the couple's
-  `invitation.animations[section]` selection, preserving current behavior.
-- `packSlug` → the couple's chosen `animation_pack` still wins at the invitation
-  level (one pack, one section). The template's `packSlug` is a **default/suggestion**
-  the couple's selection overrides. Full-page packs remain page chrome (§1).
+- `reveal` → wraps the node in your existing `AnimatedReveal` (fade/slide/zoom) as
+  the fallback effect.
+- `revealSection` → maps the node to a couple-customizable animation slot
+  (`header`/`countdown`/`love_story`/`rsvp`/`gift`). When set, the couple's
+  `invitation.animations[revealSection]` selection **overrides** `reveal` at render,
+  preserving the existing per-section animation feature in the freeform tree.
+- `packSection` → **implemented mechanism** (replaces the earlier `packSlug` idea).
+  Marks a *section node* as a floating-overlay region (`hero`/`gallery`/`story`/
+  `event`/`footer`). The renderer overlays the couple's chosen `invitation.animation_pack`
+  via `<AnimationLayer>` on the section whose `packSection` equals `pack.section`.
+  Rationale: the couple picks one section-based pack; the template only says *which
+  node is that section* in a freeform tree. `full_page` packs stay page chrome (§1,
+  handled by `PublicInvitationPage`, not the renderer). Skipped in the builder canvas
+  (no GSAP in the editor).
 
 > The node schema only *references* animations by id/effect. Motion presets,
 > upload, and the pack builder are entirely `ANIMATION_BUILDER.md`'s domain.
@@ -467,7 +476,7 @@ The Phase-1 parity target: this tree must render identically to today's
         "id": "sec_hero", "type": "section", "variant": "hero",
         "backgroundImage": { "kind": "bind", "field": "cover_photo" },
         "style": { "align": "center" },
-        "animationRef": { "reveal": "zoom", "packSlug": null },
+        "animationRef": { "packSection": "hero" },
         "children": [
           { "id": "hero_eyebrow", "type": "text", "tag": "eyebrow",
             "value": { "kind": "literal", "value": "The Wedding Of" },
@@ -504,7 +513,7 @@ The Phase-1 parity target: this tree must render identically to today's
       },
       {
         "id": "sec_events", "type": "section", "variant": "default",
-        "style": {}, "animationRef": { "packSlug": null },
+        "style": {}, "animationRef": { "packSection": "event" },
         "children": [
           { "id": "events_grid", "type": "container", "layout": "grid",
             "columns": 2, "gap": "md", "style": {},

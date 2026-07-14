@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\InvitationController as AdminInvitationController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BlogController;
@@ -62,6 +63,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::post('animations', [AdminAnimationController::class, 'store'])->name('animations.store');
     Route::post('animations/{animation}', [AdminAnimationController::class, 'update'])->name('animations.update');
     Route::delete('animations/{animation}', [AdminAnimationController::class, 'destroy'])->name('animations.destroy');
+
+    // Template layout builder (Elementor-style node-tree builder, superadmin only).
+    Route::get('templates', [AdminTemplateController::class, 'index'])->name('templates.index');
+    Route::get('templates/{template}/builder', [AdminTemplateController::class, 'builder'])->name('templates.builder');
+    Route::put('templates/{template}', [AdminTemplateController::class, 'update'])->name('templates.update');
 
     // Animation packs (floating GSAP overlays built by superadmin, chosen by couples).
     Route::get('animation-packs', [AdminAnimationPackController::class, 'index'])->name('animation-packs.index');

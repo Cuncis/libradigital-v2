@@ -24,6 +24,9 @@ class TemplateResource extends JsonResource
             'thumbnail' => $this->thumbnail,
             'is_premium' => $this->is_premium,
             'min_package' => $this->min_package->value,
+            'layout' => $this->layout,
+            'builder_version' => $this->builder_version,
+            'has_custom_layout' => $this->layout !== null,
         ];
     }
 }

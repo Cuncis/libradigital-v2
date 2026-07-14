@@ -1,3 +1,5 @@
+import type { TemplateLayout } from '@/lib/template/nodes';
+
 export type Timezone = 'WIB' | 'WITA' | 'WIT';
 export type Attendance = 'hadir' | 'tidak_hadir' | 'ragu';
 export type GiftType = 'bank' | 'ewallet';
@@ -131,6 +133,10 @@ export interface InvitationTemplate {
     thumbnail: string | null;
     is_premium: boolean;
     min_package: PackageTier;
+    /** Visual-builder node tree (raw; null when the template uses the default). */
+    layout?: TemplateLayout | null;
+    builder_version?: number;
+    has_custom_layout?: boolean;
 }
 
 export interface GiftAccount {
@@ -180,6 +186,8 @@ export interface PublicInvitation {
     visitor_count: number;
     public_url: string;
     template: InvitationTemplate | null;
+    /** Resolved layout tree — always present (falls back to the Classic tree). */
+    layout: TemplateLayout;
     gift_accounts: GiftAccount[];
     gallery_photos: GalleryPhoto[];
     has_guest_book: boolean;

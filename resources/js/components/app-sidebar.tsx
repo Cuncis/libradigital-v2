@@ -5,6 +5,7 @@ import {
     FileText,
     FolderGit2,
     LayoutGrid,
+    LayoutTemplate,
     Newspaper,
     Shield,
     Sparkles,
@@ -70,6 +71,11 @@ export function AppSidebar() {
             title: 'Animasi',
             href: admin.animations.index().url,
             icon: Sparkles,
+        },
+        {
+            title: 'Templates',
+            href: admin.templates.index().url,
+            icon: LayoutTemplate,
         },
         {
             title: 'Animation Packs',

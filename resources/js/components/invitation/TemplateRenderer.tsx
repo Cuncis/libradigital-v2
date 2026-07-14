@@ -10,6 +10,7 @@
  */
 import type { ReactNode } from 'react';
 import AnimatedReveal from '@/components/invitation/AnimatedReveal';
+import AnimationLayer from '@/components/invitation/AnimationLayer';
 import { evalVisibility, resolveValue } from '@/lib/template/bindableFields';
 import type { RenderContext } from '@/lib/template/bindableFields';
 import type {
@@ -122,6 +123,14 @@ const CONTAINER_LAYOUT: Record<'stack' | 'row' | 'grid', string> = {
     row: 'flex flex-row',
     grid: 'grid',
 };
+// Responsive column counts (mobile-first: grids stack on small screens), literal
+// so Tailwind can scan them. Falls back to the 2-column layout.
+const GRID_COLS: Record<number, string> = {
+    1: 'grid-cols-1',
+    2: 'grid-cols-1 sm:grid-cols-2',
+    3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+    4: 'grid-cols-2 sm:grid-cols-4',
+};
 const GAP: Record<NonNullable<StyleProps['padding']>, string> = {
     none: 'gap-0',
     xs: 'gap-2',
@@ -141,7 +150,28 @@ function renderChildren(
     return children?.map((child) => renderNode(child, ctx));
 }
 
+/**
+ * The couple's chosen floating pack, when it targets this section. Skipped in the
+ * builder (no GSAP in the editor) and when no pack matches.
+ */
+function renderPackOverlay(node: SectionNode, ctx: RenderContext): ReactNode {
+    const pack = ctx.invitation.animation_pack;
+
+    if (
+        ctx.editor ||
+        !pack ||
+        !node.animationRef?.packSection ||
+        pack.section !== node.animationRef.packSection
+    ) {
+        return null;
+    }
+
+    return <AnimationLayer pack={pack} />;
+}
+
 function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
+    const overlay = renderPackOverlay(node, ctx);
+
     if (node.variant === 'hero') {
         const bg = node.backgroundImage
             ? resolveValue(node.backgroundImage, ctx)
@@ -160,6 +190,7 @@ function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
                 <div className="relative">
                     {renderChildren(node.children, ctx)}
                 </div>
+                {overlay}
             </header>
         );
     }
@@ -173,6 +204,7 @@ function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
                 )}
             >
                 {renderChildren(node.children, ctx)}
+                {overlay}
             </footer>
         );
     }
@@ -181,10 +213,12 @@ function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
         <section
             className={cn(
                 'mx-auto w-full max-w-2xl px-6 py-16 text-center',
+                overlay && 'relative',
                 styleToClass(node.style),
             )}
         >
             {renderChildren(node.children, ctx)}
+            {overlay}
         </section>
     );
 }
@@ -204,7 +238,7 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                         className={cn(
                             CONTAINER_LAYOUT[node.layout],
                             node.layout === 'grid' &&
-                                `grid-cols-${node.columns ?? 2}`,
+                                (GRID_COLS[node.columns ?? 2] ?? GRID_COLS[2]),
                             node.gap && GAP[node.gap],
                             styleToClass(node.style),
                         )}
@@ -264,9 +298,39 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
         }
     })();
 
-    if (node.animationRef?.reveal) {
+    // Editor mode: real wrapper carrying the node id (for canvas click/drop
+    // hit-testing) + a selection outline. Reveals are skipped so nothing stays
+    // hidden while editing inside the scrollable preview panel.
+    if (ctx.editor) {
         return (
-            <AnimatedReveal key={node.id} fallback={node.animationRef.reveal}>
+            <div
+                key={node.id}
+                data-node-id={node.id}
+                className={cn(
+                    'relative outline-offset-[-1px] hover:outline hover:outline-1 hover:outline-brand/40',
+                    ctx.selectedId === node.id &&
+                        'outline outline-2 outline-brand',
+                )}
+            >
+                {inner}
+            </div>
+        );
+    }
+
+    const ref = node.animationRef;
+
+    if (ref?.reveal || ref?.revealSection) {
+        // The couple's chosen per-section animation (if any) overrides the fallback.
+        const coupleAnimation = ref.revealSection
+            ? ctx.invitation.animations?.[ref.revealSection]
+            : undefined;
+
+        return (
+            <AnimatedReveal
+                key={node.id}
+                animation={coupleAnimation}
+                fallback={ref.reveal ?? 'fade'}
+            >
                 {inner}
             </AnimatedReveal>
         );

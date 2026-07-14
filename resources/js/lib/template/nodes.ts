@@ -5,7 +5,11 @@
  * `<TemplateRenderer>` (reader). Stored whole as JSON on `templates.layout`.
  * See TEMPLATE_BUILDER.md for the prose spec.
  */
-import type { AnimationEffect } from '@/types/invitation';
+import type {
+    AnimationEffect,
+    AnimationPackSectionType,
+    AnimationSection,
+} from '@/types/invitation';
 import type { BindableField } from './bindableFields';
 
 // --- Values & bindings (§5) -------------------------------------------------
@@ -65,10 +69,19 @@ export interface StyleProps {
 // --- Animation reference (§9) -----------------------------------------------
 
 export interface AnimationRef {
-    /** Scroll-reveal effect via <AnimatedReveal>; couple's selection may override. */
+    /** Scroll-reveal effect via <AnimatedReveal> (fallback when no couple override). */
     reveal?: AnimationEffect | null;
-    /** Floating GSAP overlay pack slug; couple's chosen pack wins at render. */
-    packSlug?: string | null;
+    /**
+     * Maps this node to a couple-customizable animation slot. When set, the couple's
+     * `invitation.animations[revealSection]` selection overrides `reveal` at render.
+     */
+    revealSection?: AnimationSection | null;
+    /**
+     * Marks a section node as a floating-overlay region. When the couple's chosen
+     * pack (invitation.animation_pack) targets this same section, its <AnimationLayer>
+     * is rendered over this node. (Only honored on section nodes.)
+     */
+    packSection?: AnimationPackSectionType | null;
 }
 
 // --- Nodes (§4) -------------------------------------------------------------

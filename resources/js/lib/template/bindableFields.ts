@@ -151,6 +151,12 @@ export interface RenderContext {
     invitation: PublicInvitation;
     guestName: string;
     hydrated: boolean;
+    /** True inside the admin builder canvas: interactive widgets render static stand-ins. */
+    preview?: boolean;
+    /** True in the builder: wrap each node with data-node-id + selection outline, skip reveals. */
+    editor?: boolean;
+    /** Currently-selected node id (editor only) — highlights that node in the canvas. */
+    selectedId?: string | null;
 }
 
 /** Raw field value (unformatted), or null when absent. */

@@ -48,4 +48,13 @@ class TemplateFactory extends Factory
     {
         return $this->state(fn () => ['is_active' => false]);
     }
+
+    /**
+     * Attach the "Classic" node-tree layout so the template renders through
+     * <TemplateRenderer> instead of the legacy hardcoded page.
+     */
+    public function classic(): static
+    {
+        return $this->state(fn () => ['layout' => Template::defaultLayout()]);
+    }
 }

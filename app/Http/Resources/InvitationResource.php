@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enums\Addon;
 use App\Models\Invitation;
+use App\Models\Template;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -42,7 +43,13 @@ class InvitationResource extends JsonResource
             'visitor_count' => $this->visitor_count,
             'public_url' => route('invitation.show', $this->slug),
             'rsvps_count' => $this->whenCounted('rsvps'),
-            'template' => TemplateResource::make($this->whenLoaded('template')),
+            'template' => $this->whenLoaded(
+                'template',
+                fn () => $this->template ? TemplateResource::make($this->template) : null,
+            ),
+            // The public page always renders through the node tree; guarantee one
+            // even when the invitation has no template (nullable) or an unedited one.
+            'layout' => $this->template?->resolvedLayout() ?? Template::defaultLayout(),
             'gift_accounts' => GiftAccountResource::collection($this->whenLoaded('giftAccounts')),
             'gallery_photos' => GalleryPhotoResource::collection($this->whenLoaded('galleryPhotos')),
             'has_guest_book' => $this->hasAddon(Addon::GuestBook),

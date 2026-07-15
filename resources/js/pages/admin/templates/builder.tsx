@@ -1,5 +1,12 @@
 import { Head, router } from '@inertiajs/react';
-import { ArrowLeft, ChevronDown, ChevronUp, Save, Trash2 } from 'lucide-react';
+import {
+    ArrowLeft,
+    ChevronDown,
+    ChevronRight,
+    ChevronUp,
+    Save,
+    Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import TemplateRenderer from '@/components/invitation/TemplateRenderer';
 import { Button } from '@/components/ui/button';
@@ -319,6 +326,8 @@ interface LayerRowProps {
     selectedId: string | null;
     onSelect: (id: string) => void;
     dropTarget: DropTarget | null;
+    collapsed: Set<string>;
+    onToggle: (id: string) => void;
     onRowDragStart: (id: string) => void;
     onRowDragOver: (node: TreeNode, position: DropPosition) => void;
     onRowDrop: () => void;
@@ -326,10 +335,12 @@ interface LayerRowProps {
 }
 
 function LayerRow(props: LayerRowProps) {
-    const { node, depth, selectedId, onSelect, dropTarget } = props;
+    const { node, depth, selectedId, onSelect, dropTarget, collapsed } = props;
     const isRoot = depth === 0;
     const canInside = node.type === 'section' || node.type === 'container';
     const indicator = dropTarget?.id === node.id ? dropTarget.position : null;
+    const hasChildren = (node.children?.length ?? 0) > 0;
+    const isCollapsed = collapsed.has(node.id);
 
     return (
         <>
@@ -339,10 +350,14 @@ function LayerRow(props: LayerRowProps) {
                 onClick={() => onSelect(node.id)}
                 onDragStart={(e) => {
                     e.stopPropagation();
+                    // Required for the drag to start in Firefox.
+                    e.dataTransfer.setData('text/plain', node.id);
+                    e.dataTransfer.effectAllowed = 'move';
                     props.onRowDragStart(node.id);
                 }}
                 onDragOver={(e) => {
                     e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
                     const rect = e.currentTarget.getBoundingClientRect();
                     const y = e.clientY - rect.top;
                     const position: DropPosition =
@@ -362,7 +377,7 @@ function LayerRow(props: LayerRowProps) {
                 }}
                 onDragEnd={props.onDragEnd}
                 className={cn(
-                    'flex w-full cursor-grab items-center rounded px-2 py-1 text-left text-sm hover:bg-muted',
+                    'flex w-full cursor-grab items-center gap-1 rounded px-2 py-1 text-left text-sm hover:bg-muted',
                     selectedId === node.id &&
                         'bg-muted font-medium ring-1 ring-brand',
                     indicator === 'inside' &&
@@ -372,16 +387,40 @@ function LayerRow(props: LayerRowProps) {
                 )}
                 style={{ paddingLeft: `${depth * 12 + 8}px` }}
             >
+                {hasChildren ? (
+                    <span
+                        role="button"
+                        tabIndex={-1}
+                        aria-label={isCollapsed ? 'Perluas' : 'Ciutkan'}
+                        onClick={(e) => {
+                            // Toggle without selecting/dragging the row.
+                            e.stopPropagation();
+                            props.onToggle(node.id);
+                        }}
+                        className="-ml-1 flex size-4 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground"
+                    >
+                        <ChevronRight
+                            className={cn(
+                                'size-3.5 transition-transform',
+                                !isCollapsed && 'rotate-90',
+                            )}
+                        />
+                    </span>
+                ) : (
+                    <span className="size-4 shrink-0" aria-hidden />
+                )}
                 <span className="truncate">{nodeLabel(node)}</span>
             </button>
-            {node.children?.map((child) => (
-                <LayerRow
-                    {...props}
-                    key={child.id}
-                    node={child}
-                    depth={depth + 1}
-                />
-            ))}
+            {hasChildren &&
+                !isCollapsed &&
+                node.children?.map((child) => (
+                    <LayerRow
+                        {...props}
+                        key={child.id}
+                        node={child}
+                        depth={depth + 1}
+                    />
+                ))}
         </>
     );
 }
@@ -392,6 +431,20 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
     const [layout, setLayout] = useState<TemplateLayout>(template.layout);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+    const toggleCollapsed = (id: string) =>
+        setCollapsed((prev) => {
+            const next = new Set(prev);
+
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+
+            return next;
+        });
 
     const theme = resolveTheme(template.category);
     const selected = selectedId ? findNode(layout.root, selectedId) : null;
@@ -536,6 +589,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
         }
 
         e.preventDefault();
+        e.dataTransfer.dropEffect = drag.kind === 'move' ? 'move' : 'copy';
         const hit = nodeAtEvent(e);
 
         if (!hit) {
@@ -610,9 +664,22 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                         size="sm"
                                         className="cursor-grab capitalize"
                                         draggable
-                                        onDragStart={() =>
-                                            setDrag({ kind: 'new', type: t })
-                                        }
+                                        onDragStart={(e) => {
+                                            // Required for the drag to start in
+                                            // Firefox. Must be 'copyMove' (not
+                                            // 'copy'): the layer-tree rows set
+                                            // dropEffect 'move', and a dropEffect
+                                            // not permitted by effectAllowed makes
+                                            // the target invalid so `drop` never
+                                            // fires — which broke drag-to-add.
+                                            e.dataTransfer.setData(
+                                                'text/plain',
+                                                t,
+                                            );
+                                            e.dataTransfer.effectAllowed =
+                                                'copyMove';
+                                            setDrag({ kind: 'new', type: t });
+                                        }}
                                         onDragEnd={endDrag}
                                         onClick={() => addNode(t)}
                                     >
@@ -658,6 +725,8 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                     selectedId={selectedId}
                                     onSelect={setSelectedId}
                                     dropTarget={dropTarget}
+                                    collapsed={collapsed}
+                                    onToggle={toggleCollapsed}
                                     onRowDragStart={(id) =>
                                         setDrag({ kind: 'move', id })
                                     }
@@ -694,6 +763,8 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                     preview: true,
                                     editor: true,
                                     selectedId,
+                                    dropTargetId: dropTarget?.id ?? null,
+                                    dropPosition: dropTarget?.position,
                                 }}
                             />
                         </div>

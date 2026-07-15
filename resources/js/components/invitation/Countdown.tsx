@@ -60,16 +60,18 @@ export default function Countdown({ targetIso }: { targetIso: string }) {
     ];
 
     return (
-        <div className="flex justify-center gap-3 sm:gap-4">
+        // 4-column grid so the boxes always share the available width and shrink
+        // to fit on narrow phones instead of overflowing (min-w-based flex did).
+        <div className="mx-auto grid max-w-xs grid-cols-4 gap-2 sm:max-w-sm sm:gap-4">
             {units.map(([label, value]) => (
                 <div
                     key={label}
-                    className="flex min-w-[64px] flex-col items-center rounded-xl border border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] px-3 py-3 shadow-sm backdrop-blur"
+                    className="flex flex-col items-center rounded-xl border border-[var(--inv-card-border)] bg-[var(--inv-card-bg)] px-1 py-3 shadow-sm backdrop-blur sm:px-3"
                 >
-                    <span className="[font-family:var(--inv-font-heading)] text-3xl font-semibold tabular-nums">
+                    <span className="[font-family:var(--inv-font-heading)] text-2xl font-semibold tabular-nums sm:text-3xl">
                         {value}
                     </span>
-                    <span className="mt-1 text-xs tracking-wide text-muted-foreground uppercase">
+                    <span className="mt-1 text-[10px] tracking-wide text-muted-foreground uppercase sm:text-xs">
                         {label}
                     </span>
                 </div>

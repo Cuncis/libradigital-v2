@@ -140,6 +140,17 @@ const GAP: Record<NonNullable<StyleProps['padding']>, string> = {
     xl: 'gap-12',
     '2xl': 'gap-16',
 };
+// Vertical space for spacer nodes. `gap-*` only affects flex/grid children, so a
+// standalone spacer needs an explicit height instead. Literal so Tailwind scans them.
+const SPACER_HEIGHT: Record<NonNullable<StyleProps['padding']>, string> = {
+    none: 'h-0',
+    xs: 'h-2',
+    sm: 'h-4',
+    md: 'h-8',
+    lg: 'h-12',
+    xl: 'h-16',
+    '2xl': 'h-24',
+};
 
 // --- Recursive render --------------------------------------------------------
 
@@ -290,10 +301,15 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                 return spec.render(resolved, ctx);
             }
             case 'spacer':
-                return <div className={GAP[node.size]} aria-hidden />;
+                return <div className={SPACER_HEIGHT[node.size]} aria-hidden />;
             case 'divider':
                 return (
-                    <hr className="mx-auto my-6 w-16 border-[var(--inv-card-border)]" />
+                    <hr
+                        className={cn(
+                            'mx-auto my-6 w-16 border-[var(--inv-card-border)]',
+                            styleToClass(node.style),
+                        )}
+                    />
                 );
         }
     })();
@@ -302,6 +318,9 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
     // hit-testing) + a selection outline. Reveals are skipped so nothing stays
     // hidden while editing inside the scrollable preview panel.
     if (ctx.editor) {
+        const drop =
+            ctx.dropTargetId === node.id ? ctx.dropPosition : undefined;
+
         return (
             <div
                 key={node.id}
@@ -310,6 +329,10 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                     'relative outline-offset-[-1px] hover:outline hover:outline-1 hover:outline-brand/40',
                     ctx.selectedId === node.id &&
                         'outline outline-2 outline-brand',
+                    drop === 'inside' &&
+                        'outline-2 outline-brand outline-dashed',
+                    drop === 'before' && 'border-t-2 border-brand',
+                    drop === 'after' && 'border-b-2 border-brand',
                 )}
             >
                 {inner}

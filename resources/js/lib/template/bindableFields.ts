@@ -157,6 +157,10 @@ export interface RenderContext {
     editor?: boolean;
     /** Currently-selected node id (editor only) — highlights that node in the canvas. */
     selectedId?: string | null;
+    /** Node a drag is hovering (editor only) — draws a drop indicator on the canvas. */
+    dropTargetId?: string | null;
+    /** Where the dragged node would land relative to `dropTargetId`. */
+    dropPosition?: 'before' | 'after' | 'inside';
 }
 
 /** Raw field value (unformatted), or null when absent. */

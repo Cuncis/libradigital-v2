@@ -40,9 +40,14 @@ export default function EventBlock({
                 <p className="text-sm text-muted-foreground">{address}</p>
             )}
             {mapsUrl && (
-                <Button asChild variant="outline" className="mt-5">
+                <Button
+                    asChild
+                    variant="outline"
+                    className="mt-5 h-11 w-full whitespace-normal sm:h-9 sm:w-auto"
+                >
                     <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
-                        <MapPin className="size-4" /> Buka di Google Maps
+                        <MapPin className="size-4 shrink-0" /> Buka di Google
+                        Maps
                     </a>
                 </Button>
             )}

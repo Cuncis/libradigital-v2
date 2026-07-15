@@ -8,6 +8,7 @@ import {
     Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import TemplateRenderer from '@/components/invitation/TemplateRenderer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -614,7 +615,12 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
         router.put(
             admin.templates.update(template.id).url,
             { layout } as unknown as Record<string, never>,
-            { preserveScroll: true, onFinish: () => setSaving(false) },
+            {
+                preserveScroll: true,
+                onError: () =>
+                    toast.error('Gagal menyimpan layout. Coba lagi.'),
+                onFinish: () => setSaving(false),
+            },
         );
     };
 

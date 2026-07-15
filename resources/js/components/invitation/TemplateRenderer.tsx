@@ -101,7 +101,11 @@ const TRACKING: Record<NonNullable<StyleProps['tracking']>, string> = {
     widest: 'tracking-widest',
 };
 
-function styleToClass(style: StyleProps): string {
+function styleToClass(style: StyleProps | undefined | null): string {
+    if (!style) {
+        return '';
+    }
+
     return cn(
         style.align && ALIGN[style.align],
         style.padding && PADDING[style.padding],

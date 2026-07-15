@@ -55,7 +55,12 @@ test('the admin can save a layout tree', function () {
     $fresh = $template->fresh();
     expect($fresh->layout['version'])->toBe(1)
         ->and($fresh->builder_version)->toBe(1)
-        ->and($fresh->layout['root']['type'])->toBe('container');
+        ->and($fresh->layout['root']['type'])->toBe('container')
+        // The full tree must survive: node fields without explicit validation
+        // rules (style, container layout) must not be stripped on save.
+        ->and($fresh->layout['root'])->toHaveKey('style')
+        ->and($fresh->layout['root']['layout'])->toBe('stack')
+        ->and($fresh->layout['root']['children'][0])->toHaveKey('style');
 });
 
 test('saving rejects a malformed layout', function () {

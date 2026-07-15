@@ -41,14 +41,20 @@ class TemplateController extends Controller
 
     public function update(UpdateTemplateLayoutRequest $request, Template $template): RedirectResponse
     {
-        $layout = $request->validated('layout');
+        // Persist the full layout tree, not `validated('layout')`: validated()
+        // returns only keys that have explicit rules, which would strip node
+        // fields like `style` and container `layout` and corrupt the tree.
+        // The UpdateTemplateLayoutRequest has already validated the shape.
+        $layout = $request->input('layout');
 
         $template->update([
             'layout' => $layout,
             'builder_version' => $layout['version'] ?? 1,
         ]);
 
-        return back()->with('success', 'Layout template berhasil disimpan.');
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Layout template berhasil disimpan.']);
+
+        return back();
     }
 
     /**

@@ -8,7 +8,7 @@
  * Phase 0 scaffold: correct structure + binding/visibility resolution. Pixel
  * parity with the legacy page and floating-pack wiring land in Phase 1.
  */
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import AnimatedReveal from '@/components/invitation/AnimatedReveal';
 import AnimationLayer from '@/components/invitation/AnimationLayer';
 import { evalVisibility, resolveValue } from '@/lib/template/bindableFields';
@@ -122,6 +122,34 @@ function styleToClass(style: StyleProps | undefined | null): string {
     );
 }
 
+/**
+ * Custom per-side padding/margin (px) as inline styles. These override the
+ * token-based `padding`/`margin` classes per side, giving admins fine control.
+ */
+function styleToInline(
+    style: StyleProps | undefined | null,
+): CSSProperties | undefined {
+    const p = style?.paddingPx;
+    const m = style?.marginPx;
+
+    if (!p && !m) {
+        return undefined;
+    }
+
+    // React drops CSS properties whose value is undefined, so only the sides the
+    // admin actually set are applied.
+    return {
+        paddingTop: p?.top,
+        paddingRight: p?.right,
+        paddingBottom: p?.bottom,
+        paddingLeft: p?.left,
+        marginTop: m?.top,
+        marginRight: m?.right,
+        marginBottom: m?.bottom,
+        marginLeft: m?.left,
+    };
+}
+
 const CONTAINER_LAYOUT: Record<'stack' | 'row' | 'grid', string> = {
     stack: 'flex flex-col',
     row: 'flex flex-row',
@@ -193,7 +221,10 @@ function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
             : '';
 
         return (
-            <header className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center text-white">
+            <header
+                className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center text-white"
+                style={styleToInline(node.style)}
+            >
                 {bg && (
                     <img
                         src={bg}
@@ -217,6 +248,7 @@ function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
                     'relative border-t border-[var(--inv-card-border)] py-10 text-center',
                     styleToClass(node.style),
                 )}
+                style={styleToInline(node.style)}
             >
                 {renderChildren(node.children, ctx)}
                 {overlay}
@@ -231,6 +263,7 @@ function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
                 overlay && 'relative',
                 styleToClass(node.style),
             )}
+            style={styleToInline(node.style)}
         >
             {renderChildren(node.children, ctx)}
             {overlay}
@@ -257,6 +290,7 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                             node.gap && GAP[node.gap],
                             styleToClass(node.style),
                         )}
+                        style={styleToInline(node.style)}
                     >
                         {renderChildren(node.children, ctx)}
                     </div>
@@ -272,7 +306,14 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                             ? 'h3'
                             : 'p';
 
-                return <Tag className={styleToClass(node.style)}>{text}</Tag>;
+                return (
+                    <Tag
+                        className={styleToClass(node.style)}
+                        style={styleToInline(node.style)}
+                    >
+                        {text}
+                    </Tag>
+                );
             }
             case 'image': {
                 const src = resolveValue(node.src, ctx);
@@ -291,6 +332,7 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                                 : 'object-cover',
                             styleToClass(node.style),
                         )}
+                        style={styleToInline(node.style)}
                     />
                 );
             }
@@ -302,7 +344,16 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                     resolved[prop] = resolveValue(value, ctx);
                 }
 
-                return spec.render(resolved, ctx);
+                // Wrap so widgets honor node styling (custom spacing, etc.),
+                // which the widget components themselves don't read.
+                return (
+                    <div
+                        className={styleToClass(node.style) || undefined}
+                        style={styleToInline(node.style)}
+                    >
+                        {spec.render(resolved, ctx)}
+                    </div>
+                );
             }
             case 'spacer':
                 return <div className={SPACER_HEIGHT[node.size]} aria-hidden />;

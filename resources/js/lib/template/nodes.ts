@@ -50,10 +50,22 @@ export type SpacingToken = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 export type SizeToken =
     'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl';
 
+/** Custom per-side spacing in pixels. Any omitted side falls back to the token. */
+export interface SpacingSides {
+    top?: number;
+    right?: number;
+    bottom?: number;
+    left?: number;
+}
+
 export interface StyleProps {
     align?: 'start' | 'center' | 'end';
     padding?: SpacingToken;
     margin?: SpacingToken;
+    /** Custom per-side padding (px). Overrides the `padding` token per side. */
+    paddingPx?: SpacingSides;
+    /** Custom per-side margin (px). Overrides the `margin` token per side. */
+    marginPx?: SpacingSides;
     maxWidth?: 'prose' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | 'full';
     background?: 'transparent' | 'card' | 'soft' | 'accent' | 'image';
     radius?: 'none' | 'sm' | 'md' | 'lg' | '2xl';

@@ -1,13 +1,22 @@
 import { Head, router } from '@inertiajs/react';
 import {
+    AlignCenter,
+    AlignLeft,
+    AlignRight,
     ArrowLeft,
     ChevronDown,
     ChevronRight,
+    ChevronsDownUp,
+    ChevronsUpDown,
     ChevronUp,
+    Columns3,
+    Grid2x2,
+    Rows3,
     Save,
     Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import TemplateRenderer from '@/components/invitation/TemplateRenderer';
 import { Button } from '@/components/ui/button';
@@ -17,6 +26,7 @@ import { BINDABLE_FIELDS } from '@/lib/template/bindableFields';
 import type { BindableField } from '@/lib/template/bindableFields';
 import type {
     NodeType,
+    SpacingSides,
     StyleProps,
     TemplateLayout,
     TreeNode,
@@ -115,12 +125,128 @@ function opt(values: readonly string[], noneLabel?: string) {
     return noneLabel ? [{ value: '', label: noneLabel }, ...base] : base;
 }
 
+interface OptionItem {
+    value: string;
+    label?: string;
+    icon?: LucideIcon;
+    title?: string;
+}
+
+/**
+ * Segmented option picker: clickable icon/label buttons instead of a dropdown.
+ * When `allowClear` is set, clicking the active option deselects it (emits '').
+ */
+function OptionGroup({
+    value,
+    onChange,
+    options,
+    allowClear = false,
+}: {
+    value: string;
+    onChange: (v: string) => void;
+    options: OptionItem[];
+    allowClear?: boolean;
+}) {
+    return (
+        <div className="flex flex-wrap gap-1">
+            {options.map((o) => {
+                const active = value !== '' && o.value === value;
+                const Icon = o.icon;
+
+                return (
+                    <button
+                        key={o.value}
+                        type="button"
+                        title={o.title ?? o.label ?? o.value}
+                        aria-pressed={active}
+                        onClick={() =>
+                            onChange(allowClear && active ? '' : o.value)
+                        }
+                        className={cn(
+                            'flex h-8 items-center justify-center gap-1 rounded-md border px-2 text-xs capitalize transition-colors',
+                            Icon ? 'min-w-9' : 'min-w-8',
+                            active
+                                ? 'border-brand bg-brand/10 font-medium text-brand'
+                                : 'border-input bg-background text-foreground hover:bg-muted',
+                        )}
+                    >
+                        {Icon ? (
+                            <Icon className="size-4" />
+                        ) : (
+                            (o.label ?? o.value)
+                        )}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+const SPACING_SIDES: { key: keyof SpacingSides; label: string }[] = [
+    { key: 'top', label: 'Atas' },
+    { key: 'right', label: 'Kanan' },
+    { key: 'bottom', label: 'Bawah' },
+    { key: 'left', label: 'Kiri' },
+];
+
+/** Four number inputs (top/right/bottom/left) for custom px spacing. */
+function SidesInput({
+    value,
+    onChange,
+}: {
+    value: SpacingSides | undefined;
+    onChange: (v: SpacingSides | undefined) => void;
+}) {
+    const setSide = (key: keyof SpacingSides, raw: string) => {
+        const next: SpacingSides = {
+            ...value,
+            [key]: raw === '' ? undefined : Number(raw),
+        };
+        const cleaned = Object.fromEntries(
+            Object.entries(next).filter(
+                ([, v]) => typeof v === 'number' && !Number.isNaN(v),
+            ),
+        ) as SpacingSides;
+
+        onChange(Object.keys(cleaned).length > 0 ? cleaned : undefined);
+    };
+
+    return (
+        <div className="grid grid-cols-4 gap-1">
+            {SPACING_SIDES.map((s) => (
+                <div key={s.key} className="grid gap-0.5">
+                    <Input
+                        type="number"
+                        value={value?.[s.key] ?? ''}
+                        onChange={(e) => setSide(s.key, e.target.value)}
+                        placeholder="0"
+                        className="h-8 px-1 text-center text-xs"
+                    />
+                    <span className="text-center text-[10px] text-muted-foreground">
+                        {s.label}
+                    </span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 const STYLE_TOKENS: {
     key: keyof StyleProps;
     label: string;
     values: readonly string[];
+    icons?: Record<string, LucideIcon>;
 }[] = [
-    { key: 'align', label: 'Rata', values: ['start', 'center', 'end'] },
+    {
+        key: 'align',
+        label: 'Rata',
+        values: ['start', 'center', 'end'],
+        icons: {
+            start: AlignLeft,
+            center: AlignCenter,
+            end: AlignRight,
+        },
+    },
     {
         key: 'size',
         label: 'Ukuran',
@@ -184,7 +310,7 @@ function ValueEditor({
 
     return (
         <div className="grid gap-1.5">
-            <Select
+            <OptionGroup
                 value={value.kind}
                 onChange={(k) =>
                     onChange(
@@ -223,25 +349,22 @@ function ValueEditor({
                             label: f.label,
                         }))}
                     />
-                    <Select
-                        value={value.format ?? ''}
+                    <OptionGroup
+                        value={value.format ?? 'raw'}
                         onChange={(fmt) =>
                             onChange({
                                 ...value,
                                 format:
-                                    fmt === ''
+                                    fmt === 'raw'
                                         ? undefined
                                         : (fmt as 'date' | 'time' | 'datetime'),
                             })
                         }
                         options={[
-                            { value: '', label: 'Format: mentah' },
-                            { value: 'date', label: 'Format: tanggal' },
-                            { value: 'time', label: 'Format: jam' },
-                            {
-                                value: 'datetime',
-                                label: 'Format: tanggal & jam',
-                            },
+                            { value: 'raw', label: 'mentah' },
+                            { value: 'date', label: 'tanggal' },
+                            { value: 'time', label: 'jam' },
+                            { value: 'datetime', label: 'tgl & jam' },
                         ]}
                     />
                 </>
@@ -261,7 +384,7 @@ function VisibilityEditor({
 
     return (
         <div className="grid gap-1.5">
-            <Select
+            <OptionGroup
                 value={kind}
                 onChange={(k) => {
                     if (k === 'always') {
@@ -281,7 +404,7 @@ function VisibilityEditor({
                     { value: 'always', label: 'Selalu tampil' },
                     { value: 'notEmpty', label: 'Jika field terisi' },
                     { value: 'arrayNotEmpty', label: 'Jika daftar terisi' },
-                    { value: 'addon', label: 'Jika add-on buku tamu' },
+                    { value: 'addon', label: 'Add-on buku tamu' },
                 ]}
             />
             {value?.when === 'notEmpty' && (
@@ -378,7 +501,12 @@ function LayerRow(props: LayerRowProps) {
                 }}
                 onDragEnd={props.onDragEnd}
                 className={cn(
-                    'flex w-full cursor-grab items-center gap-1 rounded px-2 py-1 text-left text-sm hover:bg-muted',
+                    'flex w-full cursor-grab items-center gap-1.5 rounded px-2 py-1 text-left text-sm hover:bg-muted',
+                    // Rows with children (collapsible groups) read as headers;
+                    // leaf rows are lighter so the hierarchy is obvious.
+                    hasChildren
+                        ? 'bg-muted/40 font-semibold text-foreground'
+                        : 'text-muted-foreground',
                     selectedId === node.id &&
                         'bg-muted font-medium ring-1 ring-brand',
                     indicator === 'inside' &&
@@ -398,7 +526,12 @@ function LayerRow(props: LayerRowProps) {
                             e.stopPropagation();
                             props.onToggle(node.id);
                         }}
-                        className="-ml-1 flex size-4 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-background hover:text-foreground"
+                        className={cn(
+                            'flex size-5 shrink-0 items-center justify-center rounded border transition-colors',
+                            isCollapsed
+                                ? 'border-brand/40 bg-brand/10 text-brand'
+                                : 'border-input bg-background text-muted-foreground hover:border-brand hover:text-brand',
+                        )}
                     >
                         <ChevronRight
                             className={cn(
@@ -408,9 +541,17 @@ function LayerRow(props: LayerRowProps) {
                         />
                     </span>
                 ) : (
-                    <span className="size-4 shrink-0" aria-hidden />
+                    <span
+                        className="ml-1 size-1.5 shrink-0 rounded-full bg-muted-foreground/30"
+                        aria-hidden
+                    />
                 )}
                 <span className="truncate">{nodeLabel(node)}</span>
+                {hasChildren && (
+                    <span className="ml-auto shrink-0 rounded bg-background px-1.5 text-[10px] font-medium text-muted-foreground tabular-nums">
+                        {node.children?.length}
+                    </span>
+                )}
             </button>
             {hasChildren &&
                 !isCollapsed &&
@@ -446,6 +587,23 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
 
             return next;
         });
+
+    // Every collapsible node except the root (kept open so its sections stay
+    // visible as an outline when everything is collapsed).
+    const parentIds = useMemo(() => {
+        const collect = (node: TreeNode): string[] =>
+            node.children?.length
+                ? [node.id, ...node.children.flatMap(collect)]
+                : [];
+
+        return collect(layout.root).filter((id) => id !== layout.root.id);
+    }, [layout.root]);
+
+    const allCollapsed =
+        parentIds.length > 0 && parentIds.every((id) => collapsed.has(id));
+
+    const toggleCollapseAll = () =>
+        setCollapsed(allCollapsed ? new Set() : new Set(parentIds));
 
     const theme = resolveTheme(template.category);
     const selected = selectedId ? findNode(layout.root, selectedId) : null;
@@ -718,9 +876,35 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                         </div>
 
                         <div>
-                            <h2 className="mb-2 text-xs font-semibold text-muted-foreground uppercase">
-                                Struktur
-                            </h2>
+                            <div className="mb-2 flex items-center justify-between">
+                                <h2 className="text-xs font-semibold text-muted-foreground uppercase">
+                                    Struktur
+                                </h2>
+                                <button
+                                    type="button"
+                                    onClick={toggleCollapseAll}
+                                    title={
+                                        allCollapsed
+                                            ? 'Buka semua'
+                                            : 'Tutup semua'
+                                    }
+                                    aria-label={
+                                        allCollapsed
+                                            ? 'Buka semua'
+                                            : 'Tutup semua'
+                                    }
+                                    className="flex items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:border-brand hover:text-brand"
+                                >
+                                    {allCollapsed ? (
+                                        <ChevronsUpDown className="size-3.5" />
+                                    ) : (
+                                        <ChevronsDownUp className="size-3.5" />
+                                    )}
+                                    {allCollapsed
+                                        ? 'Buka semua'
+                                        : 'Tutup semua'}
+                                </button>
+                            </div>
                             <p className="mb-1 text-[11px] text-muted-foreground">
                                 Seret baris untuk menyusun ulang.
                             </p>
@@ -821,7 +1005,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                 {selected.type === 'text' && (
                                     <>
                                         <Field label="Tag">
-                                            <Select
+                                            <OptionGroup
                                                 value={selected.tag}
                                                 onChange={(tag) =>
                                                     patchSelected({
@@ -852,7 +1036,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
 
                                 {selected.type === 'section' && (
                                     <Field label="Varian">
-                                        <Select
+                                        <OptionGroup
                                             value={
                                                 selected.variant ?? 'default'
                                             }
@@ -873,18 +1057,30 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                 {selected.type === 'container' && (
                                     <>
                                         <Field label="Tata Letak">
-                                            <Select
+                                            <OptionGroup
                                                 value={selected.layout}
                                                 onChange={(l) =>
                                                     patchSelected({
                                                         layout: l,
                                                     } as Partial<TreeNode>)
                                                 }
-                                                options={opt([
-                                                    'stack',
-                                                    'row',
-                                                    'grid',
-                                                ])}
+                                                options={[
+                                                    {
+                                                        value: 'stack',
+                                                        title: 'Tumpuk',
+                                                        icon: Rows3,
+                                                    },
+                                                    {
+                                                        value: 'row',
+                                                        title: 'Baris',
+                                                        icon: Columns3,
+                                                    },
+                                                    {
+                                                        value: 'grid',
+                                                        title: 'Grid',
+                                                        icon: Grid2x2,
+                                                    },
+                                                ]}
                                             />
                                         </Field>
                                         {selected.layout === 'grid' && (
@@ -949,7 +1145,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
 
                                 {selected.type === 'spacer' && (
                                     <Field label="Ukuran">
-                                        <Select
+                                        <OptionGroup
                                             value={selected.size}
                                             onChange={(size) =>
                                                 patchSelected({
@@ -979,16 +1175,18 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                                 key={token.key}
                                                 label={token.label}
                                             >
-                                                <Select
+                                                <OptionGroup
+                                                    allowClear
                                                     value={
-                                                        (selected.style[
+                                                        ((selected.style ?? {})[
                                                             token.key
                                                         ] as string) ?? ''
                                                     }
                                                     onChange={(v) =>
                                                         patchSelected({
                                                             style: {
-                                                                ...selected.style,
+                                                                ...(selected.style ??
+                                                                    {}),
                                                                 [token.key]:
                                                                     v === ''
                                                                         ? undefined
@@ -996,13 +1194,52 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                                             },
                                                         } as Partial<TreeNode>)
                                                     }
-                                                    options={opt(
-                                                        token.values,
-                                                        '—',
+                                                    options={token.values.map(
+                                                        (v) => ({
+                                                            value: v,
+                                                            label: v,
+                                                            icon: token.icons?.[
+                                                                v
+                                                            ],
+                                                        }),
                                                     )}
                                                 />
                                             </Field>
                                         ))}
+                                        <Field label="Padding (px)">
+                                            <SidesInput
+                                                value={
+                                                    (selected.style ?? {})
+                                                        .paddingPx
+                                                }
+                                                onChange={(paddingPx) =>
+                                                    patchSelected({
+                                                        style: {
+                                                            ...(selected.style ??
+                                                                {}),
+                                                            paddingPx,
+                                                        },
+                                                    } as Partial<TreeNode>)
+                                                }
+                                            />
+                                        </Field>
+                                        <Field label="Margin (px)">
+                                            <SidesInput
+                                                value={
+                                                    (selected.style ?? {})
+                                                        .marginPx
+                                                }
+                                                onChange={(marginPx) =>
+                                                    patchSelected({
+                                                        style: {
+                                                            ...(selected.style ??
+                                                                {}),
+                                                            marginPx,
+                                                        },
+                                                    } as Partial<TreeNode>)
+                                                }
+                                            />
+                                        </Field>
                                     </div>
                                 </div>
 
@@ -1030,7 +1267,8 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                     </Label>
                                     <div className="mt-2 grid gap-2">
                                         <Field label="Reveal saat discroll">
-                                            <Select
+                                            <OptionGroup
+                                                allowClear
                                                 value={
                                                     selected.animationRef
                                                         ?.reveal ?? ''
@@ -1046,15 +1284,21 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                                         },
                                                     } as Partial<TreeNode>)
                                                 }
-                                                options={opt(
-                                                    REVEAL_OPTIONS,
-                                                    'Tidak ada',
+                                                options={REVEAL_OPTIONS.map(
+                                                    (v) => ({
+                                                        value: v,
+                                                        label: v.replace(
+                                                            '_',
+                                                            ' ',
+                                                        ),
+                                                    }),
                                                 )}
                                             />
                                         </Field>
                                         {selected.type === 'section' && (
                                             <Field label="Region pack melayang">
-                                                <Select
+                                                <OptionGroup
+                                                    allowClear
                                                     value={
                                                         selected.animationRef
                                                             ?.packSection ?? ''
@@ -1070,10 +1314,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                                             },
                                                         } as Partial<TreeNode>)
                                                     }
-                                                    options={opt(
-                                                        PACK_SECTIONS,
-                                                        'Tidak ada',
-                                                    )}
+                                                    options={opt(PACK_SECTIONS)}
                                                 />
                                             </Field>
                                         )}

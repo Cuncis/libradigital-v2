@@ -122,6 +122,8 @@ export type WidgetKind =
 export interface BaseNode {
     id: string;
     type: NodeType;
+    /** Optional custom label shown in the builder's layer tree (via Rename). */
+    name?: string;
     style: StyleProps;
     responsive?: {
         sm?: Partial<StyleProps>;

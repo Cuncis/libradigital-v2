@@ -4,19 +4,38 @@ import {
     AlignLeft,
     AlignRight,
     ArrowLeft,
+    BookOpen,
+    CalendarHeart,
     ChevronDown,
     ChevronRight,
     ChevronsDownUp,
     ChevronsUpDown,
     ChevronUp,
+    ClipboardCheck,
+    ClipboardPaste,
     Columns3,
+    Container,
+    Copy,
+    Eye,
+    Gift,
     Grid2x2,
+    HeartHandshake,
+    Image,
+    Images,
+    Minus,
+    MoveVertical,
+    Pencil,
     Rows3,
     Save,
+    Share2,
+    Square,
+    Timer,
     Trash2,
+    Type,
+    UserRound,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import TemplateRenderer from '@/components/invitation/TemplateRenderer';
 import { Button } from '@/components/ui/button';
@@ -35,6 +54,7 @@ import type {
     WidgetKind,
 } from '@/lib/template/nodes';
 import {
+    cloneWithNewIds,
     createNode,
     findNode,
     insertNode,
@@ -68,6 +88,28 @@ const REVEAL_OPTIONS = [
 const PACK_SECTIONS = ['hero', 'gallery', 'story', 'event', 'footer'];
 const WIDGET_KINDS = Object.keys(WIDGET_REGISTRY) as WidgetKind[];
 
+const WIDGET_ICONS: Record<WidgetKind, LucideIcon> = {
+    countdown: Timer,
+    event: CalendarHeart,
+    love_story: HeartHandshake,
+    gallery: Images,
+    rsvp: ClipboardCheck,
+    guest_book: BookOpen,
+    gift: Gift,
+    visitor_counter: Eye,
+    wa_share: Share2,
+    guest_greeting: UserRound,
+};
+
+const ELEMENTS: { type: NodeType; label: string; icon: LucideIcon }[] = [
+    { type: 'section', label: 'Section', icon: Square },
+    { type: 'container', label: 'Container', icon: Container },
+    { type: 'text', label: 'Text', icon: Type },
+    { type: 'image', label: 'Image', icon: Image },
+    { type: 'spacer', label: 'Spacer', icon: MoveVertical },
+    { type: 'divider', label: 'Divider', icon: Minus },
+];
+
 /** What is being dragged: an existing node (reorder) or a new element (from palette). */
 type DragPayload =
     | { kind: 'move'; id: string }
@@ -92,6 +134,47 @@ function Field({
             <Label className="text-xs text-muted-foreground">{label}</Label>
             {children}
         </div>
+    );
+}
+
+/** A visual palette tile: icon on top, label below. Click to add or drag to place. */
+function PaletteCard({
+    label,
+    icon: Icon,
+    dragData,
+    payload,
+    onSetDrag,
+    onEndDrag,
+    onAdd,
+}: {
+    label: string;
+    icon: LucideIcon;
+    dragData: string;
+    payload: DragPayload;
+    onSetDrag: (p: DragPayload) => void;
+    onEndDrag: () => void;
+    onAdd: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            title={label}
+            draggable
+            onDragStart={(e) => {
+                // 'copyMove' so the layer-tree rows (dropEffect 'move') accept it.
+                e.dataTransfer.setData('text/plain', dragData);
+                e.dataTransfer.effectAllowed = 'copyMove';
+                onSetDrag(payload);
+            }}
+            onDragEnd={onEndDrag}
+            onClick={onAdd}
+            className="flex cursor-grab flex-col items-center gap-1 rounded-md border border-input bg-background px-1 py-2.5 text-center transition-colors hover:border-brand hover:bg-muted"
+        >
+            <Icon className="size-5 text-brand" />
+            <span className="text-[10px] leading-tight text-muted-foreground">
+                {label}
+            </span>
+        </button>
     );
 }
 
@@ -456,6 +539,130 @@ interface LayerRowProps {
     onRowDragOver: (node: TreeNode, position: DropPosition) => void;
     onRowDrop: () => void;
     onDragEnd: () => void;
+    onContextMenu: (node: TreeNode, x: number, y: number) => void;
+    renamingId: string | null;
+    onRenameCommit: (id: string, name: string) => void;
+    onRenameCancel: () => void;
+}
+
+interface MenuItem {
+    label: string;
+    icon: LucideIcon;
+    onClick: () => void;
+    disabled?: boolean;
+    danger?: boolean;
+}
+
+/** Floating right-click menu positioned at the cursor. */
+function ContextMenu({
+    x,
+    y,
+    items,
+    onClose,
+}: {
+    x: number;
+    y: number;
+    items: MenuItem[];
+    onClose: () => void;
+}) {
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const onDown = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) {
+                onClose();
+            }
+        };
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        window.addEventListener('mousedown', onDown);
+        window.addEventListener('keydown', onKey);
+        window.addEventListener('scroll', onClose, true);
+
+        return () => {
+            window.removeEventListener('mousedown', onDown);
+            window.removeEventListener('keydown', onKey);
+            window.removeEventListener('scroll', onClose, true);
+        };
+    }, [onClose]);
+
+    // Keep the menu inside the viewport.
+    const left = Math.min(x, window.innerWidth - 184);
+    const top = Math.min(y, window.innerHeight - 24 - items.length * 34);
+
+    return (
+        <div
+            ref={ref}
+            className="fixed z-50 min-w-44 overflow-hidden rounded-md border border-input bg-background py-1 text-sm shadow-md"
+            style={{ top, left }}
+        >
+            {items.map((item) => (
+                <button
+                    key={item.label}
+                    type="button"
+                    disabled={item.disabled}
+                    onClick={() => {
+                        item.onClick();
+                        onClose();
+                    }}
+                    className={cn(
+                        'flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-muted disabled:pointer-events-none disabled:opacity-40',
+                        item.danger && 'text-destructive',
+                    )}
+                >
+                    <item.icon className="size-4" />
+                    {item.label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
+/** Inline rename box shown in place of a layer row while renaming. */
+function RenameInput({
+    node,
+    depth,
+    onCommit,
+    onCancel,
+}: {
+    node: TreeNode;
+    depth: number;
+    onCommit: (id: string, name: string) => void;
+    onCancel: () => void;
+}) {
+    const cancelled = useRef(false);
+
+    return (
+        <div
+            className="py-0.5 pr-2"
+            style={{ paddingLeft: `${depth * 12 + 8}px` }}
+        >
+            <input
+                autoFocus
+                defaultValue={node.name ?? ''}
+                placeholder={nodeLabel(node)}
+                onFocus={(e) => e.currentTarget.select()}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.currentTarget.blur();
+                    } else if (e.key === 'Escape') {
+                        cancelled.current = true;
+                        e.currentTarget.blur();
+                    }
+                }}
+                onBlur={(e) =>
+                    cancelled.current
+                        ? onCancel()
+                        : onCommit(node.id, e.currentTarget.value)
+                }
+                className="h-7 w-full rounded border border-brand bg-background px-2 text-sm outline-none"
+            />
+        </div>
+    );
 }
 
 function LayerRow(props: LayerRowProps) {
@@ -465,94 +672,109 @@ function LayerRow(props: LayerRowProps) {
     const indicator = dropTarget?.id === node.id ? dropTarget.position : null;
     const hasChildren = (node.children?.length ?? 0) > 0;
     const isCollapsed = collapsed.has(node.id);
+    const isRenaming = props.renamingId === node.id;
 
     return (
         <>
-            <button
-                type="button"
-                draggable={!isRoot}
-                onClick={() => onSelect(node.id)}
-                onDragStart={(e) => {
-                    e.stopPropagation();
-                    // Required for the drag to start in Firefox.
-                    e.dataTransfer.setData('text/plain', node.id);
-                    e.dataTransfer.effectAllowed = 'move';
-                    props.onRowDragStart(node.id);
-                }}
-                onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const y = e.clientY - rect.top;
-                    const position: DropPosition =
-                        canInside &&
-                        y > rect.height * 0.33 &&
-                        y < rect.height * 0.67
-                            ? 'inside'
-                            : y < rect.height / 2
-                              ? 'before'
-                              : 'after';
-                    props.onRowDragOver(node, position);
-                }}
-                onDrop={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    props.onRowDrop();
-                }}
-                onDragEnd={props.onDragEnd}
-                className={cn(
-                    'flex w-full cursor-grab items-center gap-1.5 rounded px-2 py-1 text-left text-sm hover:bg-muted',
-                    // Rows with children (collapsible groups) read as headers;
-                    // leaf rows are lighter so the hierarchy is obvious.
-                    hasChildren
-                        ? 'bg-muted/40 font-semibold text-foreground'
-                        : 'text-muted-foreground',
-                    selectedId === node.id &&
-                        'bg-muted font-medium ring-1 ring-brand',
-                    indicator === 'inside' &&
-                        'bg-brand/5 ring-2 ring-brand ring-inset',
-                    indicator === 'before' && 'border-t-2 border-brand',
-                    indicator === 'after' && 'border-b-2 border-brand',
-                )}
-                style={{ paddingLeft: `${depth * 12 + 8}px` }}
-            >
-                {hasChildren ? (
-                    <span
-                        role="button"
-                        tabIndex={-1}
-                        aria-label={isCollapsed ? 'Perluas' : 'Ciutkan'}
-                        onClick={(e) => {
-                            // Toggle without selecting/dragging the row.
-                            e.stopPropagation();
-                            props.onToggle(node.id);
-                        }}
-                        className={cn(
-                            'flex size-5 shrink-0 items-center justify-center rounded border transition-colors',
-                            isCollapsed
-                                ? 'border-brand/40 bg-brand/10 text-brand'
-                                : 'border-input bg-background text-muted-foreground hover:border-brand hover:text-brand',
-                        )}
-                    >
-                        <ChevronRight
+            {isRenaming ? (
+                <RenameInput
+                    node={node}
+                    depth={depth}
+                    onCommit={props.onRenameCommit}
+                    onCancel={props.onRenameCancel}
+                />
+            ) : (
+                <button
+                    type="button"
+                    draggable={!isRoot}
+                    onClick={() => onSelect(node.id)}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        onSelect(node.id);
+                        props.onContextMenu(node, e.clientX, e.clientY);
+                    }}
+                    onDragStart={(e) => {
+                        e.stopPropagation();
+                        // Required for the drag to start in Firefox.
+                        e.dataTransfer.setData('text/plain', node.id);
+                        e.dataTransfer.effectAllowed = 'move';
+                        props.onRowDragStart(node.id);
+                    }}
+                    onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const y = e.clientY - rect.top;
+                        const position: DropPosition =
+                            canInside &&
+                            y > rect.height * 0.33 &&
+                            y < rect.height * 0.67
+                                ? 'inside'
+                                : y < rect.height / 2
+                                  ? 'before'
+                                  : 'after';
+                        props.onRowDragOver(node, position);
+                    }}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        props.onRowDrop();
+                    }}
+                    onDragEnd={props.onDragEnd}
+                    className={cn(
+                        'flex w-full cursor-grab items-center gap-1.5 rounded px-2 py-1 text-left text-sm hover:bg-muted',
+                        // Rows with children (collapsible groups) read as headers;
+                        // leaf rows are lighter so the hierarchy is obvious.
+                        hasChildren
+                            ? 'bg-muted/40 font-semibold text-foreground'
+                            : 'text-muted-foreground',
+                        selectedId === node.id &&
+                            'bg-muted font-medium ring-1 ring-brand',
+                        indicator === 'inside' &&
+                            'bg-brand/5 ring-2 ring-brand ring-inset',
+                        indicator === 'before' && 'border-t-2 border-brand',
+                        indicator === 'after' && 'border-b-2 border-brand',
+                    )}
+                    style={{ paddingLeft: `${depth * 12 + 8}px` }}
+                >
+                    {hasChildren ? (
+                        <span
+                            role="button"
+                            tabIndex={-1}
+                            aria-label={isCollapsed ? 'Perluas' : 'Ciutkan'}
+                            onClick={(e) => {
+                                // Toggle without selecting/dragging the row.
+                                e.stopPropagation();
+                                props.onToggle(node.id);
+                            }}
                             className={cn(
-                                'size-3.5 transition-transform',
-                                !isCollapsed && 'rotate-90',
+                                'flex size-5 shrink-0 items-center justify-center rounded border transition-colors',
+                                isCollapsed
+                                    ? 'border-brand/40 bg-brand/10 text-brand'
+                                    : 'border-input bg-background text-muted-foreground hover:border-brand hover:text-brand',
                             )}
+                        >
+                            <ChevronRight
+                                className={cn(
+                                    'size-3.5 transition-transform',
+                                    !isCollapsed && 'rotate-90',
+                                )}
+                            />
+                        </span>
+                    ) : (
+                        <span
+                            className="ml-1 size-1.5 shrink-0 rounded-full bg-muted-foreground/30"
+                            aria-hidden
                         />
-                    </span>
-                ) : (
-                    <span
-                        className="ml-1 size-1.5 shrink-0 rounded-full bg-muted-foreground/30"
-                        aria-hidden
-                    />
-                )}
-                <span className="truncate">{nodeLabel(node)}</span>
-                {hasChildren && (
-                    <span className="ml-auto shrink-0 rounded bg-background px-1.5 text-[10px] font-medium text-muted-foreground tabular-nums">
-                        {node.children?.length}
-                    </span>
-                )}
-            </button>
+                    )}
+                    <span className="truncate">{nodeLabel(node)}</span>
+                    {hasChildren && (
+                        <span className="ml-auto shrink-0 rounded bg-background px-1.5 text-[10px] font-medium text-muted-foreground tabular-nums">
+                            {node.children?.length}
+                        </span>
+                    )}
+                </button>
+            )}
             {hasChildren &&
                 !isCollapsed &&
                 node.children?.map((child) => (
@@ -645,6 +867,64 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
         }
 
         setRoot(moveNode(layout.root, selectedId, direction));
+    };
+
+    // --- Layer-tree context menu (rename / copy / paste / delete) ------------
+    const [contextMenu, setContextMenu] = useState<{
+        id: string;
+        x: number;
+        y: number;
+    } | null>(null);
+    const [clipboard, setClipboard] = useState<TreeNode | null>(null);
+    const [renamingId, setRenamingId] = useState<string | null>(null);
+
+    const renameNode = (id: string, name: string) => {
+        const trimmed = name.trim();
+
+        setRoot(
+            updateNode(layout.root, id, {
+                name: trimmed || undefined,
+            } as Partial<TreeNode>),
+        );
+        setRenamingId(null);
+    };
+
+    const copyNode = (id: string) => {
+        const node = findNode(layout.root, id);
+
+        if (node) {
+            setClipboard(node);
+        }
+    };
+
+    const pasteNode = (targetId: string) => {
+        if (!clipboard) {
+            return;
+        }
+
+        const clone = cloneWithNewIds(clipboard);
+        const target = findNode(layout.root, targetId);
+
+        // Paste inside a section/container; otherwise drop it after the target.
+        if (
+            target &&
+            (target.type === 'section' || target.type === 'container')
+        ) {
+            setRoot(insertNode(layout.root, targetId, clone));
+        } else {
+            setRoot(insertRelative(layout.root, clone, targetId, 'after'));
+        }
+
+        setSelectedId(clone.id);
+    };
+
+    const deleteNode = (id: string) => {
+        if (id === layout.root.id) {
+            return;
+        }
+
+        setRoot(removeNode(layout.root, id));
+        setSelectedId((prev) => (prev === id ? null : prev));
     };
 
     // --- Drag and drop (reorder existing nodes + drop new ones from palette) ---
@@ -812,64 +1092,41 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                 Tambah Elemen
                             </h2>
                             <div className="grid grid-cols-2 gap-1.5">
-                                {(
-                                    [
-                                        'section',
-                                        'container',
-                                        'text',
-                                        'image',
-                                        'spacer',
-                                        'divider',
-                                    ] as NodeType[]
-                                ).map((t) => (
-                                    <Button
-                                        key={t}
-                                        variant="outline"
-                                        size="sm"
-                                        className="cursor-grab capitalize"
-                                        draggable
-                                        onDragStart={(e) => {
-                                            // Required for the drag to start in
-                                            // Firefox. Must be 'copyMove' (not
-                                            // 'copy'): the layer-tree rows set
-                                            // dropEffect 'move', and a dropEffect
-                                            // not permitted by effectAllowed makes
-                                            // the target invalid so `drop` never
-                                            // fires — which broke drag-to-add.
-                                            e.dataTransfer.setData(
-                                                'text/plain',
-                                                t,
-                                            );
-                                            e.dataTransfer.effectAllowed =
-                                                'copyMove';
-                                            setDrag({ kind: 'new', type: t });
-                                        }}
-                                        onDragEnd={endDrag}
-                                        onClick={() => addNode(t)}
-                                    >
-                                        {t}
-                                    </Button>
+                                {ELEMENTS.map((el) => (
+                                    <PaletteCard
+                                        key={el.type}
+                                        label={el.label}
+                                        icon={el.icon}
+                                        dragData={el.type}
+                                        payload={{ kind: 'new', type: el.type }}
+                                        onSetDrag={setDrag}
+                                        onEndDrag={endDrag}
+                                        onAdd={() => addNode(el.type)}
+                                    />
                                 ))}
                             </div>
-                            <div className="mt-2">
-                                <Select
-                                    value=""
-                                    onChange={(w) =>
-                                        w && addNode('widget', w as WidgetKind)
-                                    }
-                                    options={[
-                                        {
-                                            value: '',
-                                            label: '+ Tambah Widget…',
-                                        },
-                                        ...WIDGET_KINDS.map((w) => ({
-                                            value: w,
-                                            label: WIDGET_REGISTRY[w].label,
-                                        })),
-                                    ]}
-                                />
+                            <h3 className="mt-4 mb-1.5 text-[11px] font-semibold text-muted-foreground uppercase">
+                                Widget
+                            </h3>
+                            <div className="grid grid-cols-2 gap-1.5">
+                                {WIDGET_KINDS.map((w) => (
+                                    <PaletteCard
+                                        key={w}
+                                        label={WIDGET_REGISTRY[w].label}
+                                        icon={WIDGET_ICONS[w]}
+                                        dragData={w}
+                                        payload={{
+                                            kind: 'new',
+                                            type: 'widget',
+                                            widget: w,
+                                        }}
+                                        onSetDrag={setDrag}
+                                        onEndDrag={endDrag}
+                                        onAdd={() => addNode('widget', w)}
+                                    />
+                                ))}
                             </div>
-                            <p className="mt-1 text-[11px] text-muted-foreground">
+                            <p className="mt-2 text-[11px] text-muted-foreground">
                                 Klik untuk menambah, atau seret ke panel
                                 Struktur untuk menaruh di posisi tertentu.
                             </p>
@@ -923,8 +1180,18 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                     onRowDragOver={onRowDragOver}
                                     onRowDrop={onRowDrop}
                                     onDragEnd={endDrag}
+                                    onContextMenu={(n, x, y) =>
+                                        setContextMenu({ id: n.id, x, y })
+                                    }
+                                    renamingId={renamingId}
+                                    onRenameCommit={renameNode}
+                                    onRenameCancel={() => setRenamingId(null)}
                                 />
                             </div>
+                            <p className="mt-1 text-[11px] text-muted-foreground">
+                                Klik kanan sebuah baris untuk ganti nama, salin,
+                                tempel, atau hapus.
+                            </p>
                         </div>
                     </div>
 
@@ -1325,6 +1592,48 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                     </div>
                 </div>
             </div>
+
+            {contextMenu &&
+                (() => {
+                    const node = findNode(layout.root, contextMenu.id);
+
+                    if (!node) {
+                        return null;
+                    }
+
+                    return (
+                        <ContextMenu
+                            x={contextMenu.x}
+                            y={contextMenu.y}
+                            onClose={() => setContextMenu(null)}
+                            items={[
+                                {
+                                    label: 'Ganti Nama',
+                                    icon: Pencil,
+                                    onClick: () => setRenamingId(node.id),
+                                },
+                                {
+                                    label: 'Salin',
+                                    icon: Copy,
+                                    onClick: () => copyNode(node.id),
+                                },
+                                {
+                                    label: 'Tempel',
+                                    icon: ClipboardPaste,
+                                    onClick: () => pasteNode(node.id),
+                                    disabled: !clipboard,
+                                },
+                                {
+                                    label: 'Hapus',
+                                    icon: Trash2,
+                                    onClick: () => deleteNode(node.id),
+                                    disabled: node.id === layout.root.id,
+                                    danger: true,
+                                },
+                            ]}
+                        />
+                    );
+                })()}
         </>
     );
 }

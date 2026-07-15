@@ -17,8 +17,26 @@ export function genId(): string {
     return `n_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/** Deep-clone a node/subtree, assigning fresh ids so it can be pasted safely. */
+export function cloneWithNewIds(node: TreeNode): TreeNode {
+    const clone = structuredClone(node);
+
+    const reassign = (n: TreeNode): void => {
+        n.id = genId();
+        n.children?.forEach(reassign);
+    };
+
+    reassign(clone);
+
+    return clone;
+}
+
 /** Short human label for a node in the layer tree. */
 export function nodeLabel(node: TreeNode): string {
+    if (node.name) {
+        return node.name;
+    }
+
     switch (node.type) {
         case 'section':
             return `Section (${node.variant ?? 'default'})`;

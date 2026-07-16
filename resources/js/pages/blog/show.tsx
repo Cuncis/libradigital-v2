@@ -39,7 +39,7 @@ export default function BlogShow({ post, related }: Props) {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-[#eef3f6] via-white to-[#eef3f6] font-body text-neutral-800 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-100">
-            <Head title={`${post.title} — Blog LibraDigital`}>
+            <Head title={`${post.title} - Blog LibraDigital`}>
                 {post.excerpt && (
                     <meta name="description" content={post.excerpt} />
                 )}
@@ -64,7 +64,7 @@ export default function BlogShow({ post, related }: Props) {
                         <CalendarDays className="size-4" />
                         {post.published_at
                             ? formatIndoDate(post.published_at)
-                            : '—'}
+                            : '-'}
                         <span>·</span>
                         <span>{post.author_name}</span>
                     </div>

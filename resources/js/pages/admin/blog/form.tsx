@@ -72,7 +72,7 @@ export default function AdminBlogForm({ post, categories, statuses }: Props) {
     return (
         <>
             <Head
-                title={isEdit ? 'Edit Artikel — Admin' : 'Artikel Baru — Admin'}
+                title={isEdit ? 'Edit Artikel - Admin' : 'Artikel Baru - Admin'}
             />
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
                 <button

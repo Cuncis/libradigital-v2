@@ -90,7 +90,7 @@ export default function AdminInvitations({ invitations, filters }: Props) {
 
     return (
         <>
-            <Head title="Undangan — Admin" />
+            <Head title="Undangan - Admin" />
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex flex-wrap gap-2">
                     <form
@@ -166,7 +166,7 @@ export default function AdminInvitations({ invitations, filters }: Props) {
                                         return (
                                             <TableRow key={invitation.id}>
                                                 <TableCell className="font-medium">
-                                                    {invitation.couple || '—'}
+                                                    {invitation.couple || '-'}
                                                     <div className="font-mono text-xs text-muted-foreground">
                                                         {invitation.slug}
                                                     </div>
@@ -175,7 +175,7 @@ export default function AdminInvitations({ invitations, filters }: Props) {
                                                     {invitation.user_name}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {invitation.package ?? '—'}
+                                                    {invitation.package ?? '-'}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge
@@ -189,7 +189,7 @@ export default function AdminInvitations({ invitations, filters }: Props) {
                                                         ? formatIndoDate(
                                                               invitation.active_until,
                                                           )
-                                                        : '—'}
+                                                        : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     {invitation.visitor_count}

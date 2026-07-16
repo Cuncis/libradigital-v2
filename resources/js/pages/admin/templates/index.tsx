@@ -36,7 +36,7 @@ export default function AdminTemplates({ templates }: Props) {
                     <div>
                         <h1 className="text-2xl font-semibold">Templates</h1>
                         <p className="text-sm text-muted-foreground">
-                            Susun tata letak undangan secara visual — seret
+                            Susun tata letak undangan secara visual - seret
                             blok, atur konten, dan simpan sebagai layout
                             template.
                         </p>

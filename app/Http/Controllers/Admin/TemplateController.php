@@ -129,7 +129,7 @@ class TemplateController extends Controller
 
     /**
      * A representative invitation payload used to render the builder preview,
-     * shaped like the PublicInvitation resource. Static fixture — no DB access.
+     * shaped like the PublicInvitation resource. Static fixture - no DB access.
      *
      * @return array<string, mixed>
      */

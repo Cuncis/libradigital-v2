@@ -189,7 +189,7 @@ export interface PublicInvitation {
     visitor_count: number;
     public_url: string;
     template: InvitationTemplate | null;
-    /** Resolved layout tree — always present (falls back to the Classic tree). */
+    /** Resolved layout tree - always present (falls back to the Classic tree). */
     layout: TemplateLayout;
     /** Custom cover tree, or null when the template keeps the legacy cover. */
     cover?: TemplateLayout | null;

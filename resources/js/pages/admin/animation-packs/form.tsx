@@ -384,7 +384,7 @@ export default function AnimationPackForm({
                 ? new File([blob], 'thumbnail.png', { type: 'image/png' })
                 : null;
         } catch {
-            // Tainted canvas (remote assets) — backend falls back to first asset.
+            // Tainted canvas (remote assets) - backend falls back to first asset.
             return null;
         }
     };
@@ -697,7 +697,7 @@ export default function AnimationPackForm({
                                     <span>
                                         {cycleSec > 0
                                             ? `${cycleSec.toFixed(1)}s / loop`
-                                            : '—'}
+                                            : '-'}
                                     </span>
                                 </div>
                             </div>

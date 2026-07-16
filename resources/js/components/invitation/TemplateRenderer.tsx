@@ -1,5 +1,5 @@
 /**
- * Template Builder — the renderer (§12 of TEMPLATE_BUILDER.md).
+ * Template Builder - the renderer (§12 of TEMPLATE_BUILDER.md).
  *
  * Walks a layout node tree and produces the invitation body. Pure and
  * deterministic given (layout, ctx) so it is SSR-safe and can power both the

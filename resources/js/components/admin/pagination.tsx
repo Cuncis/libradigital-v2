@@ -17,7 +17,7 @@ export function Pagination({ links, from, to, total }: PaginationProps) {
     return (
         <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
             <p className="text-sm text-muted-foreground">
-                Menampilkan {from ?? 0}–{to ?? 0} dari {total}
+                Menampilkan {from ?? 0}-{to ?? 0} dari {total}
             </p>
             <nav className="flex flex-wrap items-center gap-1">
                 {links.map((link, index) => {

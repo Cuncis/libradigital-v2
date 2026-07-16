@@ -92,7 +92,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 // Midtrans server-to-server transaction notification (signature-verified, no session/CSRF).
 Route::post('billing/webhook', [OrderController::class, 'webhook'])->name('billing.webhook');
 
-// Public invitation page (published only) — see Step 4 for OG meta + SSR.
+// Public invitation page (published only) - see Step 4 for OG meta + SSR.
 Route::get('undangan/{slug}', [PublicInvitationController::class, 'show'])->name('invitation.show');
 Route::post('undangan/{slug}/rsvp', [RsvpController::class, 'store'])->middleware('throttle:5,1')->name('invitation.rsvp.store');
 Route::post('undangan/{slug}/guestbook', [GuestBookController::class, 'store'])->middleware('throttle:5,1')->name('invitation.guestbook.store');

@@ -20,7 +20,7 @@ export interface CoverAnimation {
 }
 
 /**
- * Opening animation per package tier — richer the higher the tier climbs, so a
+ * Opening animation per package tier - richer the higher the tier climbs, so a
  * pricier package feels more premium the moment the invitation is opened.
  */
 const COVER_ANIMATIONS: Record<PackageTier, CoverAnimation> = {

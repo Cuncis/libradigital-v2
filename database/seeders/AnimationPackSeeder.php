@@ -12,7 +12,7 @@ class AnimationPackSeeder extends Seeder
 {
     /**
      * Seed a few example floating-overlay packs. Assets use remote placeholder
-     * PNGs (no local asset_path) so media-disk cleanup never touches them —
+     * PNGs (no local asset_path) so media-disk cleanup never touches them -
      * admins replace them with real transparent PNGs via the panel.
      */
     public function run(): void

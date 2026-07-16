@@ -36,7 +36,7 @@ class OptimizeImage implements ShouldQueue
 
     /**
      * If the photo (or invitation) was deleted before this ran, just drop the
-     * job instead of failing it — the file it would optimise is already gone.
+     * job instead of failing it - the file it would optimise is already gone.
      */
     public bool $deleteWhenMissingModels = true;
 
@@ -66,7 +66,7 @@ class OptimizeImage implements ShouldQueue
             return;
         }
 
-        // Already optimised (e.g. a retried job) — nothing to do.
+        // Already optimised (e.g. a retried job) - nothing to do.
         if (str_ends_with(strtolower($source), '.webp')) {
             return;
         }

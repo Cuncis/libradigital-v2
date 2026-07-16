@@ -1,5 +1,5 @@
 /**
- * Template Builder — node schema (v1).
+ * Template Builder - node schema (v1).
  *
  * The authoritative data contract between the visual builder (writer) and the
  * `<TemplateRenderer>` (reader). Stored whole as JSON on `templates.layout`.
@@ -215,7 +215,7 @@ export interface ButtonNode extends BaseNode {
 
 export interface LottieNode extends BaseNode {
     type: 'lottie';
-    /** URL of a Lottie `.json` (or `.lottie`) file — literal or bound. */
+    /** URL of a Lottie `.json` (or `.lottie`) file - literal or bound. */
     src: Value;
     loop?: boolean;
     /** Playback speed multiplier (1 = normal). */

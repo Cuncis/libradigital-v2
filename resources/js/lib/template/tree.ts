@@ -1,5 +1,5 @@
 /**
- * Template Builder — immutable node-tree operations used by the admin builder.
+ * Template Builder - immutable node-tree operations used by the admin builder.
  * Every mutator returns a new root so React re-renders on change.
  */
 import type {
@@ -312,7 +312,7 @@ export function insertRelative<T extends Root>(
 
 /**
  * Move an existing node next to / into a target. No-op for invalid moves
- * (onto itself, or into its own subtree — which would corrupt the tree).
+ * (onto itself, or into its own subtree - which would corrupt the tree).
  */
 export function moveRelative<T extends Root>(
     root: T,

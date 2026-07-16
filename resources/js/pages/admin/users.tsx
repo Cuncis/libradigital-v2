@@ -58,7 +58,7 @@ export default function AdminUsers({ users, filters }: Props) {
 
     return (
         <>
-            <Head title="Pengguna — Admin" />
+            <Head title="Pengguna - Admin" />
             <div className="flex flex-col gap-4 p-4">
                 <form onSubmit={submit} className="flex max-w-sm gap-2">
                     <div className="relative flex-1">
@@ -129,7 +129,7 @@ export default function AdminUsers({ users, filters }: Props) {
                                                     ? formatIndoDate(
                                                           user.created_at,
                                                       )
-                                                    : '—'}
+                                                    : '-'}
                                             </TableCell>
                                             <TableCell>
                                                 {user.is_admin ? (

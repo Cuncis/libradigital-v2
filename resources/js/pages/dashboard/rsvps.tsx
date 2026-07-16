@@ -61,7 +61,7 @@ export default function RsvpsPage({ invitation, rsvps, summary }: Props) {
                             <ArrowLeft className="size-4" /> Dashboard
                         </Link>
                         <h1 className="font-serif text-2xl">
-                            RSVP — {invitation.groom_name} &amp;{' '}
+                            RSVP - {invitation.groom_name} &amp;{' '}
                             {invitation.bride_name}
                         </h1>
                     </div>
@@ -123,14 +123,14 @@ export default function RsvpsPage({ invitation, rsvps, summary }: Props) {
                                         </Badge>
                                     </td>
                                     <td className="max-w-xs p-3 text-muted-foreground">
-                                        {rsvp.message ?? '—'}
+                                        {rsvp.message ?? '-'}
                                     </td>
                                     <td className="p-3 text-muted-foreground">
                                         {rsvp.created_at
                                             ? new Date(
                                                   rsvp.created_at,
                                               ).toLocaleString('id-ID')
-                                            : '—'}
+                                            : '-'}
                                     </td>
                                 </tr>
                             ))}

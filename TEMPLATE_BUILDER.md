@@ -1,4 +1,4 @@
-# 🧱 Template Builder — Node Schema Spec
+# 🧱 Template Builder - Node Schema Spec
 
 ### Superadmin Feature · Elementor-style visual layout builder · v1 schema
 
@@ -6,7 +6,7 @@
 > stored as a **node tree** (JSON) on the template. Every couple's invitation
 > fills that tree with their own content via **bindings**.
 >
-> This document specifies **the node schema only** — the data contract between
+> This document specifies **the node schema only** - the data contract between
 > the builder (writer) and the `<TemplateRenderer>` (reader). It is the thing to
 > review before any code is written. TypeScript in this doc is authoritative.
 
@@ -19,7 +19,7 @@ hardcoded `PublicInvitationPage`, gated by a golden parity test).
 
 ---
 
-## 1. Scope — what is and isn't in the tree
+## 1. Scope - what is and isn't in the tree
 
 The tree describes the **scrollable body** of the invitation. Some things stay
 as page **chrome**, rendered outside the tree by the page wrapper, because they
@@ -102,7 +102,7 @@ The root is a single node (usually an invisible container holding the sections).
 export type NodeType =
   | 'container'   // layout wrapper: stack | row | grid
   | 'section'     // full-bleed band; the top-level rhythm of the page
-  | 'text'        // heading / paragraph / eyebrow — literal or bound
+  | 'text'        // heading / paragraph / eyebrow - literal or bound
   | 'image'       // static asset OR bound (cover_photo, single gallery img)
   | 'widget'      // mounts an existing invitation component
   | 'spacer'      // vertical gap
@@ -211,10 +211,10 @@ export function resolveValue(value: Value, ctx: RenderContext): string {
 }
 ```
 
-- **literal** — admin typed it (labels: "The Wedding Of", "Konfirmasi Kehadiran").
-- **bind** — pulls from the invitation/context; `fallback` overrides the default
+- **literal** - admin typed it (labels: "The Wedding Of", "Konfirmasi Kehadiran").
+- **bind** - pulls from the invitation/context; `fallback` overrides the default
   placeholder (e.g. "Nama Pengantin") when the field is empty (draft previews).
-- **template** — one string from mixed parts (couple name = groom + " & " + bride).
+- **template** - one string from mixed parts (couple name = groom + " & " + bride).
 
 ### 5.1 Bindable fields (whitelist)
 
@@ -232,8 +232,8 @@ export type BindableField =
   // media + prose
   | 'cover_photo' | 'love_story' | 'music_url'
   // context (runtime, not invitation columns)
-  | 'ctx.slug';        // invitation.slug — needed by widgets (rsvp/visitor/share)
-// NOTE: the guest name (?tamu) is NOT a text-bindable field — it is owned by the
+  | 'ctx.slug';        // invitation.slug - needed by widgets (rsvp/visitor/share)
+// NOTE: the guest name (?tamu) is NOT a text-bindable field - it is owned by the
 // `guest_greeting` widget (§6.4), which encapsulates the SSR + empty guards.
 ```
 
@@ -243,7 +243,7 @@ registry so the binding picker and the renderer agree:
 ```ts
 export interface BindableFieldMeta {
   field: BindableField;
-  label: string;             // "Nama Pria" — shown in the picker
+  label: string;             // "Nama Pria" - shown in the picker
   group: 'Pasangan' | 'Akad' | 'Resepsi' | 'Media' | 'Konteks';
   format?: 'date' | 'time' | 'datetime'; // applies formatIndoDate/Time at render
   placeholder: string;       // default fallback when empty
@@ -262,15 +262,15 @@ export const BINDABLE_FIELDS: BindableFieldMeta[];
 ```ts
 export interface RenderContext {
   invitation: PublicInvitation;   // the resource payload
-  guestName: string;              // from useTamu() — '' until hydrated
+  guestName: string;              // from useTamu() - '' until hydrated
   hydrated: boolean;              // SSR guard; guestName is '' pre-hydration
 }
 ```
 
 `guestName` is consumed only by the `guest_greeting`, `rsvp`, and `wa_share`
-widgets — it is NOT a text-bindable field. Those widgets internally call
+widgets - it is NOT a text-bindable field. Those widgets internally call
 `useHydrated()`, so `guestName` reads `''` on the server and first client render
-(SSR parity — see `libradigital-architecture` memory) and the greeting self-hides
+(SSR parity - see `libradigital-architecture` memory) and the greeting self-hides
 when empty. No template author ever hand-wires the hydration guard, and no node
 in the tree references the guest name directly.
 
@@ -298,7 +298,7 @@ export type WidgetKind =
 | `rsvp` | `RsvpForm` | `{ slug: bind(ctx.slug) }` | adapter passes `defaultName = ctx.guestName` |
 | `visitor_counter` | `VisitorCounter` | `{ slug: bind(ctx.slug) }` | |
 | `wa_share` | `WaShareButton` | `{ slug: bind(ctx.slug) }` | adapter passes `guestName = ctx.guestName` |
-| `guest_greeting` | greeting block | `{ variant: literal('card' \| 'inline') }` | see §6.4 — reads `ctx.guestName`, self-guards SSR + empty |
+| `guest_greeting` | greeting block | `{ variant: literal('card' \| 'inline') }` | see §6.4 - reads `ctx.guestName`, self-guards SSR + empty |
 
 ### 6.2 Repeater widgets (bound to arrays)
 
@@ -311,7 +311,7 @@ individual items; the item template is fixed inside the component.
 | `gift` | `GiftCard` per item | `gift_accounts[]` | section hidden if empty |
 | `guest_book` | `GuestBook` | `guest_book_entries[]` + `has_guest_book` gate | hidden unless add-on active |
 
-Repeater arrays are **not** in the `BindableField` union — they're implicit to the
+Repeater arrays are **not** in the `BindableField` union - they're implicit to the
 widget. A future enhancement could expose per-item sub-templates; out of scope v1.
 
 ### 6.3 Widget adapter
@@ -334,12 +334,12 @@ export const WIDGET_REGISTRY: Record<WidgetKind, WidgetSpec>;
 ### 6.4 The `guest_greeting` widget (resolved §14.1)
 
 The guest name (`?tamu` query param) is deliberately **not** a text-bindable
-field. It couples three failure-prone concerns — the `useHydrated` SSR guard, the
-empty guard, and specific markup — that a raw bind would push onto every template
+field. It couples three failure-prone concerns - the `useHydrated` SSR guard, the
+empty guard, and specific markup - that a raw bind would push onto every template
 author (one forgotten guard = an SSR hydration mismatch). The widget owns all three:
 
 ```ts
-// bindings.variant selects the presentation; no field binding — reads ctx.guestName
+// bindings.variant selects the presentation; no field binding - reads ctx.guestName
 type GuestGreetingVariant = 'card' | 'inline';
 //   card   → hero: translucent boxed block ("Kepada Bapak/Ibu/Saudara/i" + name)
 //   inline → RSVP intro: muted one-line paragraph
@@ -347,7 +347,7 @@ type GuestGreetingVariant = 'card' | 'inline';
 
 Behavior: renders `null` until `ctx.hydrated` AND `ctx.guestName !== ''`. This
 reproduces today's `{tamu && …}` blocks in both the hero and the RSVP section
-without any `visibleWhen` in the tree. It is the ONLY hydration-dependent node —
+without any `visibleWhen` in the tree. It is the ONLY hydration-dependent node -
 which is why the `visibility` union has no `hydrated` primitive (§7).
 
 ---
@@ -375,7 +375,7 @@ per widget from `WidgetSpec.defaultVisibleWhen` but are editable in the inspecto
 
 ## 8. Styling & responsive
 
-`StyleProps` is a **constrained, token-based** style object — not arbitrary CSS.
+`StyleProps` is a **constrained, token-based** style object - not arbitrary CSS.
 This keeps output on-theme, mobile-safe, and diffable. Values are design tokens
 that resolve to Tailwind classes / `--inv-*` vars, never raw px soup.
 
@@ -402,7 +402,7 @@ export interface StyleProps {
 
 - **Mobile-first:** base `style` targets the smallest screen; `responsive.sm` /
   `responsive.lg` shallow-merge over it. Because layout is **stack-based**, most
-  templates need zero responsive overrides — this is the payoff of that decision.
+  templates need zero responsive overrides - this is the payoff of that decision.
 - **Theme-driven color:** `color`/`background` tokens resolve to `var(--inv-*)`,
   so one tree restyles automatically across javanese/sundanese/modern/rose themes.
 - **No absolute positioning, no raw px.** Enforced by the type + save validation.
@@ -411,7 +411,7 @@ export interface StyleProps {
 
 ## 9. Animation integration (reuse of ANIMATION_BUILDER)
 
-Per-node animation reuses both existing systems — nothing new rendered here:
+Per-node animation reuses both existing systems - nothing new rendered here:
 
 ```ts
 export interface AnimationRef {
@@ -461,7 +461,7 @@ export interface AnimationRef {
 
 ---
 
-## 11. Worked example — the "Classic" template (excerpt)
+## 11. Worked example - the "Classic" template (excerpt)
 
 The Phase-1 parity target: this tree must render identically to today's
 `PublicInvitationPage`. Hero + Events shown; the full seed lives in the seeder.
@@ -556,9 +556,9 @@ export function TemplateRenderer({
 
 Rules the renderer MUST obey (these are the parity guarantees):
 
-1. **Pure & deterministic** given `(layout, ctx)` — no data fetching, SSR-safe.
+1. **Pure & deterministic** given `(layout, ctx)` - no data fetching, SSR-safe.
 2. Evaluate `visibleWhen` before rendering a node; a hidden node renders nothing
-   (not an empty wrapper) — matches today's conditional sections.
+   (not an empty wrapper) - matches today's conditional sections.
 3. Resolve every `Value` through `resolveValue`, applying `format` for date fields.
 4. Wrap a node in `AnimatedReveal` iff `animationRef.reveal`; mount `AnimationLayer`
    iff a pack applies to that section (couple selection overrides template default).
@@ -575,7 +575,7 @@ Rules the renderer MUST obey (these are the parity guarantees):
 - ❌ Per-item repeater sub-templates (gallery/gift item layouts are fixed).
 - ❌ Custom fonts/colors beyond the theme `--inv-*` system.
 - ❌ Multiple animation packs per section (unchanged: one pack, one section).
-- ❌ Undo/redo, reusable saved blocks — later phases, not schema concerns.
+- ❌ Undo/redo, reusable saved blocks - later phases, not schema concerns.
 
 ---
 
@@ -592,7 +592,7 @@ Rules the renderer MUST obey (these are the parity guarantees):
    leaves it null to match today's always-render-both behavior. Repeaters remain
    reserved for genuinely dynamic arrays (gallery/gift/guest_book).
 3. **`section.variant` kept as a render-affecting preset** (`hero | default |
-   footer`; `'muted'` dropped — use `background:'soft'`). The hero band's structure
+   footer`; `'muted'` dropped - use `background:'soft'`). The hero band's structure
    (full-height, cover-image bg + dark overlay, white-on-image) can't be expressed
    in token-only `StyleProps` without polluting every node's style type. The hero
    cover image moves onto `SectionNode.backgroundImage`, so the standalone `hero_bg`
@@ -600,5 +600,5 @@ Rules the renderer MUST obey (these are the parity guarantees):
 
 ---
 
-*TEMPLATE_BUILDER.md — LibraDigital · schema v1 · 2026-07-14*
+*TEMPLATE_BUILDER.md - LibraDigital · schema v1 · 2026-07-14*
 *Companion to ANIMATION_BUILDER.md. Reviewed before implementation.*

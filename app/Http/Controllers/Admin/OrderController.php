@@ -53,7 +53,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Mark a paid order as refunded. Invitation access is left untouched — expire
+     * Mark a paid order as refunded. Invitation access is left untouched - expire
      * it separately from the invitations screen if the refund should revoke it.
      */
     public function refund(Order $order): RedirectResponse

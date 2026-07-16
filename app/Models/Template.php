@@ -73,7 +73,7 @@ class Template extends Model
     }
 
     /**
-     * The "Classic" layout node tree — a faithful reproduction of the original
+     * The "Classic" layout node tree - a faithful reproduction of the original
      * hardcoded invitation page, expressed in the builder's node schema. Shared
      * by the seeder, factory, and parity test as the single source of truth.
      *

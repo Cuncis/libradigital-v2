@@ -9,7 +9,7 @@ type MotionFn = (
 /**
  * Deterministic PRNG (mulberry32) seeded by an asset id, so motions with random
  * offsets (fall-down rotation, drift path) reproduce the exact same values on
- * every rebuild — which keeps scrubbing/seeking stable.
+ * every rebuild - which keeps scrubbing/seeking stable.
  */
 function seededRandom(seed: number): (min: number, max: number) => number {
     let a = (Math.trunc(seed) || 1) >>> 0;

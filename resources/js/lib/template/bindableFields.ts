@@ -1,9 +1,9 @@
 /**
- * Template Builder — bindable fields, render context, and value/visibility
+ * Template Builder - bindable fields, render context, and value/visibility
  * resolution (§5, §7 of TEMPLATE_BUILDER.md).
  *
  * The field whitelist is derived 1:1 from `PublicInvitation` / `InvitationResource`.
- * Scalars only — arrays are owned by repeater widgets, not text bindings.
+ * Scalars only - arrays are owned by repeater widgets, not text bindings.
  */
 import { formatIndoDate, formatIndoTime } from '@/lib/format';
 import type { PublicInvitation } from '@/types/invitation';
@@ -151,7 +151,7 @@ const FALLBACK_BY_FIELD: Record<BindableField, string> = Object.fromEntries(
 
 /**
  * Everything the renderer needs to resolve a tree. `guestName`/`hydrated` back
- * the `guest_greeting` widget (§6.4) — no text node reads them directly.
+ * the `guest_greeting` widget (§6.4) - no text node reads them directly.
  */
 export interface RenderContext {
     invitation: PublicInvitation;
@@ -168,9 +168,9 @@ export interface RenderContext {
     preview?: boolean;
     /** True in the builder: wrap each node with data-node-id + selection outline, skip reveals. */
     editor?: boolean;
-    /** Currently-selected node id (editor only) — highlights that node in the canvas. */
+    /** Currently-selected node id (editor only) - highlights that node in the canvas. */
     selectedId?: string | null;
-    /** Node a drag is hovering (editor only) — draws a drop indicator on the canvas. */
+    /** Node a drag is hovering (editor only) - draws a drop indicator on the canvas. */
     dropTargetId?: string | null;
     /** Where the dragged node would land relative to `dropTargetId`. */
     dropPosition?: 'before' | 'after' | 'inside';

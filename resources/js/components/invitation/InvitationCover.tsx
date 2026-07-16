@@ -16,8 +16,8 @@ const CONFETTI_COLORS = ['#ffbb05', '#f43f5e', '#38bdf8', '#a855f7', '#22c55e'];
 
 /**
  * Random particle sets are built once per mount via a lazy state initializer
- * (impure work is allowed there, not in render / useMemo). The tier — and thus
- * the counts — never change while mounted, so the initial set is stable.
+ * (impure work is allowed there, not in render / useMemo). The tier - and thus
+ * the counts - never change while mounted, so the initial set is stable.
  */
 function usePetals(count: number) {
     const [petals] = useState(() =>

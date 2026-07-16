@@ -43,7 +43,7 @@ export default function VisitorCounter({ slug }: { slug: string }) {
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Eye className="size-4" />
             <span>
-                <strong className="tabular-nums">{count ?? '—'}</strong> tamu
+                <strong className="tabular-nums">{count ?? '-'}</strong> tamu
                 telah membuka undangan ini
             </span>
         </div>

@@ -1,5 +1,5 @@
 /**
- * Template Builder — widget registry (§6 of TEMPLATE_BUILDER.md).
+ * Template Builder - widget registry (§6 of TEMPLATE_BUILDER.md).
  *
  * Maps a WidgetKind to its existing invitation component + binding contract.
  * The components themselves are unchanged; this only makes them addressable

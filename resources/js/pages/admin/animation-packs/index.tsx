@@ -100,7 +100,7 @@ export default function AdminAnimationPacks({ packs, sections }: Props) {
                                                         />
                                                     ) : (
                                                         <span className="text-xs text-muted-foreground">
-                                                            —
+                                                            -
                                                         </span>
                                                     )}
                                                 </TableCell>

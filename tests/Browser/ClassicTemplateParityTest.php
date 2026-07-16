@@ -11,7 +11,7 @@ use App\Models\Template;
 /**
  * Phase 1 parity gate: an invitation whose template carries the "Classic" node
  * tree must render through <TemplateRenderer> with the same content, sections,
- * and interactions as the legacy hardcoded page — and no SSR/JS errors.
+ * and interactions as the legacy hardcoded page - and no SSR/JS errors.
  */
 function classicInvitation(array $overrides = []): Invitation
 {

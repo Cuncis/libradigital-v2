@@ -16,7 +16,7 @@ class AnimationSeeder extends Seeder
      */
     public function run(): void
     {
-        // [section, effect, name, sort_order, min_package] — null tier = all packages.
+        // [section, effect, name, sort_order, min_package] - null tier = all packages.
         $defaults = [
             // Cover openers.
             [AnimationSection::Cover, AnimationEffect::CoverFade, 'Cover Memudar', 0, null],

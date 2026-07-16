@@ -25,7 +25,7 @@ const SANS = '"Instrument Sans", ui-sans-serif, system-ui, sans-serif';
  * rotation list below, so each template can carry a visibly distinct look.
  */
 const THEMES = {
-    // Rose — the soft romantic default.
+    // Rose - the soft romantic default.
     rose: {
         page: 'bg-gradient-to-b from-rose-50 via-white to-rose-50',
         text: 'text-neutral-800',
@@ -40,7 +40,7 @@ const THEMES = {
             '--inv-font-heading': SERIF,
         } as CSSProperties,
     },
-    // Javanese Elegance — batik brown & antique gold, ornate serif.
+    // Javanese Elegance - batik brown & antique gold, ornate serif.
     javaneseElegance: {
         page: 'bg-gradient-to-b from-[#efe6d6] via-[#f7f1e6] to-[#e3d4bd]',
         text: 'text-[#46392b]',
@@ -55,7 +55,7 @@ const THEMES = {
             '--inv-font-heading': SERIF,
         } as CSSProperties,
     },
-    // Sundanese Gold — ivory & emerald with rich gold accents.
+    // Sundanese Gold - ivory & emerald with rich gold accents.
     sundaneseGold: {
         page: 'bg-gradient-to-b from-[#f6f3e6] via-[#fbfbf3] to-[#e8f0e2]',
         text: 'text-[#3f3a24]',
@@ -70,11 +70,11 @@ const THEMES = {
             '--inv-font-heading': SERIF,
         } as CSSProperties,
     },
-    // Modern Minimalist — monochrome charcoal, clean sans.
+    // Modern Minimalist - monochrome charcoal, clean sans.
     modernMinimalist: {
         page: 'bg-gradient-to-b from-neutral-50 via-white to-neutral-100',
         text: 'text-neutral-700',
-        ornament: '—',
+        ornament: '·',
         vars: {
             '--inv-accent': '#334155',
             '--inv-accent-strong': '#0f172a',
@@ -85,7 +85,7 @@ const THEMES = {
             '--inv-font-heading': SANS,
         } as CSSProperties,
     },
-    // Batak — bold ulos red & charcoal, striking serif.
+    // Batak - bold ulos red & charcoal, striking serif.
     batak: {
         page: 'bg-gradient-to-b from-[#f7eef0] via-white to-[#f0dcdf]',
         text: 'text-[#3a2a2c]',
@@ -100,7 +100,7 @@ const THEMES = {
             '--inv-font-heading': SERIF,
         } as CSSProperties,
     },
-    // Sage — botanical green & terracotta.
+    // Sage - botanical green & terracotta.
     sage: {
         page: 'bg-gradient-to-b from-[#eef1e9] via-white to-[#e1e8d8]',
         text: 'text-[#3c4534]',
@@ -115,7 +115,7 @@ const THEMES = {
             '--inv-font-heading': SERIF,
         } as CSSProperties,
     },
-    // Dusk — plum & mauve, dreamy serif.
+    // Dusk - plum & mauve, dreamy serif.
     dusk: {
         page: 'bg-gradient-to-b from-[#f3edf5] via-white to-[#e7dced]',
         text: 'text-[#42323f]',
@@ -130,7 +130,7 @@ const THEMES = {
             '--inv-font-heading': SERIF,
         } as CSSProperties,
     },
-    // Ocean — teal & navy, airy sans.
+    // Ocean - teal & navy, airy sans.
     ocean: {
         page: 'bg-gradient-to-b from-[#eaf3f4] via-white to-[#d8ecee]',
         text: 'text-[#22424a]',
@@ -145,7 +145,7 @@ const THEMES = {
             '--inv-font-heading': SANS,
         } as CSSProperties,
     },
-    // Burgundy — deep wine & blush, romantic serif.
+    // Burgundy - deep wine & blush, romantic serif.
     burgundy: {
         page: 'bg-gradient-to-b from-[#f7ecec] via-white to-[#efd7da]',
         text: 'text-[#3f2226]',
@@ -160,7 +160,7 @@ const THEMES = {
             '--inv-font-heading': SERIF,
         } as CSSProperties,
     },
-    // Midnight — inky navy & champagne gold, luxe sans.
+    // Midnight - inky navy & champagne gold, luxe sans.
     midnight: {
         page: 'bg-gradient-to-b from-[#eef1f6] via-white to-[#dde3ee]',
         text: 'text-[#26303f]',
@@ -195,7 +195,7 @@ const CATEGORY_THEME: Record<string, ThemeName> = {
 };
 
 /**
- * Rotation used to give every other template a distinct, stable look — picked
+ * Rotation used to give every other template a distinct, stable look - picked
  * deterministically from its slug so it never changes between renders. Excludes
  * the curated bespoke themes so a random template never mimics a seed template.
  */
@@ -223,7 +223,7 @@ function hashString(value: string): number {
 /**
  * Resolve a template's theme so every template gets its own look:
  *   1. a hand-picked theme for the curated seed templates (by slug),
- *   2. otherwise a stable slug-hashed rotation — distinct per template and
+ *   2. otherwise a stable slug-hashed rotation - distinct per template and
  *      constant across renders (so same-category templates never collide),
  *   3. a category theme when only a category is known (slug-less previews),
  *   4. the rose default as the final fallback.

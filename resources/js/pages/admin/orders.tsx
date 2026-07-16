@@ -87,7 +87,7 @@ export default function AdminOrders({ orders, filters }: Props) {
 
     return (
         <>
-            <Head title="Pesanan — Admin" />
+            <Head title="Pesanan - Admin" />
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex flex-wrap gap-2">
                     <form
@@ -196,7 +196,7 @@ export default function AdminOrders({ orders, filters }: Props) {
                                                         ? formatIndoDate(
                                                               order.paid_at,
                                                           )
-                                                        : '—'}
+                                                        : '-'}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     {order.status ===
@@ -212,7 +212,7 @@ export default function AdminOrders({ orders, filters }: Props) {
                                                                 </Button>
                                                             }
                                                             title="Tandai sebagai refund?"
-                                                            description={`Pesanan ${order.order_number} akan ditandai refund. Akses undangan tidak otomatis dicabut — kadaluarsakan undangan dari halaman Undangan bila perlu.`}
+                                                            description={`Pesanan ${order.order_number} akan ditandai refund. Akses undangan tidak otomatis dicabut - kadaluarsakan undangan dari halaman Undangan bila perlu.`}
                                                             confirmLabel="Tandai Refund"
                                                             destructive
                                                             onConfirm={(

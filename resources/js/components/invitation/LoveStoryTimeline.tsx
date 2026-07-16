@@ -8,7 +8,7 @@ interface Milestone {
 /**
  * Split the free-text love story into timeline milestones. Each non-empty line
  * becomes one milestone; an optional leading year (e.g. "2019 - Pertama bertemu",
- * "2019: ...", "2019 | ...", "2019 — ...") is pulled out as the milestone badge.
+ * "2019: ...", "2019 | ...", "2019 - ...") is pulled out as the milestone badge.
  */
 function parseMilestones(story: string): Milestone[] {
     return story
@@ -16,7 +16,9 @@ function parseMilestones(story: string): Milestone[] {
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .map((line) => {
-            const match = line.match(/^(\d{4})\s*[-–—:|.)]*\s*(.*)$/);
+            // Accept any common year/text separator the couple might type,
+            // including en/em dashes. Hyphen is escaped so it isn't read as a range.
+            const match = line.match(/^(\d{4})\s*[–—:|.)\-]*\s*(.*)$/);
 
             if (match && match[2].length > 0) {
                 return { year: match[1], text: match[2] };

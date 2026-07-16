@@ -572,7 +572,7 @@ function AnimationStep({
                                     value={pack.slug}
                                     disabled={locked}
                                 >
-                                    {pack.name} — {pack.section_label}
+                                    {pack.name} - {pack.section_label}
                                     {locked ? ' 🔒' : ''}
                                 </option>
                             );
@@ -646,7 +646,7 @@ function AnimationStep({
                                         value={animation.id}
                                         disabled={locked}
                                     >
-                                        {animation.name} —{' '}
+                                        {animation.name} -{' '}
                                         {animation.effect_label}
                                         {locked
                                             ? ` 🔒 ${animation.min_package_label}`

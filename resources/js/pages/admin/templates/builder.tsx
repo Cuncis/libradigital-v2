@@ -142,7 +142,7 @@ const MOTION_OPTIONS: { value: string; label: string }[] = [
     { value: 'spin', label: 'putar' },
 ];
 
-/** Preview canvas width per device — mobile mimics a phone, desktop is wider. */
+/** Preview canvas width per device - mobile mimics a phone, desktop is wider. */
 const DEVICE_WIDTH: Record<Device, number> = {
     desktop: 720,
     mobile: 400,
@@ -446,7 +446,7 @@ function ValueEditor({
     if (value.kind === 'template') {
         return (
             <p className="text-xs text-muted-foreground">
-                Nilai gabungan ({value.parts.length} bagian) — mis. nama
+                Nilai gabungan ({value.parts.length} bagian) - mis. nama
                 pasangan.
             </p>
         );
@@ -910,8 +910,8 @@ function LayerRow(props: LayerRowProps) {
 // --- Builder page ------------------------------------------------------------
 
 export default function TemplateBuilder({ template, sampleInvitation }: Props) {
-    // The builder edits two independent trees — the invitation body and the
-    // cover ("Buka Undangan" screen) — switched by the `tab`. `tree`/`setTree`
+    // The builder edits two independent trees - the invitation body and the
+    // cover ("Buka Undangan" screen) - switched by the `tab`. `tree`/`setTree`
     // always point at whichever one is active.
     const [tab, setTab] = useState<BuilderTab>('body');
     const [trees, setTrees] = useState<Record<BuilderTab, TemplateLayout>>({
@@ -1026,7 +1026,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
     };
 
     // Container flow/columns are node props on desktop, but a mobile override
-    // lives in `responsive.mobile` — so their effective value depends on device.
+    // lives in `responsive.mobile` - so their effective value depends on device.
     const container = selected?.type === 'container' ? selected : null;
     const effectiveLayout =
         (editingMobile ? selected?.responsive?.mobile?.layout : undefined) ??
@@ -1333,7 +1333,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
 
     return (
         <>
-            <Head title={`Builder — ${template.name}`} />
+            <Head title={`Builder - ${template.name}`} />
             <div className="flex h-[calc(100vh-4rem)] flex-col">
                 {/* Top bar */}
                 <div className="flex items-center justify-between border-b px-4 py-3">
@@ -1921,7 +1921,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                     </Field>
                                 )}
 
-                                {/* Style — edits the base (Desktop) or the Mobile
+                                {/* Style - edits the base (Desktop) or the Mobile
                                     override, depending on the device toggle. */}
                                 <div className="border-t pt-3">
                                     <div className="flex items-center justify-between">

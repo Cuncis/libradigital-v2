@@ -404,7 +404,7 @@ export default function AdminAnimations({
                                                         />
                                                     ) : (
                                                         <span className="text-xs text-muted-foreground">
-                                                            —
+                                                            -
                                                         </span>
                                                     )}
                                                 </TableCell>

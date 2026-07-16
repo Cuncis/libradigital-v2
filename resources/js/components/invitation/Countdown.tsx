@@ -50,7 +50,7 @@ export default function Countdown({ targetIso }: { targetIso: string }) {
     }
 
     const pad = (value: number | undefined) =>
-        value === undefined ? '––' : String(value).padStart(2, '0');
+        value === undefined ? '--' : String(value).padStart(2, '0');
 
     const units: Array<[string, string]> = [
         ['Hari', pad(remaining?.days)],

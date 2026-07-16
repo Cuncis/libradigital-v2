@@ -1,4 +1,4 @@
-# 🎨 Animation Builder — LibraDigital
+# 🎨 Animation Builder - LibraDigital
 ### Superadmin Feature · GSAP · Drag & Drop · Gen Z Vibes
 
 > Admin bikin animasi sekali → user tinggal pilih dari dropdown → undangan langsung hidup.  
@@ -8,27 +8,27 @@
 
 ## 📋 Table of Contents
 
-1. [Big Picture — Gimana Ini Kerja](#1-big-picture--gimana-ini-kerja)
+1. [Big Picture - Gimana Ini Kerja](#1-big-picture--gimana-ini-kerja)
 2. [Siapa yang Ngapain](#2-siapa-yang-ngapain)
 3. [Animation Pack vs Animation Asset](#3-animation-pack-vs-animation-asset)
 4. [9 Motion Presets](#4-9-motion-presets)
-5. [Builder UI — Superadmin](#5-builder-ui--superadmin)
+5. [Builder UI - Superadmin](#5-builder-ui--superadmin)
 6. [Alur Kerja Admin Step by Step](#6-alur-kerja-admin-step-by-step)
-7. [User Experience — Stepper Step 6](#7-user-experience--stepper-step-6)
-8. [Preview Modal — Detail](#8-preview-modal--detail)
-9. [AnimationLayer — Cara Render di Invitation](#9-animationlayer--cara-render-di-invitation)
+7. [User Experience - Stepper Step 6](#7-user-experience--stepper-step-6)
+8. [Preview Modal - Detail](#8-preview-modal--detail)
+9. [AnimationLayer - Cara Render di Invitation](#9-animationlayer--cara-render-di-invitation)
 10. [Database Schema](#10-database-schema)
 11. [File Structure](#11-file-structure)
-12. [Backend — Routes & Controller](#12-backend--routes--controller)
-13. [Frontend — Kode Lengkap](#13-frontend--kode-lengkap)
+12. [Backend - Routes & Controller](#12-backend--routes--controller)
+13. [Frontend - Kode Lengkap](#13-frontend--kode-lengkap)
 14. [R2 Storage](#14-r2-storage)
-15. [Seeder — Pack Bawaan](#15-seeder--pack-bawaan)
+15. [Seeder - Pack Bawaan](#15-seeder--pack-bawaan)
 16. [Rules & Constraints](#16-rules--constraints)
 17. [FAQ](#17-faq)
 
 ---
 
-## 1. Big Picture — Gimana Ini Kerja
+## 1. Big Picture - Gimana Ini Kerja
 
 ```
                          ╔══════════════════════════════════╗
@@ -48,7 +48,7 @@
                               disimpan ke DB + R2
                                         ║
                          ╔══════════════╩═══════════════════╗
-                         ║        USER — STEP 6             ║
+                         ║        USER - STEP 6             ║
                          ║                                  ║
                          ║  Pilih template tema             ║
                          ║       ↓                          ║
@@ -81,7 +81,7 @@
 |---|---|---|
 | **Superadmin** | `/superadmin/animation-packs` | Buat, edit, hapus animation pack. Upload asset. Set tier & section. |
 | **User** | Stepper Step 6 | Pilih nama pack dari dropdown. Preview via modal. Klik "Pakai". |
-| **Tamu undangan** | URL undangan publik | Lihat hasil animasi berjalan — tidak tahu ada "pack" di baliknya. |
+| **Tamu undangan** | URL undangan publik | Lihat hasil animasi berjalan - tidak tahu ada "pack" di baliknya. |
 
 ---
 
@@ -109,14 +109,14 @@ Animation Pack  "Pink Cherry Blossom"
 ```
 
 - **1 pack** bisa punya banyak asset (rekomendasi maks 8–10 agar performa tetap smooth)
-- **1 pack** hanya untuk **1 section** — kalau mau animasi di hero DAN gallery, buat 2 pack berbeda lalu user pilih keduanya
-- Asset PNG/WebP harus **tanpa background** (transparan) — ini yang bikin efeknya natural
+- **1 pack** hanya untuk **1 section** - kalau mau animasi di hero DAN gallery, buat 2 pack berbeda lalu user pilih keduanya
+- Asset PNG/WebP harus **tanpa background** (transparan) - ini yang bikin efeknya natural
 
 ---
 
 ## 4. Nine Motion Presets
 
-Semua animasi pakai GSAP. Tidak ada CSS keyframes custom — semua terpusat di `motions.ts`.
+Semua animasi pakai GSAP. Tidak ada CSS keyframes custom - semua terpusat di `motions.ts`.
 
 ### 4.1 Catalog Lengkap
 
@@ -161,7 +161,7 @@ Semua animasi pakai GSAP. Tidak ada CSS keyframes custom — semua terpusat di `
 
 ---
 
-## 5. Builder UI — Superadmin
+## 5. Builder UI - Superadmin
 
 ### 5.1 Layout Keseluruhan
 
@@ -301,7 +301,7 @@ Semua animasi pakai GSAP. Tidak ada CSS keyframes custom — semua terpusat di `
 
 ---
 
-## 7. User Experience — Stepper Step 6
+## 7. User Experience - Stepper Step 6
 
 Dalam Step 6 (pilih template), setelah memilih tema visual, user melihat section tambahan:
 
@@ -329,7 +329,7 @@ Dalam Step 6 (pilih template), setelah memilih tema visual, user melihat section
 
 ---
 
-## 8. Preview Modal — Detail
+## 8. Preview Modal - Detail
 
 ### 8.1 Wireframe Modal
 
@@ -387,7 +387,7 @@ Option B: Klik "Batal" atau tekan Escape
 
 ### 8.3 Data yang Tampil di Preview
 
-Data diambil langsung dari Zustand `stepperStore` — **bukan data dummy**:
+Data diambil langsung dari Zustand `stepperStore` - **bukan data dummy**:
 
 | Field | Sumber |
 |---|---|
@@ -399,11 +399,11 @@ Kalau user belum isi nama (masih draft), tampil placeholder: `"Nama Pengantin"` 
 
 ---
 
-## 9. AnimationLayer — Cara Render di Invitation
+## 9. AnimationLayer - Cara Render di Invitation
 
 ### 9.1 Konsep
 
-`AnimationLayer` adalah komponen transparan yang di-render **di atas** section invitation. Ia tidak mengubah layout section apapun — hanya float di atasnya.
+`AnimationLayer` adalah komponen transparan yang di-render **di atas** section invitation. Ia tidak mengubah layout section apapun - hanya float di atasnya.
 
 ```
 ┌─────────────────────────────────────┐
@@ -442,10 +442,10 @@ Kalau user belum isi nama (masih draft), tampil placeholder: `"Nama Pengantin"` 
 
 ### 9.3 Performance Considerations
 
-- Maksimal **8–10 asset per pack** — lebih dari itu bisa lag di HP mid-range
+- Maksimal **8–10 asset per pack** - lebih dari itu bisa lag di HP mid-range
 - `fall-down` dengan banyak asset → pakai `stagger` GSAP bukan loop terpisah
 - Semua tween di-kill saat component unmount (useGSAP cleanup otomatis)
-- Asset di-preload saat modal preview buka — tidak ada flicker
+- Asset di-preload saat modal preview buka - tidak ada flicker
 - PNG transparan maksimal **200KB per asset** (enforced di upload validation)
 
 ---
@@ -569,14 +569,14 @@ database/
 
 ---
 
-## 12. Backend — Routes & Controller
+## 12. Backend - Routes & Controller
 
 ### Routes
 
 ```php
 // routes/web.php
 
-// Superadmin — Animation Packs (protected)
+// Superadmin - Animation Packs (protected)
 Route::prefix('superadmin/animation-packs')
     ->middleware(['auth', 'verified', 'role:superadmin'])
     ->name('superadmin.animation-packs.')
@@ -589,13 +589,13 @@ Route::prefix('superadmin/animation-packs')
         Route::delete('/{pack}', [AnimationPackController::class, 'destroy'])->name('destroy');
     });
 
-// Superadmin — Asset Upload Presign
+// Superadmin - Asset Upload Presign
 Route::post('/superadmin/animation-assets/presign',
     [AnimationAssetController::class, 'presign'])
     ->middleware(['auth', 'verified', 'role:superadmin'])
     ->name('superadmin.animation-assets.presign');
 
-// routes/api.php — Public JSON (tidak butuh auth, untuk dropdown stepper)
+// routes/api.php - Public JSON (tidak butuh auth, untuk dropdown stepper)
 Route::get('/animation-packs', [AnimationPackController::class, 'publicIndex'])
     ->name('api.animation-packs');
 ```
@@ -684,7 +684,7 @@ class AnimationPackController extends Controller
             ->with('success', 'Animation pack berhasil disimpan! 🎉');
     }
 
-    // Public JSON — untuk dropdown stepper user
+    // Public JSON - untuk dropdown stepper user
     public function publicIndex(Request $request): JsonResponse
     {
         $tier = $request->query('tier', 'standard');
@@ -731,7 +731,7 @@ public function presign(Request $request): JsonResponse
 
 ---
 
-## 13. Frontend — Kode Lengkap
+## 13. Frontend - Kode Lengkap
 
 ### 13.1 Types
 
@@ -1023,7 +1023,7 @@ export function AnimationPreviewModal({ pack, stepperData, onConfirm, onClose }:
           </button>
         </div>
 
-        {/* Preview area — simulasi HP portrait */}
+        {/* Preview area - simulasi HP portrait */}
         <div
           ref={containerRef}
           className="relative h-72 overflow-hidden"
@@ -1133,11 +1133,11 @@ Pack dihapus admin
   → R2 files dihapus via job DeleteAnimationAssetsJob (database queue)
 ```
 
-> **Asset animasi tidak punya expiry** — ini milik platform, bukan milik individual user. Berbeda dengan foto undangan yang punya TTL.
+> **Asset animasi tidak punya expiry** - ini milik platform, bukan milik individual user. Berbeda dengan foto undangan yang punya TTL.
 
 ---
 
-## 15. Seeder — Pack Bawaan
+## 15. Seeder - Pack Bawaan
 
 ```php
 // database/seeders/AnimationPackSeeder.php
@@ -1229,7 +1229,7 @@ public function run(): void
 | Rule | Nilai |
 |---|---|
 | Format yang diterima | PNG, WebP |
-| Harus transparan | Ya — tidak ada validasi otomatis, tapi SOP admin |
+| Harus transparan | Ya - tidak ada validasi otomatis, tapi SOP admin |
 | Max file size | 200 KB per asset |
 | Max asset per pack | 10 asset |
 | Min asset per pack | 1 asset |
@@ -1258,7 +1258,7 @@ public function run(): void
 ## 17. FAQ
 
 **Q: Kenapa tidak pakai CSS keyframes biasa?**
-A: GSAP jauh lebih powerful untuk animasi yang butuh timing kompleks, delay stagger, dan kontrol play/stop. Juga bisa di-kill dengan bersih saat unmount — tidak ada memory leak.
+A: GSAP jauh lebih powerful untuk animasi yang butuh timing kompleks, delay stagger, dan kontrol play/stop. Juga bisa di-kill dengan bersih saat unmount - tidak ada memory leak.
 
 **Q: Kenapa pack hanya untuk 1 section?**
 A: Supaya clean di builder. Kalau 1 pack bisa cover semua section, canvas builder jadi kompleks dan positioning jadi ambigu. User tetap bisa pilih pack berbeda untuk section berbeda kalau mau (future feature).
@@ -1270,12 +1270,12 @@ A: Dengan maks 10 asset per pack dan file ≤200KB, tidak. GSAP juga pakai `will
 A: `invitation.animation_pack_slug` jadi `NULL` (via `ON DELETE SET NULL`). Undangan tetap tampil normal, hanya tanpa animasi. Tidak ada error.
 
 **Q: Bisakah user membuat animasi sendiri?**
-A: Tidak. Animation Builder adalah fitur superadmin only. User hanya memilih nama pack. Ini by design — kalau user bisa custom, support jadi kompleks dan output quality tidak terjamin.
+A: Tidak. Animation Builder adalah fitur superadmin only. User hanya memilih nama pack. Ini by design - kalau user bisa custom, support jadi kompleks dan output quality tidak terjamin.
 
 **Q: Thumbnail pack di-generate gimana?**
 A: Saat admin klik "Simpan Pack", frontend jalankan `html2canvas` pada canvas builder → hasil capture di-upload ke R2 sebagai `animation-assets/{pack-slug}/thumbnail.png` → URL-nya disimpan di kolom `thumbnail_url`. Thumbnail ini yang tampil di dropdown user dan di list admin.
 
 ---
 
-*ANIMATION_BUILDER.md — LibraDigital · Juli 2026*  
+*ANIMATION_BUILDER.md - LibraDigital · Juli 2026*  
 *Terhubung dengan: README.md Section 11 (Template & Animation System) dan Section 12 (Animation Builder)*

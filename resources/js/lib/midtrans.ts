@@ -19,7 +19,10 @@ let loading: Promise<void> | null = null;
 /**
  * Loads the Midtrans Snap.js script once and resolves when `window.snap` is ready.
  */
-export function loadSnap(clientKey: string, isProduction: boolean): Promise<void> {
+export function loadSnap(
+    clientKey: string,
+    isProduction: boolean,
+): Promise<void> {
     if (typeof window === 'undefined') {
         return Promise.resolve();
     }
@@ -39,7 +42,8 @@ export function loadSnap(clientKey: string, isProduction: boolean): Promise<void
             : 'https://app.sandbox.midtrans.com/snap/snap.js';
         script.setAttribute('data-client-key', clientKey);
         script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Gagal memuat Midtrans Snap.js'));
+        script.onerror = () =>
+            reject(new Error('Gagal memuat Midtrans Snap.js'));
         document.head.appendChild(script);
     });
 

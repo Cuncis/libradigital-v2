@@ -37,7 +37,7 @@ export default function BlogIndex({ posts, categories, filters }: Props) {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-[#eef3f6] via-white to-[#eef3f6] font-body text-neutral-800 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-100">
-            <Head title="Blog — LibraDigital">
+            <Head title="Blog - LibraDigital">
                 <meta
                     name="description"
                     content="Tips, inspirasi, dan panduan seputar undangan pernikahan digital dari LibraDigital."
@@ -131,7 +131,7 @@ export default function BlogIndex({ posts, categories, filters }: Props) {
                                         <CalendarDays className="size-3.5" />
                                         {post.published_at
                                             ? formatIndoDate(post.published_at)
-                                            : '—'}
+                                            : '-'}
                                         <span>·</span>
                                         <span>{post.author_name}</span>
                                     </div>

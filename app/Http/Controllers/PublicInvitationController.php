@@ -14,7 +14,7 @@ class PublicInvitationController extends Controller
      * Render an active invitation by slug.
      *
      * Open Graph / Twitter meta tags are emitted server-side (via withViewData)
-     * so link crawlers such as WhatsApp — which do not execute JavaScript —
+     * so link crawlers such as WhatsApp - which do not execute JavaScript -
      * produce a rich preview. The React page receives the invitation as a prop.
      */
     public function show(string $slug): Response

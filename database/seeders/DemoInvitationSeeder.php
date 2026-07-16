@@ -17,7 +17,7 @@ use Illuminate\Support\Collection;
 class DemoInvitationSeeder extends Seeder
 {
     /**
-     * The demo couples showcased on the landing page — six per package tier.
+     * The demo couples showcased on the landing page - six per package tier.
      *
      * @var list<array{0: string, 1: string}>
      */

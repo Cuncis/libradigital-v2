@@ -241,7 +241,7 @@ export default function Welcome({ packages, demos, posts }: Props) {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-[#eef3f6] via-white to-[#eef3f6] font-body text-neutral-800 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-100">
-            <Head title="LibraDigital — Undangan Digital Pernikahan" />
+            <Head title="LibraDigital - Undangan Digital Pernikahan" />
 
             <SiteHeader />
 

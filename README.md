@@ -1,4 +1,4 @@
-# 💍 LibraDigital — Wedding Invitation SaaS Platform
+# 💍 LibraDigital - Wedding Invitation SaaS Platform
 ### Indonesia Market · Laravel 13 + React 19 (Inertia.js v3) · 2026
 
 > **Tagline:** Buat undangan digital pernikahan dalam 10 menit. Cantik, animated, self-serve.
@@ -29,7 +29,7 @@
 
 ## 1. Business Overview
 
-**LibraDigital** adalah platform SaaS undangan digital pernikahan untuk pasar Indonesia. Klien membuat undangan mereka sendiri melalui stepper UI 7 langkah tanpa perlu menghubungi admin — fully self-serve.
+**LibraDigital** adalah platform SaaS undangan digital pernikahan untuk pasar Indonesia. Klien membuat undangan mereka sendiri melalui stepper UI 7 langkah tanpa perlu menghubungi admin - fully self-serve.
 
 ### Target Market
 - Pasangan yang akan menikah di Indonesia (±2 juta pernikahan/tahun)
@@ -73,13 +73,13 @@ Undangan kadaluarsa bisa diperpanjang Rp 49K/6 bulan. Konversi ~40–60%.
 
 ### Secondary Revenue (Fase 3+)
 
-**E. Template Marketplace** — Desainer luar jual template, komisi 30–40%.
+**E. Template Marketplace** - Desainer luar jual template, komisi 30–40%.
 
-**F. Affiliate Program** — Konten kreator, mahasiswa, komunitas ibu-ibu.
+**F. Affiliate Program** - Konten kreator, mahasiswa, komunitas ibu-ibu.
 
-**G. White Label B2B** — Studio kreatif/EO besar pakai platform dengan branding mereka. Rp 299K–799K/bulan.
+**G. White Label B2B** - Studio kreatif/EO besar pakai platform dengan branding mereka. Rp 299K–799K/bulan.
 
-**H. API Access** — Developer pihak ketiga integrasi dengan platform. Rp 199K–499K/bulan.
+**H. API Access** - Developer pihak ketiga integrasi dengan platform. Rp 199K–499K/bulan.
 
 ### Add-on Catalog
 | Add-on | Harga | Est. Konversi |
@@ -133,13 +133,13 @@ Undangan kadaluarsa bisa diperpanjang Rp 49K/6 bulan. Konversi ~40–60%.
 ```
 PHP 8.4 + Laravel 13
 ├── Inertia.js v3 (server-driven SPA bridge ke React)
-├── Laravel Fortify — session-based auth
+├── Laravel Fortify - session-based auth
 │   └── login, register, password reset, email verification
-├── Laravel Socialite — Google OAuth login
-├── Pest 4 + PHPUnit 12 — testing
+├── Laravel Socialite - Google OAuth login
+├── Pest 4 + PHPUnit 12 - testing
 │   └── termasuk browser-testing plugin (Playwright-backed)
-├── Laravel Pint — code style enforcement
-└── Larastan — static analysis
+├── Laravel Pint - code style enforcement
+└── Larastan - static analysis
 ```
 
 ### Frontend
@@ -147,7 +147,7 @@ PHP 8.4 + Laravel 13
 React 19 (via Inertia.js v3)
 ├── TypeScript
 ├── Tailwind CSS v4
-├── Laravel Wayfinder — typed TS functions untuk routes/controllers
+├── Laravel Wayfinder - typed TS functions untuk routes/controllers
 │   └── frontend call backend actions langsung, tanpa hand-written URLs
 ├── shadcn/ui (komponen UI)
 ├── React Hook Form + Zod (form validation)
@@ -171,7 +171,7 @@ Deploy      : Laravel Forge + Hetzner VPS (CX31)
 SSL         : Let's Encrypt via Forge
 ```
 
-### Architecture Note — Inertia Monolith (Bukan Decoupled API)
+### Architecture Note - Inertia Monolith (Bukan Decoupled API)
 
 ```
 Blade renders root shell (app.blade.php)
@@ -182,7 +182,7 @@ Inertia handles semua navigasi antar page (server-driven)
   └── TIDAK ada REST API layer terpisah
   └── Wayfinder generate typed TS functions dari routes/controllers
 
-Pure JSON endpoints (unauthenticated, pakai fetch wrapper — bukan Inertia router):
+Pure JSON endpoints (unauthenticated, pakai fetch wrapper - bukan Inertia router):
   └── POST /rsvp/{slug}        ← submit RSVP dari tamu
   └── POST /invitation/{slug}/visit ← visitor counter
 ```
@@ -655,10 +655,10 @@ Validasi signature key
 
 | Tier | Package | Teknologi | Contoh |
 |---|---|---|---|
-| 1 — CSS | Starter, Standard | CSS3 transitions, keyframes | fade-in, slide-up, float |
-| 2 — GSAP | Premium | GSAP ScrollTrigger, stagger | parallax hero, stagger gallery |
-| 3 — Particle | Premium | tsParticles | kelopak bunga jatuh, bintang |
-| 4 — WebGL | Signature | Three.js, shader | 3D scene, cinematic opening |
+| 1 - CSS | Starter, Standard | CSS3 transitions, keyframes | fade-in, slide-up, float |
+| 2 - GSAP | Premium | GSAP ScrollTrigger, stagger | parallax hero, stagger gallery |
+| 3 - Particle | Premium | tsParticles | kelopak bunga jatuh, bintang |
+| 4 - WebGL | Signature | Three.js, shader | 3D scene, cinematic opening |
 
 ### Template File Structure
 
@@ -699,7 +699,7 @@ interface InvitationData {
   rsvp_open: boolean
 }
 
-// SEMUA tema harus accept props ini — tidak boleh ada perbedaan interface
+// SEMUA tema harus accept props ini - tidak boleh ada perbedaan interface
 // Ini yang memungkinkan 1 data = N tema, dan migrasi mudah
 ```
 
@@ -779,7 +779,7 @@ Fitur add-on: RSVP Reminder via WA. Sistem kirim WA ke semua tamu yang belum RSV
 
 ## 14. Roadmap
 
-### Fase 1 — MVP Stepper (Bulan 0–3)
+### Fase 1 - MVP Stepper (Bulan 0–3)
 - [ ] Auth (register, login, forgot password)
 - [ ] Stepper UI 7 langkah
 - [ ] Upload foto ke Cloudflare R2
@@ -792,7 +792,7 @@ Fitur add-on: RSVP Reminder via WA. Sistem kirim WA ke semua tamu yang belum RSV
 - [ ] Dashboard user (lihat & kelola undangan)
 - [ ] Landing page + pricing page
 
-### Fase 2 — Partner & Volume (Bulan 3–9)
+### Fase 2 - Partner & Volume (Bulan 3–9)
 - [ ] Reseller/WO registration & dashboard
 - [ ] Komisi otomatis + withdrawal system
 - [ ] 10+ template (tambah Sundanese, Minang, Batak, Modern Dark)
@@ -804,7 +804,7 @@ Fitur add-on: RSVP Reminder via WA. Sistem kirim WA ke semua tamu yang belum RSV
 - [ ] Affiliate link tracking
 - [ ] Blog/SEO (Next.js atau Nuxt untuk landing, atau tambahkan ke Laravel)
 
-### Fase 3 — SaaS Full (Bulan 9–18)
+### Fase 3 - SaaS Full (Bulan 9–18)
 - [ ] Template marketplace (submit + review + komisi desainer)
 - [ ] Custom domain via Cloudflare API (Signature tier)
 - [ ] Animation Builder untuk admin/operator
@@ -814,7 +814,7 @@ Fitur add-on: RSVP Reminder via WA. Sistem kirim WA ke semua tamu yang belum RSV
 - [ ] Admin panel analytics (revenue, conversion rate, top template)
 - [ ] White label B2B (sub-platform branding sendiri)
 
-### Fase 4 — Market Leader (Bulan 18–30)
+### Fase 4 - Market Leader (Bulan 18–30)
 - [ ] WebGL / Three.js Tier 4 untuk Signature
 - [ ] Animation Builder v2 (keyframe editor visual)
 - [ ] Asset library PNG transparan (ornamen, bunga, dll)
@@ -858,7 +858,7 @@ php artisan db:seed
 # Build assets
 npm run dev
 
-# Queue worker (terminal terpisah — pakai database driver)
+# Queue worker (terminal terpisah - pakai database driver)
 php artisan queue:work --queue=default,photos,notifications
 
 # SSR server untuk Inertia (terminal terpisah)
@@ -894,12 +894,12 @@ DB_DATABASE=libradigital
 DB_USERNAME=root
 DB_PASSWORD=
 
-# Session, queue, cache — semua pakai database driver
+# Session, queue, cache - semua pakai database driver
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
 CACHE_STORE=database
 
-# Cloudflare R2 — via Laravel s3 filesystem driver
+# Cloudflare R2 - via Laravel s3 filesystem driver
 AWS_ACCESS_KEY_ID=          # R2 Access Key ID
 AWS_SECRET_ACCESS_KEY=      # R2 Secret Access Key
 AWS_DEFAULT_REGION=auto
@@ -962,14 +962,14 @@ di README.md bagian Database Schema. Sertakan:
 - Model dengan fillable, casts, relationships (user, gifts, photos, rsvp_responses, order)
 - Migration lengkap dengan semua kolom dan index
 - Factory untuk Pest testing
-- Tidak menggunakan Spatie Media Library — file key disimpan langsung sebagai string
+- Tidak menggunakan Spatie Media Library - file key disimpan langsung sebagai string
 ```
 
 ### Scaffold Stepper (Inertia Monolith)
 
 ```
 Stack: Laravel 13, Inertia.js v3, React 19, TypeScript, Laravel Wayfinder.
-Arsitektur: Inertia monolith — TIDAK ada REST API layer. Semua form submit via 
+Arsitektur: Inertia monolith - TIDAK ada REST API layer. Semua form submit via 
 Inertia router (useForm). Gunakan Wayfinder untuk typed route references.
 
 Buat StepperController dengan Inertia actions:
@@ -998,7 +998,7 @@ Backend:
 - Cek invitation.status === 'active' dan active_until >= today
 - Pass data via Inertia::render('Invitation/Show', [...])
 - Di HandleInertiaRequests middleware: inject OG meta tags (title, image, description)
-  untuk SSR — ini yang di-render Blade saat first load untuk SEO/WhatsApp preview
+  untuk SSR - ini yang di-render Blade saat first load untuk SEO/WhatsApp preview
 
 Frontend:
 - Invitation/Show.tsx: terima InvitationData props dari Inertia
@@ -1048,7 +1048,7 @@ Stack: Laravel 13, Laravel Wayfinder, TypeScript, React 19.
 Jelaskan dan terapkan Laravel Wayfinder di project ini:
 - Jalankan: php artisan wayfinder:generate untuk generate typed TS actions
 - Contoh penggunaan di React component: import {show} from '@/actions/InvitationController'
-  lalu router.get(show({slug: invitation.slug})) — bukan hardcode string URL
+  lalu router.get(show({slug: invitation.slug})) - bukan hardcode string URL
 - Buat contoh penggunaan di: Stepper submit, Dashboard link ke edit/view, 
   Reseller dashboard link ke klien
 - Buat juga typed fetch wrapper untuk pure JSON endpoints (RSVP, visitor counter)
@@ -1078,4 +1078,4 @@ Jelaskan dan terapkan Laravel Wayfinder di project ini:
 
 *README ini adalah living document. Update setiap kali ada perubahan arsitektur signifikan.*
 
-*Last updated: Juli 2026 — Stack: PHP 8.4 · Laravel 13 · React 19 · Inertia v3 · Wayfinder · Fortify · Socialite · MySQL (all drivers) · Cloudflare R2*
+*Last updated: Juli 2026 - Stack: PHP 8.4 · Laravel 13 · React 19 · Inertia v3 · Wayfinder · Fortify · Socialite · MySQL (all drivers) · Cloudflare R2*

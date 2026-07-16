@@ -57,7 +57,7 @@ export default function AdminBlogIndex({ posts, filters }: Props) {
 
     return (
         <>
-            <Head title="Blog — Admin" />
+            <Head title="Blog - Admin" />
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center justify-between gap-2">
                     <form
@@ -133,7 +133,7 @@ export default function AdminBlogIndex({ posts, filters }: Props) {
                                                     ? formatIndoDate(
                                                           post.published_at,
                                                       )
-                                                    : '—'}
+                                                    : '-'}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center justify-end gap-1">

@@ -67,6 +67,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Template layout builder (Elementor-style node-tree builder, superadmin only).
     Route::get('templates', [AdminTemplateController::class, 'index'])->name('templates.index');
     Route::get('templates/{template}/builder', [AdminTemplateController::class, 'builder'])->name('templates.builder');
+    Route::get('templates/{template}/preview', [AdminTemplateController::class, 'preview'])->name('templates.preview');
     Route::put('templates/{template}', [AdminTemplateController::class, 'update'])->name('templates.update');
     Route::post('templates/{template}/assets', [AdminTemplateController::class, 'uploadAsset'])->name('templates.assets.store');
 

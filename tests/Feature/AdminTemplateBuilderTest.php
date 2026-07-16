@@ -46,6 +46,31 @@ test('opening the builder seeds the Classic tree when a template has no layout',
         );
 });
 
+test('the admin can preview a template through the public page', function () {
+    $admin = User::factory()->admin()->create();
+    $template = Template::factory()->create(['name' => 'Modern Bloom']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.templates.preview', $template))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('invitation/PublicInvitationPage')
+            // The sample invitation carries the template's resolved layout + theme.
+            ->has('invitation.layout.root')
+            ->where('invitation.template.id', $template->id)
+            ->has('invitation.groom_name')
+        );
+});
+
+test('non-admins cannot preview a template', function () {
+    $template = Template::factory()->create();
+    $user = User::factory()->create(['is_admin' => false]);
+
+    $this->actingAs($user)
+        ->get(route('admin.templates.preview', $template))
+        ->assertForbidden();
+});
+
 test('the admin can save a layout tree', function () {
     $admin = User::factory()->admin()->create();
     $template = Template::factory()->create();

@@ -46,6 +46,33 @@ class TemplateController extends Controller
         ]);
     }
 
+    /**
+     * Render the template through the real public invitation page using a
+     * representative sample invitation, so the admin can see how it looks
+     * (cover + body) exactly as a guest would.
+     */
+    public function preview(Template $template): Response
+    {
+        $invitation = $this->sampleInvitation();
+        $invitation['slug'] = "preview-{$template->id}";
+        $invitation['template_id'] = $template->id;
+        $invitation['layout'] = $template->resolvedLayout();
+        $invitation['cover'] = $template->cover;
+        $invitation['template'] = [
+            'id' => $template->id,
+            'name' => $template->name,
+            'slug' => $template->slug,
+            'category' => $template->category->value,
+            'thumbnail' => $template->thumbnail,
+            'is_premium' => $template->is_premium,
+            'min_package' => $template->min_package->value,
+        ];
+
+        return Inertia::render('invitation/PublicInvitationPage', [
+            'invitation' => $invitation,
+        ]);
+    }
+
     public function update(UpdateTemplateLayoutRequest $request, Template $template): RedirectResponse
     {
         // Persist the full layout tree, not `validated('layout')`: validated()

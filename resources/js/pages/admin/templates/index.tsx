@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { LayoutTemplate, Pencil } from 'lucide-react';
+import { Eye, LayoutTemplate, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -76,22 +76,42 @@ export default function AdminTemplates({ templates }: Props) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <Button
-                                                    asChild
-                                                    variant="outline"
-                                                    size="sm"
-                                                >
-                                                    <Link
-                                                        href={
-                                                            admin.templates.builder(
-                                                                template.id,
-                                                            ).url
-                                                        }
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        asChild
+                                                        variant="ghost"
+                                                        size="sm"
                                                     >
-                                                        <Pencil className="size-4" />
-                                                        Buka Builder
-                                                    </Link>
-                                                </Button>
+                                                        <a
+                                                            href={
+                                                                admin.templates.preview(
+                                                                    template.id,
+                                                                ).url
+                                                            }
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            <Eye className="size-4" />
+                                                            Preview
+                                                        </a>
+                                                    </Button>
+                                                    <Button
+                                                        asChild
+                                                        variant="outline"
+                                                        size="sm"
+                                                    >
+                                                        <Link
+                                                            href={
+                                                                admin.templates.builder(
+                                                                    template.id,
+                                                                ).url
+                                                            }
+                                                        >
+                                                            <Pencil className="size-4" />
+                                                            Buka Builder
+                                                        </Link>
+                                                    </Button>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))}

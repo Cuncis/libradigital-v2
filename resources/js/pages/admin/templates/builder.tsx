@@ -16,6 +16,7 @@ import {
     Columns3,
     Container,
     Copy,
+    ExternalLink,
     Eye,
     Gift,
     Grid2x2,
@@ -1422,10 +1423,22 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                         })}
                     </div>
 
-                    <Button onClick={save} disabled={saving}>
-                        <Save className="size-4" />{' '}
-                        {saving ? 'Menyimpan…' : 'Simpan Layout'}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button asChild variant="outline">
+                            <a
+                                href={admin.templates.preview(template.id).url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Pratinjau versi tersimpan di tab baru"
+                            >
+                                <ExternalLink className="size-4" /> Preview
+                            </a>
+                        </Button>
+                        <Button onClick={save} disabled={saving}>
+                            <Save className="size-4" />{' '}
+                            {saving ? 'Menyimpan…' : 'Simpan Layout'}
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="grid flex-1 grid-cols-[260px_1fr_300px] overflow-hidden">

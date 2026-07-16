@@ -93,6 +93,23 @@ class TemplateController extends Controller
     }
 
     /**
+     * Reset a template back to its defaults by clearing the custom layout and
+     * cover, so it falls back to the Classic body tree and the legacy cover.
+     */
+    public function reset(Template $template): RedirectResponse
+    {
+        $template->update([
+            'layout' => null,
+            'cover' => null,
+            'builder_version' => 1,
+        ]);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Template dikembalikan ke bawaan.']);
+
+        return back();
+    }
+
+    /**
      * Upload a builder asset (cover image or Lottie animation) and return its
      * public URL, which the admin then binds to an image/lottie node's source.
      */

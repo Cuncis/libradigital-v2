@@ -1,5 +1,6 @@
-import { Head, Link } from '@inertiajs/react';
-import { Eye, LayoutTemplate, Pencil } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Eye, LayoutTemplate, Pencil, RotateCcw } from 'lucide-react';
+import { ConfirmDialog } from '@/components/admin/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +20,13 @@ interface Props {
 }
 
 export default function AdminTemplates({ templates }: Props) {
+    const reset = (template: InvitationTemplate, close: () => void) => {
+        router.delete(admin.templates.reset(template.id).url, {
+            preserveScroll: true,
+            onFinish: close,
+        });
+    };
+
     return (
         <>
             <Head title="Templates" />
@@ -77,6 +85,32 @@ export default function AdminTemplates({ templates }: Props) {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
+                                                    <ConfirmDialog
+                                                        trigger={
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-destructive"
+                                                                disabled={
+                                                                    !template.has_custom_layout &&
+                                                                    !template.has_custom_cover
+                                                                }
+                                                            >
+                                                                <RotateCcw className="size-4" />
+                                                                Reset
+                                                            </Button>
+                                                        }
+                                                        title="Reset template?"
+                                                        description={`Layout dan cover kustom "${template.name}" akan dihapus dan dikembalikan ke bawaan. Tindakan ini tidak bisa dibatalkan.`}
+                                                        confirmLabel="Ya, reset"
+                                                        destructive
+                                                        onConfirm={(close) =>
+                                                            reset(
+                                                                template,
+                                                                close,
+                                                            )
+                                                        }
+                                                    />
                                                     <Button
                                                         asChild
                                                         variant="ghost"

@@ -170,6 +170,35 @@ test('saving without a cover keeps the legacy cover (null)', function () {
     expect($template->fresh()->cover)->toBeNull();
 });
 
+test('the admin can reset a template to defaults', function () {
+    $admin = User::factory()->admin()->create();
+    $template = Template::factory()->create([
+        'layout' => Template::defaultLayout(),
+        'cover' => Template::defaultCover(),
+        'builder_version' => 2,
+    ]);
+
+    $this->actingAs($admin)
+        ->delete(route('admin.templates.reset', $template))
+        ->assertRedirect();
+
+    $fresh = $template->fresh();
+    expect($fresh->layout)->toBeNull()
+        ->and($fresh->cover)->toBeNull()
+        ->and($fresh->builder_version)->toBe(1);
+});
+
+test('non-admins cannot reset a template', function () {
+    $template = Template::factory()->create(['layout' => Template::defaultLayout()]);
+    $user = User::factory()->create(['is_admin' => false]);
+
+    $this->actingAs($user)
+        ->delete(route('admin.templates.reset', $template))
+        ->assertForbidden();
+
+    expect($template->fresh()->layout)->not->toBeNull();
+});
+
 test('saving rejects a malformed layout', function () {
     $admin = User::factory()->admin()->create();
     $template = Template::factory()->create();

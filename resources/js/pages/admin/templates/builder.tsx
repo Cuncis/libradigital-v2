@@ -964,7 +964,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
     const toggleCollapseAll = () =>
         setCollapsed(allCollapsed ? new Set() : new Set(parentIds));
 
-    const theme = resolveTheme(template.category);
+    const theme = resolveTheme(template);
     const selected = selectedId ? findNode(tree.root, selectedId) : null;
 
     const setRoot = (root: TemplateLayout['root']) =>

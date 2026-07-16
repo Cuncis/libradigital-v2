@@ -32,7 +32,7 @@ export default function PublicInvitationPage({
     const hydrated = useHydrated();
     const device = useViewportDevice();
     const couple = `${invitation.groom_name ?? ''} & ${invitation.bride_name ?? ''}`;
-    const theme = resolveTheme(invitation.template?.category);
+    const theme = resolveTheme(invitation.template);
 
     // Full-page floating pack (pinned to the viewport). Per-section packs are
     // rendered inside the tree by <TemplateRenderer> via packSection markers.

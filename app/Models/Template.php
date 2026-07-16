@@ -198,7 +198,7 @@ class Template extends Model
                             ['id' => 'rsvp_widget', 'type' => 'widget', 'widget' => 'rsvp', 'style' => [], 'bindings' => ['slug' => $bindSlug]],
                         ],
                     ],
-                    // 7b. Guest book (guest_book add-on)
+                    // 7b. Guest book (only shown when the couple buys the guest_book add-on)
                     [
                         'id' => 'sec_guestbook',
                         'type' => 'section',

@@ -11,6 +11,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import AnimatedReveal from '@/components/invitation/AnimatedReveal';
 import AnimationLayer from '@/components/invitation/AnimationLayer';
+import LottiePlayer from '@/components/invitation/LottiePlayer';
 import { evalVisibility, resolveValue } from '@/lib/template/bindableFields';
 import type { RenderContext } from '@/lib/template/bindableFields';
 import type {
@@ -100,6 +101,14 @@ const TRACKING: Record<NonNullable<StyleProps['tracking']>, string> = {
     wider: 'tracking-wider',
     widest: 'tracking-widest',
 };
+const MOTION: Record<NonNullable<StyleProps['motion']>, string> = {
+    none: '',
+    sway: 'inv-motion-sway',
+    float: 'inv-motion-float',
+    drift: 'inv-motion-drift',
+    pulse: 'inv-motion-pulse',
+    spin: 'inv-motion-spin',
+};
 
 function styleToClass(style: StyleProps | undefined | null): string {
     if (!style) {
@@ -119,6 +128,7 @@ function styleToClass(style: StyleProps | undefined | null): string {
         style.color && COLOR[style.color],
         style.tracking && TRACKING[style.tracking],
         style.case === 'upper' && 'uppercase',
+        style.motion && MOTION[style.motion],
     );
 }
 
@@ -148,6 +158,23 @@ function styleToInline(
         marginBottom: m?.bottom,
         marginLeft: m?.left,
     };
+}
+
+/**
+ * The style layer that applies for the active device. Desktop (or unset) uses the
+ * base `style`; mobile merges the `responsive.mobile` override over the base so a
+ * blank override key transparently inherits the desktop value.
+ */
+function resolveStyle(
+    node: TreeNode,
+    ctx: RenderContext,
+): StyleProps | undefined {
+    if (ctx.device === 'mobile' && node.responsive?.mobile) {
+        // The override also carries layout/columns (ignored by the style maps).
+        return { ...node.style, ...node.responsive.mobile } as StyleProps;
+    }
+
+    return node.style;
 }
 
 const CONTAINER_LAYOUT: Record<'stack' | 'row' | 'grid', string> = {
@@ -214,6 +241,7 @@ function renderPackOverlay(node: SectionNode, ctx: RenderContext): ReactNode {
 
 function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
     const overlay = renderPackOverlay(node, ctx);
+    const style = resolveStyle(node, ctx);
 
     if (node.variant === 'hero') {
         const bg = node.backgroundImage
@@ -223,7 +251,7 @@ function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
         return (
             <header
                 className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center text-white"
-                style={styleToInline(node.style)}
+                style={styleToInline(style)}
             >
                 {bg && (
                     <img
@@ -246,9 +274,9 @@ function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
             <footer
                 className={cn(
                     'relative border-t border-[var(--inv-card-border)] py-10 text-center',
-                    styleToClass(node.style),
+                    styleToClass(style),
                 )}
-                style={styleToInline(node.style)}
+                style={styleToInline(style)}
             >
                 {renderChildren(node.children, ctx)}
                 {overlay}
@@ -261,9 +289,9 @@ function renderSection(node: SectionNode, ctx: RenderContext): ReactNode {
             className={cn(
                 'mx-auto w-full max-w-2xl px-6 py-16 text-center',
                 overlay && 'relative',
-                styleToClass(node.style),
+                styleToClass(style),
             )}
-            style={styleToInline(node.style)}
+            style={styleToInline(style)}
         >
             {renderChildren(node.children, ctx)}
             {overlay}
@@ -280,21 +308,30 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
         switch (node.type) {
             case 'section':
                 return renderSection(node, ctx);
-            case 'container':
+            case 'container': {
+                // Container flow/columns can be overridden per device too.
+                const override =
+                    ctx.device === 'mobile'
+                        ? node.responsive?.mobile
+                        : undefined;
+                const layout = override?.layout ?? node.layout;
+                const columns = override?.columns ?? node.columns;
+
                 return (
                     <div
                         className={cn(
-                            CONTAINER_LAYOUT[node.layout],
-                            node.layout === 'grid' &&
-                                (GRID_COLS[node.columns ?? 2] ?? GRID_COLS[2]),
+                            CONTAINER_LAYOUT[layout],
+                            layout === 'grid' &&
+                                (GRID_COLS[columns ?? 2] ?? GRID_COLS[2]),
                             node.gap && GAP[node.gap],
-                            styleToClass(node.style),
+                            styleToClass(resolveStyle(node, ctx)),
                         )}
-                        style={styleToInline(node.style)}
+                        style={styleToInline(resolveStyle(node, ctx))}
                     >
                         {renderChildren(node.children, ctx)}
                     </div>
                 );
+            }
             case 'text': {
                 const text = resolveValue(node.value, ctx);
                 const Tag =
@@ -308,8 +345,8 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
 
                 return (
                     <Tag
-                        className={styleToClass(node.style)}
-                        style={styleToInline(node.style)}
+                        className={styleToClass(resolveStyle(node, ctx))}
+                        style={styleToInline(resolveStyle(node, ctx))}
                     >
                         {text}
                     </Tag>
@@ -330,9 +367,9 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                             node.fit === 'contain'
                                 ? 'object-contain'
                                 : 'object-cover',
-                            styleToClass(node.style),
+                            styleToClass(resolveStyle(node, ctx)),
                         )}
-                        style={styleToInline(node.style)}
+                        style={styleToInline(resolveStyle(node, ctx))}
                     />
                 );
             }
@@ -348,8 +385,10 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                 // which the widget components themselves don't read.
                 return (
                     <div
-                        className={styleToClass(node.style) || undefined}
-                        style={styleToInline(node.style)}
+                        className={
+                            styleToClass(resolveStyle(node, ctx)) || undefined
+                        }
+                        style={styleToInline(resolveStyle(node, ctx))}
                     >
                         {spec.render(resolved, ctx)}
                     </div>
@@ -362,10 +401,51 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                     <hr
                         className={cn(
                             'mx-auto my-6 w-16 border-[var(--inv-card-border)]',
-                            styleToClass(node.style),
+                            styleToClass(resolveStyle(node, ctx)),
                         )}
                     />
                 );
+            case 'button': {
+                const label = resolveValue(node.label, ctx);
+                // Only the live page wires the open action; in the editor the
+                // button is inert so clicks select it on the canvas instead.
+                const onClick =
+                    !ctx.editor && node.action !== 'none'
+                        ? ctx.onOpen
+                        : undefined;
+
+                return (
+                    <button
+                        type="button"
+                        onClick={onClick}
+                        className={cn(
+                            'inline-flex items-center justify-center gap-2 rounded-full bg-white/95 px-6 py-3 font-medium text-neutral-900 shadow-lg transition-colors hover:bg-white',
+                            styleToClass(resolveStyle(node, ctx)),
+                        )}
+                        style={styleToInline(resolveStyle(node, ctx))}
+                    >
+                        {label || 'Buka Undangan'}
+                    </button>
+                );
+            }
+            case 'lottie': {
+                const src = resolveValue(node.src, ctx);
+
+                return (
+                    <div
+                        className={
+                            styleToClass(resolveStyle(node, ctx)) || undefined
+                        }
+                        style={styleToInline(resolveStyle(node, ctx))}
+                    >
+                        <LottiePlayer
+                            src={src}
+                            loop={node.loop ?? true}
+                            speed={node.speed ?? 1}
+                        />
+                    </div>
+                );
+            }
         }
     })();
 

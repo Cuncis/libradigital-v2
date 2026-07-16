@@ -50,6 +50,8 @@ class InvitationResource extends JsonResource
             // The public page always renders through the node tree; guarantee one
             // even when the invitation has no template (nullable) or an unedited one.
             'layout' => $this->template?->resolvedLayout() ?? Template::defaultLayout(),
+            // Custom cover tree, or null when the template keeps the legacy cover.
+            'cover' => $this->template?->cover,
             'gift_accounts' => GiftAccountResource::collection($this->whenLoaded('giftAccounts')),
             'gallery_photos' => GalleryPhotoResource::collection($this->whenLoaded('galleryPhotos')),
             'has_guest_book' => $this->hasAddon(Addon::GuestBook),

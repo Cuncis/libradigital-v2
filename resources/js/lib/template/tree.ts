@@ -52,6 +52,10 @@ export function nodeLabel(node: TreeNode): string {
             return 'Spacer';
         case 'divider':
             return 'Divider';
+        case 'button':
+            return `Tombol: ${previewText(node.label)}`;
+        case 'lottie':
+            return 'Lottie';
     }
 }
 
@@ -237,6 +241,23 @@ export function createNode(type: NodeType, widget?: WidgetKind): TreeNode {
             return { id, type: 'spacer', size: 'md', style: {} };
         case 'divider':
             return { id, type: 'divider', style: {} };
+        case 'button':
+            return {
+                id,
+                type: 'button',
+                action: 'open',
+                style: {},
+                label: { kind: 'literal', value: 'Buka Undangan' },
+            };
+        case 'lottie':
+            return {
+                id,
+                type: 'lottie',
+                loop: true,
+                speed: 1,
+                style: {},
+                src: { kind: 'literal', value: '' },
+            };
         case 'widget': {
             const kind = widget ?? 'countdown';
             const bindings: Record<string, Value> = {};

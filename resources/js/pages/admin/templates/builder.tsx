@@ -22,16 +22,24 @@ import {
     HeartHandshake,
     Image,
     Images,
+    LayoutList,
+    Loader2,
+    MailOpen,
     Minus,
+    Monitor,
+    MousePointerClick,
     MoveVertical,
     Pencil,
     Rows3,
     Save,
     Share2,
+    Smartphone,
+    Sparkles,
     Square,
     Timer,
     Trash2,
     Type,
+    Upload,
     UserRound,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -44,7 +52,9 @@ import { Label } from '@/components/ui/label';
 import { BINDABLE_FIELDS } from '@/lib/template/bindableFields';
 import type { BindableField } from '@/lib/template/bindableFields';
 import type {
+    Device,
     NodeType,
+    ResponsiveOverride,
     SpacingSides,
     StyleProps,
     TemplateLayout,
@@ -73,9 +83,15 @@ import admin from '@/routes/admin';
 import type { InvitationTemplate, PublicInvitation } from '@/types/invitation';
 
 interface Props {
-    template: InvitationTemplate & { layout: TemplateLayout };
+    template: InvitationTemplate & {
+        layout: TemplateLayout;
+        cover: TemplateLayout;
+    };
     sampleInvitation: PublicInvitation;
 }
+
+/** Which tree the builder is editing: the invitation body or the cover screen. */
+type BuilderTab = 'body' | 'cover';
 
 const REVEAL_OPTIONS = [
     'fade',
@@ -110,6 +126,27 @@ const ELEMENTS: { type: NodeType; label: string; icon: LucideIcon }[] = [
     { type: 'divider', label: 'Divider', icon: Minus },
 ];
 
+// Extra elements surfaced on the Cover tab: the open button + a Lottie layer.
+const COVER_ELEMENTS: { type: NodeType; label: string; icon: LucideIcon }[] = [
+    { type: 'button', label: 'Tombol', icon: MousePointerClick },
+    { type: 'lottie', label: 'Lottie', icon: Sparkles },
+];
+
+const MOTION_OPTIONS: { value: string; label: string }[] = [
+    { value: '', label: 'diam' },
+    { value: 'sway', label: 'goyang' },
+    { value: 'float', label: 'melayang' },
+    { value: 'drift', label: 'geser' },
+    { value: 'pulse', label: 'denyut' },
+    { value: 'spin', label: 'putar' },
+];
+
+/** Preview canvas width per device — mobile mimics a phone, desktop is wider. */
+const DEVICE_WIDTH: Record<Device, number> = {
+    desktop: 720,
+    mobile: 400,
+};
+
 /** What is being dragged: an existing node (reorder) or a new element (from palette). */
 type DragPayload =
     | { kind: 'move'; id: string }
@@ -134,6 +171,29 @@ function Field({
             <Label className="text-xs text-muted-foreground">{label}</Label>
             {children}
         </div>
+    );
+}
+
+/** Small pill showing which device layer the inspector is currently editing. */
+function DeviceBadge({ device }: { device: Device }) {
+    const mobile = device === 'mobile';
+
+    return (
+        <span
+            className={cn(
+                'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium',
+                mobile
+                    ? 'bg-brand/10 text-brand'
+                    : 'bg-muted text-muted-foreground',
+            )}
+        >
+            {mobile ? (
+                <Smartphone className="size-3" />
+            ) : (
+                <Monitor className="size-3" />
+            )}
+            {mobile ? 'Mobile' : 'Desktop'}
+        </span>
     );
 }
 
@@ -452,6 +512,63 @@ function ValueEditor({
                     />
                 </>
             )}
+        </div>
+    );
+}
+
+/** A source picker (literal URL / binding) with an inline file-upload button. */
+function AssetInput({
+    value,
+    onChange,
+    accept,
+    uploading,
+    onUpload,
+}: {
+    value: Value;
+    onChange: (v: Value) => void;
+    accept: string;
+    uploading: boolean;
+    onUpload: (file: File) => Promise<string | null>;
+}) {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    return (
+        <div className="grid gap-1.5">
+            <ValueEditor value={value} onChange={onChange} />
+            <input
+                ref={inputRef}
+                type="file"
+                accept={accept}
+                className="hidden"
+                onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = '';
+
+                    if (!file) {
+                        return;
+                    }
+
+                    const url = await onUpload(file);
+
+                    if (url) {
+                        onChange({ kind: 'literal', value: url });
+                    }
+                }}
+            />
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={uploading}
+                onClick={() => inputRef.current?.click()}
+            >
+                {uploading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                ) : (
+                    <Upload className="size-4" />
+                )}
+                {uploading ? 'Mengunggah…' : 'Unggah file'}
+            </Button>
         </div>
     );
 }
@@ -792,10 +909,29 @@ function LayerRow(props: LayerRowProps) {
 // --- Builder page ------------------------------------------------------------
 
 export default function TemplateBuilder({ template, sampleInvitation }: Props) {
-    const [layout, setLayout] = useState<TemplateLayout>(template.layout);
+    // The builder edits two independent trees — the invitation body and the
+    // cover ("Buka Undangan" screen) — switched by the `tab`. `tree`/`setTree`
+    // always point at whichever one is active.
+    const [tab, setTab] = useState<BuilderTab>('body');
+    const [trees, setTrees] = useState<Record<BuilderTab, TemplateLayout>>({
+        body: template.layout,
+        cover: template.cover,
+    });
+    const tree = trees[tab];
+    const setTree = (updater: (prev: TemplateLayout) => TemplateLayout) =>
+        setTrees((prev) => ({ ...prev, [tab]: updater(prev[tab]) }));
+
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    const [device, setDevice] = useState<Device>('mobile');
     const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+    const switchTab = (next: BuilderTab) => {
+        if (next !== tab) {
+            setTab(next);
+            setSelectedId(null);
+        }
+    };
 
     const toggleCollapsed = (id: string) =>
         setCollapsed((prev) => {
@@ -818,8 +954,8 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                 ? [node.id, ...node.children.flatMap(collect)]
                 : [];
 
-        return collect(layout.root).filter((id) => id !== layout.root.id);
-    }, [layout.root]);
+        return collect(tree.root).filter((id) => id !== tree.root.id);
+    }, [tree.root]);
 
     const allCollapsed =
         parentIds.length > 0 && parentIds.every((id) => collapsed.has(id));
@@ -828,17 +964,107 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
         setCollapsed(allCollapsed ? new Set() : new Set(parentIds));
 
     const theme = resolveTheme(template.category);
-    const selected = selectedId ? findNode(layout.root, selectedId) : null;
+    const selected = selectedId ? findNode(tree.root, selectedId) : null;
 
     const setRoot = (root: TemplateLayout['root']) =>
-        setLayout((prev) => ({ ...prev, root }));
+        setTree((prev) => ({ ...prev, root }));
 
     const patchSelected = (patch: Partial<TreeNode>) => {
         if (!selectedId) {
             return;
         }
 
-        setRoot(updateNode(layout.root, selectedId, patch));
+        setRoot(updateNode(tree.root, selectedId, patch));
+    };
+
+    // The style layer the inspector edits for the active device: the base `style`
+    // on desktop, the `responsive.mobile` override on mobile (Elementor-style).
+    const editingMobile = device === 'mobile';
+    const activeStyle: StyleProps =
+        (editingMobile ? selected?.responsive?.mobile : selected?.style) ?? {};
+
+    /** Set/clear one style key on the active device layer (undefined removes it). */
+    const patchStyleKey = <K extends keyof StyleProps>(
+        key: K,
+        value: StyleProps[K] | undefined,
+    ) => {
+        if (!selected) {
+            return;
+        }
+
+        if (editingMobile) {
+            const mobile: Partial<StyleProps> = {
+                ...(selected.responsive?.mobile ?? {}),
+            };
+
+            if (value === undefined) {
+                delete mobile[key];
+            } else {
+                mobile[key] = value;
+            }
+
+            patchSelected({
+                responsive: {
+                    ...selected.responsive,
+                    mobile: Object.keys(mobile).length > 0 ? mobile : undefined,
+                },
+            } as Partial<TreeNode>);
+
+            return;
+        }
+
+        const style: StyleProps = { ...(selected.style ?? {}) };
+
+        if (value === undefined) {
+            delete style[key];
+        } else {
+            style[key] = value;
+        }
+
+        patchSelected({ style } as Partial<TreeNode>);
+    };
+
+    // Container flow/columns are node props on desktop, but a mobile override
+    // lives in `responsive.mobile` — so their effective value depends on device.
+    const container = selected?.type === 'container' ? selected : null;
+    const effectiveLayout =
+        (editingMobile ? selected?.responsive?.mobile?.layout : undefined) ??
+        container?.layout;
+    const effectiveColumns =
+        (editingMobile ? selected?.responsive?.mobile?.columns : undefined) ??
+        container?.columns;
+
+    /** Set/clear a container-layout key on the active device layer. */
+    const patchContainerKey = <K extends 'layout' | 'columns'>(
+        key: K,
+        value: ResponsiveOverride[K] | undefined,
+    ) => {
+        if (!selected) {
+            return;
+        }
+
+        if (editingMobile) {
+            const mobile: ResponsiveOverride = {
+                ...(selected.responsive?.mobile ?? {}),
+            };
+
+            if (value === undefined) {
+                delete mobile[key];
+            } else {
+                mobile[key] = value;
+            }
+
+            patchSelected({
+                responsive: {
+                    ...selected.responsive,
+                    mobile: Object.keys(mobile).length > 0 ? mobile : undefined,
+                },
+            } as Partial<TreeNode>);
+
+            return;
+        }
+
+        patchSelected({ [key]: value } as Partial<TreeNode>);
     };
 
     const addNode = (type: NodeType, widget?: WidgetKind) => {
@@ -847,17 +1073,17 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
             selected &&
             (selected.type === 'section' || selected.type === 'container')
                 ? selected.id
-                : layout.root.id;
-        setRoot(insertNode(layout.root, parentId, node));
+                : tree.root.id;
+        setRoot(insertNode(tree.root, parentId, node));
         setSelectedId(node.id);
     };
 
     const removeSelected = () => {
-        if (!selectedId || selectedId === layout.root.id) {
+        if (!selectedId || selectedId === tree.root.id) {
             return;
         }
 
-        setRoot(removeNode(layout.root, selectedId));
+        setRoot(removeNode(tree.root, selectedId));
         setSelectedId(null);
     };
 
@@ -866,7 +1092,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
             return;
         }
 
-        setRoot(moveNode(layout.root, selectedId, direction));
+        setRoot(moveNode(tree.root, selectedId, direction));
     };
 
     // --- Layer-tree context menu (rename / copy / paste / delete) ------------
@@ -882,7 +1108,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
         const trimmed = name.trim();
 
         setRoot(
-            updateNode(layout.root, id, {
+            updateNode(tree.root, id, {
                 name: trimmed || undefined,
             } as Partial<TreeNode>),
         );
@@ -890,7 +1116,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
     };
 
     const copyNode = (id: string) => {
-        const node = findNode(layout.root, id);
+        const node = findNode(tree.root, id);
 
         if (node) {
             setClipboard(node);
@@ -903,27 +1129,27 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
         }
 
         const clone = cloneWithNewIds(clipboard);
-        const target = findNode(layout.root, targetId);
+        const target = findNode(tree.root, targetId);
 
         // Paste inside a section/container; otherwise drop it after the target.
         if (
             target &&
             (target.type === 'section' || target.type === 'container')
         ) {
-            setRoot(insertNode(layout.root, targetId, clone));
+            setRoot(insertNode(tree.root, targetId, clone));
         } else {
-            setRoot(insertRelative(layout.root, clone, targetId, 'after'));
+            setRoot(insertRelative(tree.root, clone, targetId, 'after'));
         }
 
         setSelectedId(clone.id);
     };
 
     const deleteNode = (id: string) => {
-        if (id === layout.root.id) {
+        if (id === tree.root.id) {
             return;
         }
 
-        setRoot(removeNode(layout.root, id));
+        setRoot(removeNode(tree.root, id));
         setSelectedId((prev) => (prev === id ? null : prev));
     };
 
@@ -943,11 +1169,11 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
 
         // The root can only receive children (it has no siblings to sit beside).
         const pos: DropPosition =
-            node.id === layout.root.id ? 'inside' : position;
+            node.id === tree.root.id ? 'inside' : position;
 
         // A node can't be dropped onto itself or into its own subtree.
         if (drag.kind === 'move') {
-            const dragged = findNode(layout.root, drag.id);
+            const dragged = findNode(tree.root, drag.id);
 
             if (
                 node.id === drag.id ||
@@ -972,7 +1198,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
         if (drag.kind === 'move') {
             setRoot(
                 moveRelative(
-                    layout.root,
+                    tree.root,
                     drag.id,
                     dropTarget.id,
                     dropTarget.position,
@@ -983,7 +1209,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
             const node = createNode(drag.type, drag.widget);
             setRoot(
                 insertRelative(
-                    layout.root,
+                    tree.root,
                     node,
                     dropTarget.id,
                     dropTarget.position,
@@ -1007,7 +1233,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
             return null;
         }
 
-        const node = findNode(layout.root, el.dataset.nodeId);
+        const node = findNode(tree.root, el.dataset.nodeId);
 
         return node ? { node, el } : null;
     };
@@ -1048,11 +1274,53 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
         onRowDragOver(hit.node, position);
     };
 
+    // --- Asset upload (cover images / Lottie files) --------------------------
+    const [uploading, setUploading] = useState(false);
+
+    const uploadAsset = async (file: File): Promise<string | null> => {
+        const form = new FormData();
+        form.append('asset', file);
+        setUploading(true);
+
+        try {
+            const xsrf = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+            const response = await fetch(
+                admin.templates.assets.store(template.id).url,
+                {
+                    method: 'POST',
+                    body: form,
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-XSRF-TOKEN': xsrf ? decodeURIComponent(xsrf[1]) : '',
+                    },
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error('upload failed');
+            }
+
+            const data = (await response.json()) as { url: string };
+
+            return data.url;
+        } catch {
+            toast.error('Gagal mengunggah aset. Coba lagi.');
+
+            return null;
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const save = () => {
         setSaving(true);
         router.put(
             admin.templates.update(template.id).url,
-            { layout } as unknown as Record<string, never>,
+            {
+                layout: trees.body,
+                cover: trees.cover,
+            } as unknown as Record<string, never>,
             {
                 preserveScroll: true,
                 onError: () =>
@@ -1077,7 +1345,83 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                         <h1 className="text-lg font-semibold">
                             {template.name}
                         </h1>
+                        {/* Body / Cover tree switch. */}
+                        <div className="ml-2 flex items-center gap-1 rounded-md border border-input bg-background p-0.5">
+                            {[
+                                {
+                                    value: 'body' as const,
+                                    icon: LayoutList,
+                                    label: 'Undangan',
+                                },
+                                {
+                                    value: 'cover' as const,
+                                    icon: MailOpen,
+                                    label: 'Cover',
+                                },
+                            ].map((t) => {
+                                const active = tab === t.value;
+
+                                return (
+                                    <button
+                                        key={t.value}
+                                        type="button"
+                                        title={t.label}
+                                        aria-pressed={active}
+                                        onClick={() => switchTab(t.value)}
+                                        className={cn(
+                                            'flex h-8 items-center gap-1.5 rounded px-3 text-xs font-medium transition-colors',
+                                            active
+                                                ? 'bg-brand/10 text-brand'
+                                                : 'text-muted-foreground hover:bg-muted',
+                                        )}
+                                    >
+                                        <t.icon className="size-4" />
+                                        {t.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
+                    {/* Device preview toggle (Elementor-style). */}
+                    <div className="flex items-center gap-1 rounded-md border border-input bg-background p-0.5">
+                        {[
+                            {
+                                value: 'desktop' as const,
+                                icon: Monitor,
+                                label: 'Desktop',
+                            },
+                            {
+                                value: 'mobile' as const,
+                                icon: Smartphone,
+                                label: 'Mobile',
+                            },
+                        ].map((d) => {
+                            const active = device === d.value;
+
+                            return (
+                                <button
+                                    key={d.value}
+                                    type="button"
+                                    title={d.label}
+                                    aria-label={d.label}
+                                    aria-pressed={active}
+                                    onClick={() => setDevice(d.value)}
+                                    className={cn(
+                                        'flex h-8 items-center gap-1.5 rounded px-3 text-xs font-medium transition-colors',
+                                        active
+                                            ? 'bg-brand/10 text-brand'
+                                            : 'text-muted-foreground hover:bg-muted',
+                                    )}
+                                >
+                                    <d.icon className="size-4" />
+                                    <span className="hidden sm:inline">
+                                        {d.label}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
                     <Button onClick={save} disabled={saving}>
                         <Save className="size-4" />{' '}
                         {saving ? 'Menyimpan…' : 'Simpan Layout'}
@@ -1092,7 +1436,10 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                 Tambah Elemen
                             </h2>
                             <div className="grid grid-cols-2 gap-1.5">
-                                {ELEMENTS.map((el) => (
+                                {(tab === 'cover'
+                                    ? [...ELEMENTS, ...COVER_ELEMENTS]
+                                    : ELEMENTS
+                                ).map((el) => (
                                     <PaletteCard
                                         key={el.type}
                                         label={el.label}
@@ -1167,7 +1514,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                             </p>
                             <div className="rounded-md border">
                                 <LayerRow
-                                    node={layout.root}
+                                    node={tree.root}
                                     depth={0}
                                     selectedId={selectedId}
                                     onSelect={setSelectedId}
@@ -1199,11 +1546,14 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                     <div className="overflow-auto bg-muted/40 p-4">
                         <div
                             className={cn(
-                                'invitation-scope mx-auto max-w-md overflow-hidden rounded-xl border shadow-sm',
+                                'invitation-scope mx-auto w-full overflow-hidden rounded-xl border shadow-sm transition-[max-width] duration-300',
                                 theme.page,
                                 theme.text,
                             )}
-                            style={theme.vars}
+                            style={{
+                                ...theme.vars,
+                                maxWidth: DEVICE_WIDTH[device],
+                            }}
                             onClick={onCanvasClick}
                             onDragOver={onCanvasDragOver}
                             onDrop={(e) => {
@@ -1212,11 +1562,12 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                             }}
                         >
                             <TemplateRenderer
-                                layout={layout}
+                                layout={tree}
                                 ctx={{
                                     invitation: sampleInvitation,
                                     guestName: 'Rahmat',
                                     hydrated: true,
+                                    device,
                                     preview: true,
                                     editor: true,
                                     selectedId,
@@ -1255,7 +1606,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                         >
                                             <ChevronDown className="size-4" />
                                         </Button>
-                                        {selected.id !== layout.root.id && (
+                                        {selected.id !== tree.root.id && (
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -1322,14 +1673,37 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                 )}
 
                                 {selected.type === 'container' && (
-                                    <>
-                                        <Field label="Tata Letak">
+                                    <div className="grid gap-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-xs font-semibold text-muted-foreground uppercase">
+                                                Tata Letak
+                                            </Label>
+                                            <DeviceBadge device={device} />
+                                        </div>
+                                        {editingMobile && (
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Tata letak khusus Mobile. Klik
+                                                pilihan aktif untuk ikut
+                                                Desktop.
+                                            </p>
+                                        )}
+                                        <Field label="Aliran">
                                             <OptionGroup
-                                                value={selected.layout}
+                                                allowClear={editingMobile}
+                                                value={
+                                                    effectiveLayout ?? 'stack'
+                                                }
                                                 onChange={(l) =>
-                                                    patchSelected({
-                                                        layout: l,
-                                                    } as Partial<TreeNode>)
+                                                    patchContainerKey(
+                                                        'layout',
+                                                        (l === ''
+                                                            ? undefined
+                                                            : l) as
+                                                            | 'stack'
+                                                            | 'row'
+                                                            | 'grid'
+                                                            | undefined,
+                                                    )
                                                 }
                                                 options={[
                                                     {
@@ -1350,26 +1724,31 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                                 ]}
                                             />
                                         </Field>
-                                        {selected.layout === 'grid' && (
+                                        {effectiveLayout === 'grid' && (
                                             <Field label="Kolom">
                                                 <Input
                                                     type="number"
                                                     min={1}
                                                     max={4}
                                                     value={
-                                                        selected.columns ?? 2
+                                                        effectiveColumns ?? 2
                                                     }
                                                     onChange={(e) =>
-                                                        patchSelected({
-                                                            columns: Number(
-                                                                e.target.value,
-                                                            ),
-                                                        } as Partial<TreeNode>)
+                                                        patchContainerKey(
+                                                            'columns',
+                                                            e.target.value ===
+                                                                ''
+                                                                ? undefined
+                                                                : Number(
+                                                                      e.target
+                                                                          .value,
+                                                                  ),
+                                                        )
                                                     }
                                                 />
                                             </Field>
                                         )}
-                                    </>
+                                    </div>
                                 )}
 
                                 {selected.type === 'widget' && (
@@ -1399,8 +1778,11 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
 
                                 {selected.type === 'image' && (
                                     <Field label="Sumber">
-                                        <ValueEditor
+                                        <AssetInput
                                             value={selected.src}
+                                            accept="image/*"
+                                            uploading={uploading}
+                                            onUpload={uploadAsset}
                                             onChange={(src) =>
                                                 patchSelected({
                                                     src,
@@ -1408,6 +1790,101 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                             }
                                         />
                                     </Field>
+                                )}
+
+                                {selected.type === 'button' && (
+                                    <>
+                                        <Field label="Teks Tombol">
+                                            <ValueEditor
+                                                value={selected.label}
+                                                onChange={(label) =>
+                                                    patchSelected({
+                                                        label,
+                                                    } as Partial<TreeNode>)
+                                                }
+                                            />
+                                        </Field>
+                                        <Field label="Aksi">
+                                            <OptionGroup
+                                                value={
+                                                    selected.action ?? 'open'
+                                                }
+                                                onChange={(action) =>
+                                                    patchSelected({
+                                                        action,
+                                                    } as Partial<TreeNode>)
+                                                }
+                                                options={[
+                                                    {
+                                                        value: 'open',
+                                                        label: 'Buka undangan',
+                                                    },
+                                                    {
+                                                        value: 'none',
+                                                        label: 'Tidak ada',
+                                                    },
+                                                ]}
+                                            />
+                                        </Field>
+                                    </>
+                                )}
+
+                                {selected.type === 'lottie' && (
+                                    <>
+                                        <Field label="Sumber (.json/.lottie)">
+                                            <AssetInput
+                                                value={selected.src}
+                                                accept=".json,.lottie,application/json"
+                                                uploading={uploading}
+                                                onUpload={uploadAsset}
+                                                onChange={(src) =>
+                                                    patchSelected({
+                                                        src,
+                                                    } as Partial<TreeNode>)
+                                                }
+                                            />
+                                        </Field>
+                                        <Field label="Ulang (loop)">
+                                            <OptionGroup
+                                                value={
+                                                    (selected.loop ?? true)
+                                                        ? 'yes'
+                                                        : 'no'
+                                                }
+                                                onChange={(v) =>
+                                                    patchSelected({
+                                                        loop: v === 'yes',
+                                                    } as Partial<TreeNode>)
+                                                }
+                                                options={[
+                                                    {
+                                                        value: 'yes',
+                                                        label: 'Ya',
+                                                    },
+                                                    {
+                                                        value: 'no',
+                                                        label: 'Tidak',
+                                                    },
+                                                ]}
+                                            />
+                                        </Field>
+                                        <Field label="Kecepatan">
+                                            <Input
+                                                type="number"
+                                                min={0.1}
+                                                max={4}
+                                                step={0.1}
+                                                value={selected.speed ?? 1}
+                                                onChange={(e) =>
+                                                    patchSelected({
+                                                        speed: Number(
+                                                            e.target.value,
+                                                        ),
+                                                    } as Partial<TreeNode>)
+                                                }
+                                            />
+                                        </Field>
+                                    </>
                                 )}
 
                                 {selected.type === 'spacer' && (
@@ -1431,11 +1908,21 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                     </Field>
                                 )}
 
-                                {/* Style */}
+                                {/* Style — edits the base (Desktop) or the Mobile
+                                    override, depending on the device toggle. */}
                                 <div className="border-t pt-3">
-                                    <Label className="text-xs font-semibold text-muted-foreground uppercase">
-                                        Gaya
-                                    </Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-semibold text-muted-foreground uppercase">
+                                            Gaya
+                                        </Label>
+                                        <DeviceBadge device={device} />
+                                    </div>
+                                    {editingMobile && (
+                                        <p className="mt-1 text-[11px] text-muted-foreground">
+                                            Menyunting gaya khusus Mobile.
+                                            Kosong = ikut Desktop.
+                                        </p>
+                                    )}
                                     <div className="mt-2 grid gap-2">
                                         {STYLE_TOKENS.map((token) => (
                                             <Field
@@ -1445,21 +1932,17 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                                 <OptionGroup
                                                     allowClear
                                                     value={
-                                                        ((selected.style ?? {})[
+                                                        (activeStyle[
                                                             token.key
                                                         ] as string) ?? ''
                                                     }
                                                     onChange={(v) =>
-                                                        patchSelected({
-                                                            style: {
-                                                                ...(selected.style ??
-                                                                    {}),
-                                                                [token.key]:
-                                                                    v === ''
-                                                                        ? undefined
-                                                                        : v,
-                                                            },
-                                                        } as Partial<TreeNode>)
+                                                        patchStyleKey(
+                                                            token.key,
+                                                            (v === ''
+                                                                ? undefined
+                                                                : v) as never,
+                                                        )
                                                     }
                                                     options={token.values.map(
                                                         (v) => ({
@@ -1473,37 +1956,40 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                                 />
                                             </Field>
                                         ))}
+                                        <Field label="Gerak (motion)">
+                                            <OptionGroup
+                                                allowClear
+                                                value={activeStyle.motion ?? ''}
+                                                onChange={(v) =>
+                                                    patchStyleKey(
+                                                        'motion',
+                                                        (v === ''
+                                                            ? undefined
+                                                            : v) as never,
+                                                    )
+                                                }
+                                                options={MOTION_OPTIONS}
+                                            />
+                                        </Field>
                                         <Field label="Padding (px)">
                                             <SidesInput
-                                                value={
-                                                    (selected.style ?? {})
-                                                        .paddingPx
-                                                }
+                                                value={activeStyle.paddingPx}
                                                 onChange={(paddingPx) =>
-                                                    patchSelected({
-                                                        style: {
-                                                            ...(selected.style ??
-                                                                {}),
-                                                            paddingPx,
-                                                        },
-                                                    } as Partial<TreeNode>)
+                                                    patchStyleKey(
+                                                        'paddingPx',
+                                                        paddingPx,
+                                                    )
                                                 }
                                             />
                                         </Field>
                                         <Field label="Margin (px)">
                                             <SidesInput
-                                                value={
-                                                    (selected.style ?? {})
-                                                        .marginPx
-                                                }
+                                                value={activeStyle.marginPx}
                                                 onChange={(marginPx) =>
-                                                    patchSelected({
-                                                        style: {
-                                                            ...(selected.style ??
-                                                                {}),
-                                                            marginPx,
-                                                        },
-                                                    } as Partial<TreeNode>)
+                                                    patchStyleKey(
+                                                        'marginPx',
+                                                        marginPx,
+                                                    )
                                                 }
                                             />
                                         </Field>
@@ -1595,7 +2081,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
 
             {contextMenu &&
                 (() => {
-                    const node = findNode(layout.root, contextMenu.id);
+                    const node = findNode(tree.root, contextMenu.id);
 
                     if (!node) {
                         return null;
@@ -1627,7 +2113,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                     label: 'Hapus',
                                     icon: Trash2,
                                     onClick: () => deleteNode(node.id),
-                                    disabled: node.id === layout.root.id,
+                                    disabled: node.id === tree.root.id,
                                     danger: true,
                                 },
                             ]}

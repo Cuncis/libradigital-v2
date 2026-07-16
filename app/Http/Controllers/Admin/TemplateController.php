@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateTemplateLayoutRequest;
 use App\Http\Resources\TemplateResource;
 use App\Models\Template;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,6 +36,10 @@ class TemplateController extends Controller
             $template->layout = Template::defaultLayout();
         }
 
+        if ($template->cover === null) {
+            $template->cover = Template::defaultCover();
+        }
+
         return Inertia::render('admin/templates/builder', [
             'template' => TemplateResource::make($template),
             'sampleInvitation' => $this->sampleInvitation(),
@@ -49,12 +56,31 @@ class TemplateController extends Controller
 
         $template->update([
             'layout' => $layout,
+            'cover' => $request->input('cover'),
             'builder_version' => $layout['version'] ?? 1,
         ]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Layout template berhasil disimpan.']);
 
         return back();
+    }
+
+    /**
+     * Upload a builder asset (cover image or Lottie animation) and return its
+     * public URL, which the admin then binds to an image/lottie node's source.
+     */
+    public function uploadAsset(Request $request, Template $template): JsonResponse
+    {
+        $request->validate([
+            // Raster/vector images and Lottie JSON. `.lottie` (zip) is allowed by
+            // extension since its MIME is inconsistent across browsers.
+            'asset' => ['required', 'file', 'max:8192', 'mimes:jpg,jpeg,png,webp,svg,gif,json,lottie'],
+        ]);
+
+        $disk = config('filesystems.media');
+        $path = $request->file('asset')->store("templates/{$template->id}/assets", $disk);
+
+        return response()->json(['url' => Storage::disk($disk)->url($path)]);
     }
 
     /**

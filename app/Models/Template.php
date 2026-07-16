@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property TemplateCategory $category
  * @property string|null $thumbnail
  * @property array<string, mixed>|null $layout
+ * @property array<string, mixed>|null $cover
  * @property int $builder_version
  * @property bool $is_premium
  * @property Package $min_package
@@ -33,6 +34,7 @@ class Template extends Model
         return [
             'category' => TemplateCategory::class,
             'layout' => 'array',
+            'cover' => 'array',
             'builder_version' => 'integer',
             'is_premium' => 'boolean',
             'min_package' => Package::class,
@@ -57,6 +59,17 @@ class Template extends Model
     public function resolvedLayout(): array
     {
         return $this->layout ?? self::defaultLayout();
+    }
+
+    /**
+     * The template's cover tree, or the default cover when it has none yet.
+     * Used by the builder to always give the superadmin a base to edit.
+     *
+     * @return array<string, mixed>
+     */
+    public function resolvedCover(): array
+    {
+        return $this->cover ?? self::defaultCover();
     }
 
     /**
@@ -235,6 +248,40 @@ class Template extends Model
                             ['id' => 'footer_credit', 'type' => 'text', 'tag' => 'p', 'style' => ['size' => 'xs', 'color' => 'muted'], 'value' => ['kind' => 'literal', 'value' => 'Dibuat dengan 🤍 di libradigital.id']],
                         ],
                     ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * The default cover ("Buka Undangan" screen) node tree. A full-screen hero
+     * section with the couple's cover photo, names, date, and the open button.
+     * Shared by the builder seed and factory as the single source of truth.
+     *
+     * @return array<string, mixed>
+     */
+    public static function defaultCover(): array
+    {
+        $couple = ['kind' => 'template', 'parts' => [
+            ['kind' => 'bind', 'field' => 'groom_name'],
+            ['kind' => 'literal', 'value' => ' & '],
+            ['kind' => 'bind', 'field' => 'bride_name'],
+        ]];
+
+        return [
+            'version' => 1,
+            'root' => [
+                'id' => 'cover_root',
+                'type' => 'section',
+                'variant' => 'hero',
+                'backgroundImage' => ['kind' => 'bind', 'field' => 'cover_photo'],
+                'style' => ['align' => 'center', 'color' => 'white'],
+                'children' => [
+                    ['id' => 'cover_eyebrow', 'type' => 'text', 'tag' => 'eyebrow', 'style' => ['size' => 'sm', 'tracking' => 'widest', 'case' => 'upper', 'color' => 'white'], 'value' => ['kind' => 'literal', 'value' => 'The Wedding Of']],
+                    ['id' => 'cover_names', 'type' => 'text', 'tag' => 'h1', 'style' => ['font' => 'heading', 'size' => '5xl', 'weight' => 'semibold', 'color' => 'white'], 'value' => $couple],
+                    ['id' => 'cover_date', 'type' => 'text', 'tag' => 'p', 'style' => ['size' => 'lg', 'color' => 'white'], 'visibleWhen' => ['when' => 'notEmpty', 'field' => 'wedding_date'], 'value' => ['kind' => 'bind', 'field' => 'wedding_date', 'format' => 'date']],
+                    ['id' => 'cover_greeting', 'type' => 'widget', 'widget' => 'guest_greeting', 'style' => [], 'bindings' => ['variant' => ['kind' => 'literal', 'value' => 'card']]],
+                    ['id' => 'cover_button', 'type' => 'button', 'action' => 'open', 'style' => ['margin' => 'lg'], 'label' => ['kind' => 'literal', 'value' => 'Buka Undangan']],
                 ],
             ],
         ];

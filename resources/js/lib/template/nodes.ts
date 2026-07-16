@@ -47,8 +47,14 @@ export type Visibility =
 // --- Styling tokens (§8) ----------------------------------------------------
 
 export type SpacingToken = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+/** Looping CSS motion for an element (great for cover assets). */
+export type MotionPreset =
+    'none' | 'sway' | 'float' | 'drift' | 'pulse' | 'spin';
 export type SizeToken =
     'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl';
+
+/** Preview/render device buckets. Desktop is the base design; mobile overrides it. */
+export type Device = 'desktop' | 'mobile';
 
 /** Custom per-side spacing in pixels. Any omitted side falls back to the token. */
 export interface SpacingSides {
@@ -56,6 +62,18 @@ export interface SpacingSides {
     right?: number;
     bottom?: number;
     left?: number;
+}
+
+/**
+ * A per-device override layer. Carries style props plus the container-layout
+ * fields (`layout`/`columns`) so admins can, e.g., switch a row to a stack on
+ * mobile. Any omitted key inherits the node's base (desktop) value.
+ */
+export interface ResponsiveOverride extends Partial<StyleProps> {
+    /** Override the container flow (stack/row/grid) on this device. */
+    layout?: 'stack' | 'row' | 'grid';
+    /** Override the grid column count on this device. */
+    columns?: number;
 }
 
 export interface StyleProps {
@@ -76,6 +94,8 @@ export interface StyleProps {
     color?: 'default' | 'muted' | 'accent' | 'accent-strong' | 'white';
     tracking?: 'normal' | 'wide' | 'wider' | 'widest';
     case?: 'none' | 'upper';
+    /** Looping motion animation applied to the element wrapper. */
+    motion?: MotionPreset;
 }
 
 // --- Animation reference (§9) -----------------------------------------------
@@ -105,7 +125,9 @@ export type NodeType =
     | 'image'
     | 'widget'
     | 'spacer'
-    | 'divider';
+    | 'divider'
+    | 'button'
+    | 'lottie';
 
 export type WidgetKind =
     | 'countdown'
@@ -125,9 +147,14 @@ export interface BaseNode {
     /** Optional custom label shown in the builder's layer tree (via Rename). */
     name?: string;
     style: StyleProps;
+    /**
+     * Per-device overrides. `style` (and, for containers, `layout`/`columns`) is
+     * the desktop/base design; when a `mobile` override is present, its keys are
+     * merged over the base on small screens (public page) or when the builder's
+     * device toggle is on Mobile.
+     */
     responsive?: {
-        sm?: Partial<StyleProps>;
-        lg?: Partial<StyleProps>;
+        mobile?: ResponsiveOverride;
     };
     visibleWhen?: Visibility | null;
     animationRef?: AnimationRef | null;
@@ -179,6 +206,22 @@ export interface DividerNode extends BaseNode {
     ornament?: boolean;
 }
 
+export interface ButtonNode extends BaseNode {
+    type: 'button';
+    label: Value;
+    /** 'open' wires the cover's onOpen callback; 'none' is a static button. */
+    action?: 'open' | 'none';
+}
+
+export interface LottieNode extends BaseNode {
+    type: 'lottie';
+    /** URL of a Lottie `.json` (or `.lottie`) file — literal or bound. */
+    src: Value;
+    loop?: boolean;
+    /** Playback speed multiplier (1 = normal). */
+    speed?: number;
+}
+
 export type TreeNode =
     | ContainerNode
     | SectionNode
@@ -186,7 +229,9 @@ export type TreeNode =
     | ImageNode
     | WidgetNode
     | SpacerNode
-    | DividerNode;
+    | DividerNode
+    | ButtonNode
+    | LottieNode;
 
 export interface TemplateLayout {
     version: number;

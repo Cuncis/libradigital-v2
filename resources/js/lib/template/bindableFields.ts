@@ -7,7 +7,13 @@
  */
 import { formatIndoDate, formatIndoTime } from '@/lib/format';
 import type { PublicInvitation } from '@/types/invitation';
-import type { BindFormat, RepeaterSource, Value, Visibility } from './nodes';
+import type {
+    BindFormat,
+    Device,
+    RepeaterSource,
+    Value,
+    Visibility,
+} from './nodes';
 
 export type BindableField =
     // couple + date
@@ -151,6 +157,13 @@ export interface RenderContext {
     invitation: PublicInvitation;
     guestName: string;
     hydrated: boolean;
+    /**
+     * Active device bucket. Selects which per-node style layer applies: 'desktop'
+     * (or undefined) uses the base `style`; 'mobile' merges `responsive.mobile`.
+     */
+    device?: Device;
+    /** Opens the invitation (called by a cover button with action:'open'). */
+    onOpen?: () => void;
     /** True inside the admin builder canvas: interactive widgets render static stand-ins. */
     preview?: boolean;
     /** True in the builder: wrap each node with data-node-id + selection outline, skip reveals. */

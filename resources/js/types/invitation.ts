@@ -135,8 +135,11 @@ export interface InvitationTemplate {
     min_package: PackageTier;
     /** Visual-builder node tree (raw; null when the template uses the default). */
     layout?: TemplateLayout | null;
+    /** Cover ("Buka Undangan") node tree (raw; null when using the legacy cover). */
+    cover?: TemplateLayout | null;
     builder_version?: number;
     has_custom_layout?: boolean;
+    has_custom_cover?: boolean;
 }
 
 export interface GiftAccount {
@@ -188,6 +191,8 @@ export interface PublicInvitation {
     template: InvitationTemplate | null;
     /** Resolved layout tree — always present (falls back to the Classic tree). */
     layout: TemplateLayout;
+    /** Custom cover tree, or null when the template keeps the legacy cover. */
+    cover?: TemplateLayout | null;
     gift_accounts: GiftAccount[];
     gallery_photos: GalleryPhoto[];
     has_guest_book: boolean;

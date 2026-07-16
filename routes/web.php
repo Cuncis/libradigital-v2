@@ -68,6 +68,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('templates', [AdminTemplateController::class, 'index'])->name('templates.index');
     Route::get('templates/{template}/builder', [AdminTemplateController::class, 'builder'])->name('templates.builder');
     Route::put('templates/{template}', [AdminTemplateController::class, 'update'])->name('templates.update');
+    Route::post('templates/{template}/assets', [AdminTemplateController::class, 'uploadAsset'])->name('templates.assets.store');
 
     // Animation packs (floating GSAP overlays built by superadmin, chosen by couples).
     Route::get('animation-packs', [AdminAnimationPackController::class, 'index'])->name('animation-packs.index');

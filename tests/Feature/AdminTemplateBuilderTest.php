@@ -38,6 +38,10 @@ test('opening the builder seeds the Classic tree when a template has no layout',
             ->component('admin/templates/builder')
             ->where('template.layout.version', 1)
             ->has('template.layout.root.children')
+            // The cover tree is seeded too, so the Cover tab always has a base.
+            ->where('template.cover.version', 1)
+            ->where('template.cover.root.type', 'section')
+            ->has('template.cover.root.children')
             ->has('sampleInvitation.groom_name')
         );
 });
@@ -61,6 +65,84 @@ test('the admin can save a layout tree', function () {
         ->and($fresh->layout['root'])->toHaveKey('style')
         ->and($fresh->layout['root']['layout'])->toBe('stack')
         ->and($fresh->layout['root']['children'][0])->toHaveKey('style');
+});
+
+test('the admin can save per-device responsive overrides', function () {
+    $admin = User::factory()->admin()->create();
+    $template = Template::factory()->create();
+
+    $layout = Template::defaultLayout();
+    // Attach a mobile-only override carrying both style and container-layout keys.
+    $layout['root']['children'][0]['responsive'] = [
+        'mobile' => [
+            'align' => 'start',
+            'size' => 'sm',
+            'layout' => 'stack',
+            'columns' => 1,
+        ],
+    ];
+
+    $this->actingAs($admin)
+        ->put(route('admin.templates.update', $template), ['layout' => $layout])
+        ->assertRedirect();
+
+    $child = $template->fresh()->layout['root']['children'][0];
+
+    // The override must survive the round-trip untouched (no validation stripping).
+    expect($child['responsive']['mobile'])->toBe([
+        'align' => 'start',
+        'size' => 'sm',
+        'layout' => 'stack',
+        'columns' => 1,
+    ]);
+});
+
+test('the admin can save a cover tree with button/lottie/motion nodes', function () {
+    $admin = User::factory()->admin()->create();
+    $template = Template::factory()->create();
+
+    $layout = Template::defaultLayout();
+    $cover = Template::defaultCover();
+    // A Lottie layer with looping motion alongside the seeded open button.
+    $cover['root']['children'][] = [
+        'id' => 'cover_lottie',
+        'type' => 'lottie',
+        'loop' => true,
+        'speed' => 1.5,
+        'style' => ['motion' => 'float'],
+        'src' => ['kind' => 'literal', 'value' => 'https://cdn.test/heart.json'],
+    ];
+
+    $this->actingAs($admin)
+        ->put(route('admin.templates.update', $template), [
+            'layout' => $layout,
+            'cover' => $cover,
+        ])
+        ->assertRedirect();
+
+    $fresh = $template->fresh();
+    $children = $fresh->cover['root']['children'];
+
+    expect($fresh->cover['version'])->toBe(1)
+        ->and($fresh->cover['root']['type'])->toBe('section')
+        // The seeded open button survives with its action intact.
+        ->and(collect($children)->firstWhere('type', 'button')['action'])->toBe('open')
+        // The lottie node round-trips with its motion style and settings.
+        ->and(collect($children)->firstWhere('type', 'lottie'))->toMatchArray([
+            'speed' => 1.5,
+            'style' => ['motion' => 'float'],
+        ]);
+});
+
+test('saving without a cover keeps the legacy cover (null)', function () {
+    $admin = User::factory()->admin()->create();
+    $template = Template::factory()->create();
+
+    $this->actingAs($admin)
+        ->put(route('admin.templates.update', $template), ['layout' => Template::defaultLayout()])
+        ->assertRedirect();
+
+    expect($template->fresh()->cover)->toBeNull();
 });
 
 test('saving rejects a malformed layout', function () {

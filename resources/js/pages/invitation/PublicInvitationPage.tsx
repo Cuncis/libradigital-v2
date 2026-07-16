@@ -1,9 +1,11 @@
 import { Head } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import AnimationLayer from '@/components/invitation/AnimationLayer';
+import CustomCover from '@/components/invitation/CustomCover';
 import InvitationCover from '@/components/invitation/InvitationCover';
 import TemplateRenderer from '@/components/invitation/TemplateRenderer';
 import { useHydrated } from '@/hooks/use-hydrated';
+import { useViewportDevice } from '@/hooks/use-viewport-device';
 import { resolveCoverEffect } from '@/lib/cover-animation';
 import { resolveTheme } from '@/lib/themes';
 import { cn } from '@/lib/utils';
@@ -28,6 +30,7 @@ export default function PublicInvitationPage({
 }) {
     const tamu = useTamu();
     const hydrated = useHydrated();
+    const device = useViewportDevice();
     const couple = `${invitation.groom_name ?? ''} & ${invitation.bride_name ?? ''}`;
     const theme = resolveTheme(invitation.template?.category);
 
@@ -85,19 +88,27 @@ export default function PublicInvitationPage({
         >
             <Head title={`Undangan Pernikahan ${couple}`} />
 
-            {!coverGone && (
-                <InvitationCover
-                    tier={invitation.package}
-                    animation={invitation.animations?.cover}
-                    coverPhoto={invitation.cover_photo}
-                    groomName={invitation.groom_name}
-                    brideName={invitation.bride_name}
-                    weddingDate={invitation.wedding_date}
-                    guestName={tamu}
-                    ornament={theme.ornament}
-                    onOpen={handleOpen}
-                />
-            )}
+            {!coverGone &&
+                (invitation.cover ? (
+                    <CustomCover
+                        cover={invitation.cover}
+                        invitation={invitation}
+                        guestName={tamu}
+                        onOpen={handleOpen}
+                    />
+                ) : (
+                    <InvitationCover
+                        tier={invitation.package}
+                        animation={invitation.animations?.cover}
+                        coverPhoto={invitation.cover_photo}
+                        groomName={invitation.groom_name}
+                        brideName={invitation.bride_name}
+                        weddingDate={invitation.wedding_date}
+                        guestName={tamu}
+                        ornament={theme.ornament}
+                        onOpen={handleOpen}
+                    />
+                ))}
 
             {invitation.music_url && (
                 <audio ref={audioRef} src={invitation.music_url} loop />
@@ -112,7 +123,7 @@ export default function PublicInvitationPage({
 
             <TemplateRenderer
                 layout={invitation.layout}
-                ctx={{ invitation, guestName: tamu, hydrated }}
+                ctx={{ invitation, guestName: tamu, hydrated, device }}
             />
         </div>
     );

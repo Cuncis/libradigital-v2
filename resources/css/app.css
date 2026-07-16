@@ -329,6 +329,56 @@
         animation: inv-confetti-fall cubic-bezier(0.3, 0.7, 0.5, 1) forwards;
     }
 
+    /* ---- Looping element motion (cover assets, decorations) ---- */
+    @keyframes inv-motion-sway {
+        0%,
+        100% {
+            transform: rotate(-4deg);
+        }
+        50% {
+            transform: rotate(4deg);
+        }
+    }
+    @keyframes inv-motion-drift {
+        0%,
+        100% {
+            transform: translateX(-8%);
+        }
+        50% {
+            transform: translateX(8%);
+        }
+    }
+    @keyframes inv-motion-pulse {
+        0%,
+        100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.08);
+        }
+    }
+    @keyframes inv-motion-spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    .inv-motion-sway {
+        animation: inv-motion-sway 4s ease-in-out infinite;
+        transform-origin: top center;
+    }
+    .inv-motion-float {
+        animation: float 6s ease-in-out infinite;
+    }
+    .inv-motion-drift {
+        animation: inv-motion-drift 5s ease-in-out infinite;
+    }
+    .inv-motion-pulse {
+        animation: inv-motion-pulse 3s ease-in-out infinite;
+    }
+    .inv-motion-spin {
+        animation: inv-motion-spin 9s linear infinite;
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .animate-float,
         .inv-exit-fade,
@@ -337,7 +387,12 @@
         .inv-glow,
         .inv-shimmer,
         .inv-petal,
-        .inv-confetti {
+        .inv-confetti,
+        .inv-motion-sway,
+        .inv-motion-float,
+        .inv-motion-drift,
+        .inv-motion-pulse,
+        .inv-motion-spin {
             animation: none;
         }
         /* Ensure the cover still leaves the screen without motion. */

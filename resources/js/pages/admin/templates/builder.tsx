@@ -6,6 +6,7 @@ import {
     ArrowLeft,
     BookOpen,
     CalendarHeart,
+    Check,
     ChevronDown,
     ChevronRight,
     ChevronsDownUp,
@@ -31,6 +32,7 @@ import {
     MousePointerClick,
     MoveVertical,
     Pencil,
+    Plus,
     Rows3,
     Save,
     Share2,
@@ -147,6 +149,20 @@ const DEVICE_WIDTH: Record<Device, number> = {
     desktop: 720,
     mobile: 400,
 };
+
+/** Friendly labels for add-ons that gate sections (via visibleWhen: addon). */
+const ADDON_LABELS: Record<string, string> = {
+    guest_book: 'Buku Tamu',
+};
+
+/** Collect the distinct add-ons a tree gates sections on, for the preview toggle. */
+function collectAddons(node: TreeNode): string[] {
+    const here =
+        node.visibleWhen?.when === 'addon' ? [node.visibleWhen.addon] : [];
+    const children = node.children?.flatMap(collectAddons) ?? [];
+
+    return [...here, ...children];
+}
 
 /** What is being dragged: an existing node (reorder) or a new element (from palette). */
 type DragPayload =
@@ -927,6 +943,34 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
     const [device, setDevice] = useState<Device>('mobile');
     const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
+    // Add-on-gated sections in the current tree, with a per-add-on preview toggle
+    // (all on by default so admins can design them; toggle off to see the plain
+    // invitation a couple without that add-on would receive).
+    const [disabledAddons, setDisabledAddons] = useState<Set<string>>(
+        new Set(),
+    );
+    const previewAddons = useMemo(
+        () => Array.from(new Set(collectAddons(tree.root))),
+        [tree.root],
+    );
+    const toggleAddon = (addon: string) =>
+        setDisabledAddons((prev) => {
+            const next = new Set(prev);
+
+            if (next.has(addon)) {
+                next.delete(addon);
+            } else {
+                next.add(addon);
+            }
+
+            return next;
+        });
+    // Only guest_book gates a section today; map its toggle to has_guest_book.
+    const previewInvitation: PublicInvitation = {
+        ...sampleInvitation,
+        has_guest_book: !disabledAddons.has('guest_book'),
+    };
+
     const switchTab = (next: BuilderTab) => {
         if (next !== tab) {
             setTab(next);
@@ -1025,15 +1069,24 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
         patchSelected({ style } as Partial<TreeNode>);
     };
 
-    // Container flow/columns are node props on desktop, but a mobile override
-    // lives in `responsive.mobile` - so their effective value depends on device.
-    const container = selected?.type === 'container' ? selected : null;
+    // Flow/columns are node props on desktop, but a mobile override lives in
+    // `responsive.mobile` - so their effective value depends on device. Both
+    // containers and the gift widget (its card grid) expose this control.
+    const isGiftWidget =
+        selected?.type === 'widget' && selected.widget === 'gift';
+    const layoutable =
+        selected && (selected.type === 'container' || isGiftWidget)
+            ? selected
+            : null;
     const effectiveLayout =
         (editingMobile ? selected?.responsive?.mobile?.layout : undefined) ??
-        container?.layout;
+        layoutable?.layout;
     const effectiveColumns =
         (editingMobile ? selected?.responsive?.mobile?.columns : undefined) ??
-        container?.columns;
+        layoutable?.columns;
+    // Gift cards default to a grid; containers default to a stack.
+    const effectiveLayoutValue =
+        effectiveLayout ?? (isGiftWidget ? 'grid' : 'stack');
 
     /** Set/clear a container-layout key on the active device layer. */
     const patchContainerKey = <K extends 'layout' | 'columns'>(
@@ -1557,6 +1610,39 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
 
                     {/* Center: live preview (click a block to select, drop onto it) */}
                     <div className="overflow-auto bg-muted/40 p-4">
+                        {previewAddons.length > 0 && (
+                            <div className="mx-auto mb-3 flex w-full max-w-[720px] flex-wrap items-center gap-2 rounded-md border border-dashed bg-background/60 px-3 py-2">
+                                <span className="text-[11px] font-medium text-muted-foreground">
+                                    Pratinjau add-on:
+                                </span>
+                                {previewAddons.map((addon) => {
+                                    const on = !disabledAddons.has(addon);
+
+                                    return (
+                                        <button
+                                            key={addon}
+                                            type="button"
+                                            onClick={() => toggleAddon(addon)}
+                                            aria-pressed={on}
+                                            title={`Aktif hanya untuk pembeli add-on ${ADDON_LABELS[addon] ?? addon}`}
+                                            className={cn(
+                                                'flex h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors',
+                                                on
+                                                    ? 'border-brand bg-brand/10 text-brand'
+                                                    : 'border-input bg-background text-muted-foreground hover:bg-muted',
+                                            )}
+                                        >
+                                            {on ? (
+                                                <Check className="size-3.5" />
+                                            ) : (
+                                                <Plus className="size-3.5" />
+                                            )}
+                                            {ADDON_LABELS[addon] ?? addon}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
                         <div
                             className={cn(
                                 'invitation-scope mx-auto w-full overflow-hidden rounded-xl border shadow-sm transition-[max-width] duration-300',
@@ -1577,7 +1663,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                             <TemplateRenderer
                                 layout={tree}
                                 ctx={{
-                                    invitation: sampleInvitation,
+                                    invitation: previewInvitation,
                                     guestName: 'Rahmat',
                                     hydrated: true,
                                     device,
@@ -1685,7 +1771,8 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                     </Field>
                                 )}
 
-                                {selected.type === 'container' && (
+                                {(selected.type === 'container' ||
+                                    isGiftWidget) && (
                                     <div className="grid gap-2">
                                         <div className="flex items-center justify-between">
                                             <Label className="text-xs font-semibold text-muted-foreground uppercase">
@@ -1703,9 +1790,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                         <Field label="Aliran">
                                             <OptionGroup
                                                 allowClear={editingMobile}
-                                                value={
-                                                    effectiveLayout ?? 'stack'
-                                                }
+                                                value={effectiveLayoutValue}
                                                 onChange={(l) =>
                                                     patchContainerKey(
                                                         'layout',
@@ -1737,7 +1822,7 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                                 ]}
                                             />
                                         </Field>
-                                        {effectiveLayout === 'grid' && (
+                                        {effectiveLayoutValue === 'grid' && (
                                             <Field label="Kolom">
                                                 <Input
                                                     type="number"
@@ -1764,13 +1849,16 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                     </div>
                                 )}
 
-                                {selected.type === 'widget' && (
-                                    <div className="grid gap-2">
-                                        <Label className="text-xs text-muted-foreground">
-                                            Binding
-                                        </Label>
-                                        {Object.entries(selected.bindings).map(
-                                            ([key, val]) => (
+                                {selected.type === 'widget' &&
+                                    Object.keys(selected.bindings).length >
+                                        0 && (
+                                        <div className="grid gap-2">
+                                            <Label className="text-xs text-muted-foreground">
+                                                Binding
+                                            </Label>
+                                            {Object.entries(
+                                                selected.bindings,
+                                            ).map(([key, val]) => (
                                                 <Field key={key} label={key}>
                                                     <ValueEditor
                                                         value={val}
@@ -1784,10 +1872,9 @@ export default function TemplateBuilder({ template, sampleInvitation }: Props) {
                                                         }
                                                     />
                                                 </Field>
-                                            ),
-                                        )}
-                                    </div>
-                                )}
+                                            ))}
+                                        </div>
+                                    )}
 
                                 {selected.type === 'image' && (
                                     <Field label="Sumber">

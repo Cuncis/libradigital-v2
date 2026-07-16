@@ -390,7 +390,7 @@ function renderNode(node: TreeNode, ctx: RenderContext): ReactNode {
                         }
                         style={styleToInline(resolveStyle(node, ctx))}
                     >
-                        {spec.render(resolved, ctx)}
+                        {spec.render(resolved, ctx, node)}
                     </div>
                 );
             }

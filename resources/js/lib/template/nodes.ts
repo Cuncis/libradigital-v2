@@ -194,6 +194,12 @@ export interface WidgetNode extends BaseNode {
     type: 'widget';
     widget: WidgetKind;
     bindings: Record<string, Value>;
+    /**
+     * Repeater card layout — used by the gift widget's account grid, mirroring a
+     * container's `layout`/`columns` (per-device override via `responsive.mobile`).
+     */
+    layout?: 'stack' | 'row' | 'grid';
+    columns?: number;
 }
 
 export interface SpacerNode extends BaseNode {

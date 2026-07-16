@@ -15,8 +15,35 @@ import LoveStoryTimeline from '@/components/invitation/LoveStoryTimeline';
 import RsvpForm from '@/components/invitation/RsvpForm';
 import VisitorCounter from '@/components/invitation/VisitorCounter';
 import WaShareButton from '@/components/invitation/WaShareButton';
+import { cn } from '@/lib/utils';
 import type { RenderContext } from './bindableFields';
-import type { Visibility, WidgetKind } from './nodes';
+import type { Visibility, WidgetKind, WidgetNode } from './nodes';
+
+/** Responsive column counts (mobile-first), literal so Tailwind can scan them. */
+const REPEATER_COLS: Record<number, string> = {
+    1: 'grid-cols-1',
+    2: 'grid-cols-1 sm:grid-cols-2',
+    3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+    4: 'grid-cols-2 sm:grid-cols-4',
+};
+
+/** Wrapper class for a repeater's cards given a layout/columns (device-resolved). */
+function repeaterLayoutClass(node: WidgetNode | undefined, ctx: RenderContext) {
+    const override =
+        ctx.device === 'mobile' ? node?.responsive?.mobile : undefined;
+    const layout = override?.layout ?? node?.layout ?? 'grid';
+    const columns = override?.columns ?? node?.columns ?? 2;
+
+    return cn(
+        'gap-4',
+        layout === 'stack' && 'flex flex-col',
+        layout === 'row' && 'flex flex-row flex-wrap',
+        layout === 'grid' && [
+            'grid',
+            REPEATER_COLS[columns] ?? REPEATER_COLS[2],
+        ],
+    );
+}
 
 export interface BindingRule {
     label: string;
@@ -32,7 +59,11 @@ export interface WidgetSpec {
     isRepeater: boolean;
     /** Seeded onto a node's `visibleWhen` at creation; the renderer reads the node's. */
     defaultVisibleWhen?: Visibility;
-    render: (resolved: Record<string, string>, ctx: RenderContext) => ReactNode;
+    render: (
+        resolved: Record<string, string>,
+        ctx: RenderContext,
+        node?: WidgetNode,
+    ) => ReactNode;
 }
 
 /** Static, non-interactive stand-in shown for live widgets in the builder canvas. */
@@ -168,8 +199,8 @@ export const WIDGET_REGISTRY: Record<WidgetKind, WidgetSpec> = {
         bindingSchema: {},
         isRepeater: true,
         defaultVisibleWhen: { when: 'arrayNotEmpty', source: 'gift_accounts' },
-        render: (_resolved, ctx) => (
-            <div className="grid gap-4 sm:grid-cols-2">
+        render: (_resolved, ctx, node) => (
+            <div className={repeaterLayoutClass(node, ctx)}>
                 {ctx.invitation.gift_accounts.map((gift) => (
                     <GiftCard key={gift.id} gift={gift} />
                 ))}
